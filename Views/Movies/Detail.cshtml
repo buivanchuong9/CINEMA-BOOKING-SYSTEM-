@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Movie Details - CineMax";
+}
+
+<!-- Movie Detail Hero Section -->
+<section class="movie-detail-hero">
+    <div class="movie-backdrop" id="movieBackdrop"></div>
+    <div class="container py-5">
+        <div class="row g-4">
+            <!-- Movie Poster -->
+            <div class="col-lg-4" data-aos="fade-right">
+                <div class="movie-poster-large">
+                    <img id="moviePoster" src="" alt="Movie Poster" class="img-fluid rounded shadow-lg">
+                    <button class="btn btn-cinema-red w-100 mt-3 rounded-pill" onclick="scrollToShowtimes()">
+                        <i class="bi bi-ticket-perforated-fill me-2"></i> Book Tickets
+                    </button>
+                </div>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="col-lg-8" data-aos="fade-left">
+                <div class="movie-info-detail">
+                    <div class="mb-3">
+                        <span class="badge badge-cinema me-2" id="movieRating"></span>
+                        <span class="badge bg-danger" id="movieAgeRating"></span>
+                    </div>
+                    
+                    <h1 class="display-4 fw-bold mb-3" id="movieTitle"></h1>
+                    
+                    <div class="d-flex gap-3 mb-4 flex-wrap" id="movieMeta"></div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-cinema-red mb-2">
+                            <i class="bi bi-chat-quote-fill me-2"></i>Synopsis
+                        </h5>
+                        <p class="lead text-secondary" id="movieDescription"></p>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="glass-card p-3">
+                                <h6 class="text-popcorn-gold mb-2">
+                                    <i class="bi bi-person-fill me-2"></i>Director
+                                </h6>
+                                <p class="mb-0" id="movieDirector"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glass-card p-3">
+                                <h6 class="text-popcorn-gold mb-2">
+                                    <i class="bi bi-people-fill me-2"></i>Cast
+                                </h6>
+                                <p class="mb-0" id="movieCast"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trailer Button -->
+                    <button class="btn btn-outline-light btn-lg rounded-pill px-5" onclick="playMovieTrailer()">
+                        <i class="bi bi-play-circle-fill me-2"></i> Watch Trailer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Showtime Selection Section -->
+<section class="py-5" id="showtimesSection">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-calendar-check me-2 text-cinema-red"></i>
+                Select Your Showtime
+            </h2>
+            <p class="text-muted">Choose your preferred date, cinema, and time</p>
+        </div>
+
+        <!-- Date Picker -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8" data-aos="fade-up">
+                <div class="glass-card p-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-calendar3 me-2 text-popcorn-gold"></i>Select Date
+                    </label>
+                    <input type="text" id="datePicker" class="form-control form-control-lg" placeholder="Choose a date">
+                </div>
+            </div>
+        </div>
+
+        <!-- Cinema Selection -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8" data-aos="fade-up">
+                <div class="glass-card p-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-building me-2 text-popcorn-gold"></i>Select Cinema
+                    </label>
+                    <select id="cinemaSelect" class="form-select form-select-lg">
+                        <option value="">Choose a cinema...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Showtime Grid -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10" data-aos="fade-up">
+                <div id="showtimeGrid" class="showtime-grid">
+                    <!-- Showtimes will be dynamically loaded -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews Section -->
+<section class="py-5 bg-gradient-section">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-star-fill me-2 text-popcorn-gold"></i>
+                User Reviews
+            </h2>
+            <p class="text-muted">See what others are saying</p>
+        </div>
+
+        <div class="row g-4" id="reviewsContainer">
+            <!-- Reviews will be dynamically loaded -->
+        </div>
+
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-light rounded-pill px-5" onclick="showReviewForm()">
+                <i class="bi bi-pencil-square me-2"></i> Write a Review
+            </button>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/movie-detail.js" asp-append-version="true"></script>
+}

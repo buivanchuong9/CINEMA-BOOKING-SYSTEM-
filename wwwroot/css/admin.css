@@ -1,0 +1,362 @@
+/* ============================================
+   ADMIN DASHBOARD - CineMax Admin Portal
+   Dark Theme Admin UI
+   ============================================ */
+
+/* ========== ADMIN LAYOUT ========== */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* ========== SIDEBAR ========== */
+.admin-sidebar {
+  width: 260px;
+  background: var(--bg-secondary);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  transition: var(--transition-base);
+  z-index: 1050;
+  overflow-y: auto;
+}
+
+.admin-sidebar.collapsed {
+  margin-left: -260px;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.nav-section {
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.nav-section-title {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 0.25rem;
+  transition: var(--transition-fast);
+  font-size: 0.95rem;
+}
+
+.nav-item i {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, var(--cinema-red), #be123c);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ========== CONTENT WRAPPER ========== */
+.admin-content-wrapper {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-base);
+}
+
+.admin-sidebar.collapsed ~ .admin-content-wrapper {
+  margin-left: 0;
+}
+
+/* ========== TOP NAVBAR ========== */
+.admin-topbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-search {
+  position: relative;
+  width: 350px;
+}
+
+.topbar-search i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.topbar-search input {
+  padding-left: 2.5rem;
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-radius: 8px;
+}
+
+.topbar-search input:focus {
+  background: var(--bg-primary);
+  border-color: var(--cinema-red);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--cinema-red);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--cinema-red);
+  object-fit: cover;
+}
+
+/* ========== MAIN CONTENT ========== */
+.admin-main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ========== FOOTER ========== */
+.admin-footer {
+  padding: 1rem 2rem;
+  background: var(--bg-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ========== DROPDOWN MENU ========== */
+.admin-dropdown {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  padding: 0.5rem;
+}
+
+.admin-dropdown .dropdown-item {
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  transition: var(--transition-fast);
+}
+
+.admin-dropdown .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.admin-dropdown .dropdown-header {
+  color: var(--text-primary);
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+.admin-dropdown .dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ========== STAT CARDS ========== */
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--cinema-red);
+  opacity: 0;
+  transition: var(--transition-base);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card-icon.bg-red {
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(225, 29, 72, 0.05));
+  color: var(--cinema-red);
+}
+
+.stat-card-icon.bg-gold {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+  color: var(--popcorn-gold);
+}
+
+.stat-card-icon.bg-green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+  color: var(--seat-available);
+}
+
+.stat-card-icon.bg-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+  color: #3b82f6;
+}
+
+.stat-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-card-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card-change {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stat-card-change.positive {
+  color: var(--seat-available);
+}
+
+.stat-card-change.negative {
+  color: var(--cinema-red);
+}
+
+/* ========== CHART CONTAINER ========== */
+.chart-container {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ========== RESPONSIVE: ADMIN ========== */
+@media (max-width: 992px) {
+  .admin-sidebar {
+    margin-left: -260px;
+  }
+  
+  .admin-sidebar.show {
+    margin-left: 0;
+  }
+  
+  .admin-content-wrapper {
+    margin-left: 0 !important;
+  }
+  
+  .topbar-search {
+    width: 100%;
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-topbar {
+    padding: 1rem;
+  }
+  
+  .admin-main-content {
+    padding: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-card-value {
+    font-size: 1.5rem;
+  }
+}

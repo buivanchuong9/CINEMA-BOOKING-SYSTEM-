@@ -1,0 +1,201 @@
+@{
+    ViewData["Title"] = "Seat Selection - CineMax";
+}
+
+<!-- Booking Info Bar -->
+<section class="booking-info-bar py-3">
+    <div class="container">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-film text-cinema-red me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Movie</small>
+                        <strong id="bookingMovie"></strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-building text-popcorn-gold me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Cinema</small>
+                        <strong id="bookingCinema"></strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar3 text-cinema-red me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Date & Time</small>
+                        <strong id="bookingDateTime"></strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-badge-3d text-popcorn-gold me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Format</small>
+                        <strong id="bookingFormat"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Seat Selection Section -->
+<section class="py-5">
+    <div class="container-fluid px-lg-5">
+        <div class="row">
+            <!-- Seat Map Column -->
+            <div class="col-lg-9">
+                <div class="text-center mb-4" data-aos="fade-down">
+                    <h3 class="fw-bold mb-2">
+                        <i class="bi bi-grid-3x3-gap me-2 text-cinema-red"></i>
+                        Select Your Seats
+                    </h3>
+                    <p class="text-muted">Choose your preferred seats for the best viewing experience</p>
+                </div>
+
+                <!-- Seat Legend -->
+                <div class="seat-legend mb-4" data-aos="fade-up">
+                    <div class="d-flex justify-content-center gap-4 flex-wrap">
+                        <div class="legend-item">
+                            <div class="seat-icon seat-available"></div>
+                            <span>Available</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat-icon seat-selected"></div>
+                            <span>Selected</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat-icon seat-sold"></div>
+                            <span>Sold</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat-icon seat-vip"></div>
+                            <span>VIP</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="seat-icon seat-couple"></div>
+                            <span>Couple</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cinema Screen -->
+                <div class="cinema-screen mb-4" data-aos="zoom-in">
+                    <div class="screen-curve"></div>
+                    <p class="screen-text">SCREEN</p>
+                </div>
+
+                <!-- Seat Map Container (with Panzoom for mobile) -->
+                <div class="seat-map-wrapper" id="seatMapWrapper">
+                    <div class="seat-map" id="seatMap">
+                        <!-- Seats will be dynamically generated via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Mobile Zoom Controls -->
+                <div class="mobile-zoom-controls d-lg-none mt-3">
+                    <button class="btn btn-outline-light btn-sm" onclick="zoomIn()">
+                        <i class="bi bi-zoom-in"></i> Zoom In
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="zoomOut()">
+                        <i class="bi bi-zoom-out"></i> Zoom Out
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="resetZoom()">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Booking Summary Column -->
+            <div class="col-lg-3">
+                <div class="booking-summary glass-card sticky-summary" data-aos="fade-left">
+                    <h5 class="fw-bold mb-4">
+                        <i class="bi bi-receipt me-2 text-popcorn-gold"></i>
+                        Booking Summary
+                    </h5>
+
+                    <!-- Selected Seats -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Selected Seats</h6>
+                        <div id="selectedSeatsList" class="selected-seats-list">
+                            <p class="text-muted small text-center">No seats selected</p>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <!-- Price Breakdown -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Standard (<span id="standardCount">0</span>)</span>
+                            <span id="standardPrice">0 ₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>VIP (<span id="vipCount">0</span>)</span>
+                            <span id="vipPrice">0 ₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Couple (<span id="coupleCount">0</span>)</span>
+                            <span id="couplePrice">0 ₫</span>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <!-- Total -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Total</h5>
+                            <h4 class="mb-0 text-cinema-red fw-bold" id="totalPrice">0 ₫</h4>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            <span id="totalSeats">0</span> seat(s) selected
+                        </small>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <button class="btn btn-cinema-red w-100 mb-2 rounded-pill" id="continueBtn" 
+                            onclick="proceedToPayment()" disabled>
+                        <i class="bi bi-credit-card me-2"></i>
+                        Continue to Payment
+                    </button>
+                    <button class="btn btn-outline-light w-100 rounded-pill" onclick="clearSelection()">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Fixed Bottom Bar (Mobile) -->
+<div class="fixed-bottom-bar d-lg-none">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-6">
+                <div class="text-start">
+                    <small class="text-muted d-block">Total Amount</small>
+                    <h5 class="mb-0 text-cinema-red fw-bold" id="totalPriceMobile">0 ₫</h5>
+                </div>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-cinema-red w-100 rounded-pill" id="continueBtnMobile" 
+                        onclick="proceedToPayment()" disabled>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/seat-selection.js" asp-append-version="true"></script>
+}

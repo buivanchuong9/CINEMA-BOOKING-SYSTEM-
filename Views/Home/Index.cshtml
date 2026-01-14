@@ -1,0 +1,98 @@
+﻿@{
+    ViewData["Title"] = "Home - CineMax";
+}
+
+<!-- Hero Movie Slider -->
+<section class="hero-section">
+    <div class="swiper heroSwiper">
+        <div class="swiper-wrapper" id="heroSlides">
+            <!-- Slides will be dynamically loaded via JavaScript -->
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+</section>
+
+<!-- Now Showing Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-up">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-film me-2 text-cinema-red"></i>
+                    Now Showing
+                </h2>
+                <p class="text-muted mb-0">Book your favorite movies now</p>
+            </div>
+            <a href="/Movies" class="btn btn-outline-light rounded-pill">
+                View All <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+
+        <!-- Movie Grid -->
+        <div class="row g-4" id="nowShowingMovies">
+            <!-- Movie cards will be dynamically loaded via JavaScript -->
+        </div>
+    </div>
+</section>
+
+<!-- Coming Soon Section -->
+<section class="py-5 bg-gradient-section">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-calendar-event me-2 text-popcorn-gold"></i>
+                Coming Soon
+            </h2>
+            <p class="text-muted">Get ready for these upcoming blockbusters</p>
+        </div>
+
+        <!-- Coming Soon Grid -->
+        <div class="row g-4" id="comingSoonMovies">
+            <!-- Coming soon cards will be dynamically loaded via JavaScript -->
+        </div>
+    </div>
+</section>
+
+<!-- Promotions Banner -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6" data-aos="fade-right">
+                <div class="promo-card glass-card position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3">
+                        <span class="badge badge-cinema">Limited Time</span>
+                    </div>
+                    <div class="p-4">
+                        <i class="bi bi-ticket-perforated-fill fs-1 text-cinema-red mb-3 d-block"></i>
+                        <h3 class="fw-bold mb-2">Student Discount</h3>
+                        <p class="text-muted mb-3">
+                            Get 20% off on all weekday screenings. Valid student ID required.
+                        </p>
+                        <a href="#" class="btn btn-cinema-red">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6" data-aos="fade-left">
+                <div class="promo-card glass-card position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3">
+                        <span class="badge badge-gold">Hot Deal</span>
+                    </div>
+                    <div class="p-4">
+                        <i class="bi bi-gift-fill fs-1 text-popcorn-gold mb-3 d-block"></i>
+                        <h3 class="fw-bold mb-2">Membership Rewards</h3>
+                        <p class="text-muted mb-3">
+                            Join CineMax Club and earn points on every booking. Exclusive perks await!
+                        </p>
+                        <a href="#" class="btn btn-popcorn-gold">Join Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/home.js" asp-append-version="true"></script>
+}

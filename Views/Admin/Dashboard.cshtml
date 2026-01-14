@@ -1,0 +1,167 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted mb-0">Welcome back! Here's what's happening today.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-light rounded-pill">
+            <i class="bi bi-download me-2"></i>Export Report
+        </button>
+        <button class="btn btn-cinema-red rounded-pill">
+            <i class="bi bi-plus-lg me-2"></i>New Showtime
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" data-aos="fade-up">
+            <div class="stat-card-icon bg-red">
+                <i class="bi bi-ticket-perforated-fill"></i>
+            </div>
+            <div class="stat-card-value" id="todayBookings">0</div>
+            <div class="stat-card-label">Today's Bookings</div>
+            <div class="stat-card-change positive">
+                <i class="bi bi-arrow-up"></i> 12% vs yesterday
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-card-icon bg-gold">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-card-value" id="todayRevenue">0</div>
+            <div class="stat-card-label">Today's Revenue</div>
+            <div class="stat-card-change positive">
+                <i class="bi bi-arrow-up"></i> 8% vs yesterday
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-card-icon bg-green">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-card-value" id="activeUsers">0</div>
+            <div class="stat-card-label">Active Users</div>
+            <div class="stat-card-change positive">
+                <i class="bi bi-arrow-up"></i> 5% vs last week
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="stat-card-icon bg-blue">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-card-value" id="occupancyRate">0</div>
+            <div class="stat-card-label">Avg Occupancy Rate</div>
+            <div class="stat-card-change negative">
+                <i class="bi bi-arrow-down"></i> 3% vs last week
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row g-4 mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-lg-8">
+        <div class="chart-container" data-aos="fade-up">
+            <div class="chart-header">
+                <h5 class="chart-title">
+                    <i class="bi bi-graph-up me-2 text-cinema-red"></i>
+                    Revenue Last 7 Days
+                </h5>
+            </div>
+            <div id="revenueChart" style="height: 350px;"></div>
+        </div>
+    </div>
+
+    <!-- Top Movies -->
+    <div class="col-lg-4">
+        <div class="chart-container" data-aos="fade-up" data-aos-delay="100">
+            <div class="chart-header">
+                <h5 class="chart-title">
+                    <i class="bi bi-star-fill me-2 text-popcorn-gold"></i>
+                    Top Movies
+                </h5>
+            </div>
+            <div id="topMoviesList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row g-4 mb-4">
+    <!-- Ticket Sales by Movie -->
+    <div class="col-lg-6">
+        <div class="chart-container" data-aos="fade-up">
+            <div class="chart-header">
+                <h5 class="chart-title">
+                    <i class="bi bi-bar-chart-fill me-2 text-cinema-red"></i>
+                    Ticket Sales by Movie
+                </h5>
+            </div>
+            <div id="ticketSalesChart" style="height: 350px;"></div>
+        </div>
+    </div>
+
+    <!-- Seat Occupancy Heatmap -->
+    <div class="col-lg-6">
+        <div class="chart-container" data-aos="fade-up" data-aos-delay="100">
+            <div class="chart-header">
+                <h5 class="chart-title">
+                    <i class="bi bi-calendar-heat me-2 text-popcorn-gold"></i>
+                    Seat Occupancy by Time
+                </h5>
+            </div>
+            <div id="occupancyHeatmap" style="height: 350px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Bookings Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="chart-container" data-aos="fade-up">
+            <div class="chart-header mb-3">
+                <h5 class="chart-title">
+                    <i class="bi bi-clock-history me-2 text-cinema-red"></i>
+                    Recent Bookings
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer</th>
+                            <th>Movie</th>
+                            <th>Cinema</th>
+                            <th>Date & Time</th>
+                            <th>Seats</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentBookingsTable">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+}
