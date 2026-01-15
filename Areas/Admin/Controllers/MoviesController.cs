@@ -36,10 +36,21 @@ public class MoviesController : Controller
     {
         try
         {
-            // Only validate required fields
-            if (string.IsNullOrWhiteSpace(movie.Title) || movie.Duration <= 0)
+            // Remove optional fields from validation
+            ModelState.Remove("PosterUrl");
+            ModelState.Remove("TrailerUrl");
+            ModelState.Remove("Description");
+            ModelState.Remove("AgeRating");
+            ModelState.Remove("Rating");
+            ModelState.Remove("Director");
+            ModelState.Remove("Cast");
+            ModelState.Remove("CreatedAt");
+            ModelState.Remove("IsActive");
+
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Tên phim và thời lượng là bắt buộc!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 return View(movie);
             }
 
@@ -81,16 +92,20 @@ public class MoviesController : Controller
 
         try
         {
-            // Manual validation for required fields only
-            if (string.IsNullOrWhiteSpace(movie.Title))
-            {
-                TempData["Error"] = "Tên phim là bắt buộc!";
-                return View(movie);
-            }
+            // Remove optional fields
+            ModelState.Remove("PosterUrl");
+            ModelState.Remove("TrailerUrl");
+            ModelState.Remove("Description");
+            ModelState.Remove("AgeRating");
+            ModelState.Remove("Rating");
+            ModelState.Remove("Director");
+            ModelState.Remove("Cast");
+            ModelState.Remove("CreatedAt");
 
-            if (movie.Duration <= 0)
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Thời lượng phải lớn hơn 0!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 return View(movie);
             }
 

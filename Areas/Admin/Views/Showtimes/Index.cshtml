@@ -84,9 +84,14 @@
                                     <td>
                                         @if (!isPast)
                                         {
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@showtime.Id, '@(movies != null && movies.ContainsKey(showtime.MovieId) ? movies[showtime.MovieId] : "")')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <a href="/Admin/Showtimes/Edit/@showtime.Id" class="btn btn-sm btn-outline-light">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@showtime.Id, '@(movies != null && movies.ContainsKey(showtime.MovieId) ? movies[showtime.MovieId] : "")')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         }
                                         else
                                         {

@@ -36,10 +36,16 @@ public class CinemasController : Controller
     {
         try
         {
-            // Only validate Name and Address (required fields)
-            if (string.IsNullOrWhiteSpace(cinema.Name) || string.IsNullOrWhiteSpace(cinema.Address))
+            // Remove optional fields from ModelState
+            ModelState.Remove("MapEmbedUrl");
+            ModelState.Remove("Phone");
+            ModelState.Remove("CreatedAt");
+            ModelState.Remove("IsActive");
+
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Tên rạp và địa chỉ là bắt buộc!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại thông tin: " + string.Join(", ", errors);
                 return View(cinema);
             }
 
@@ -84,9 +90,12 @@ public class CinemasController : Controller
         {
             ModelState.Remove("MapEmbedUrl");
             ModelState.Remove("Phone");
+            ModelState.Remove("CreatedAt");
 
             if (!ModelState.IsValid)
             {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 return View(cinema);
             }
 

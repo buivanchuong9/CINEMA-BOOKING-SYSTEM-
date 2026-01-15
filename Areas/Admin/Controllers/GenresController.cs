@@ -34,8 +34,13 @@ public class GenresController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Genre genre)
     {
+        ModelState.Remove("Slug");
+        ModelState.Remove("CreatedAt");
+
         if (!ModelState.IsValid)
         {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
             return View(genre);
         }
 
@@ -74,8 +79,13 @@ public class GenresController : Controller
             return NotFound();
         }
 
+        ModelState.Remove("Slug");
+        ModelState.Remove("CreatedAt");
+
         if (!ModelState.IsValid)
         {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
             return View(genre);
         }
 

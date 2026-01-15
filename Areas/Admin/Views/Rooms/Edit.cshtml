@@ -1,0 +1,94 @@
+@model BE.Core.Entities.CinemaInfrastructure.Room
+@{
+    ViewData["Title"] = "Sửa Phòng Chiếu - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-pencil-square me-2 text-cinema-red"></i>
+            Sửa Thông Tin Phòng Chiếu
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    <input type="hidden" asp-for="SeatMapMatrix" />
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CinemaId" class="form-label required">Chọn Rạp</label>
+                            <select asp-for="CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select">
+                                <option value="">-- Chọn rạp --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label required">Tên Phòng</label>
+                            <input asp-for="Name" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="TotalRows" class="form-label">Số Hàng Ghế</label>
+                            <input asp-for="TotalRows" type="number" class="form-control" min="1" max="26" readonly />
+                            <div class="form-text">Không thể thay đổi số hàng</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="SeatsPerRow" class="form-label">Số Ghế Mỗi Hàng</label>
+                            <input asp-for="SeatsPerRow" type="number" class="form-control" min="1" max="30" readonly />
+                            <div class="form-text">Không thể thay đổi số ghế</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tổng Ghế</label>
+                            <input type="text" class="form-control" value="@(Model.TotalRows * Model.SeatsPerRow)" readonly />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="IsActive" class="form-label">Trạng Thái</label>
+                            <select asp-for="IsActive" class="form-select">
+                                <option value="true">Hoạt Động</option>
+                                <option value="false">Ngừng Hoạt Động</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Lưu ý:</strong> Không thể thay đổi cấu hình ghế sau khi tạo. Chỉ có thể sửa tên và trạng thái.
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <button type="submit" class="btn btn-cinema-red btn-lg">
+                                <i class="bi bi-save me-2"></i>
+                                Cập Nhật
+                            </button>
+                            <a href="/Admin/Rooms" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

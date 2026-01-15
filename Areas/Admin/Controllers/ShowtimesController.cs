@@ -66,9 +66,14 @@ public class ShowtimesController : Controller
     {
         try
         {
-            if (showtime.MovieId <= 0 || showtime.RoomId <= 0)
+            ModelState.Remove("EndTime");
+            ModelState.Remove("CreatedAt");
+            ModelState.Remove("IsActive");
+
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Vui lòng chọn phim và phòng chiếu!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 await PopulateDropdowns();
                 return View(showtime);
             }
@@ -131,6 +136,17 @@ public class ShowtimesController : Controller
 
         try
         {
+            ModelState.Remove("EndTime");
+            ModelState.Remove("CreatedAt");
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+
             // Recalculate EndTime
             var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
             if (movie != null)

@@ -21,6 +21,46 @@ public class PaymentController : Controller
         _logger = logger;
     }
 
+    // GET: /Payment/TestPayment?bookingId=1
+    // CHỈ DÙNG CHO DEVELOPMENT - Bypass VNPay để test
+    public async Task<IActionResult> TestPayment(int bookingId)
+    {
+        try
+        {
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+            
+            if (booking == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn đặt vé!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (booking.Status == BookingStatus.Paid)
+            {
+                TempData["Info"] = "Đơn hàng đã được thanh toán rồi!";
+                return RedirectToAction("Details", "Booking", new { id = booking.Id });
+            }
+
+            // Simulate successful payment
+            booking.Status = BookingStatus.Paid;
+            booking.PaymentMethod = PaymentMethod.VNPAY;
+            booking.TransactionId = $"TEST_{DateTime.Now:yyyyMMddHHmmss}";
+            booking.UpdatedAt = DateTime.Now;
+            
+            _unitOfWork.Bookings.Update(booking);
+            await _unitOfWork.SaveChangesAsync();
+            
+            TempData["Success"] = "Thanh toán test thành công! Vé của bạn đã được xác nhận.";
+            return RedirectToAction("Details", "Booking", new { id = booking.Id });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in test payment");
+            TempData["Error"] = "Có lỗi xảy ra!";
+            return RedirectToAction("Index", "Home");
+        }
+    }
+
     // GET: /Payment/VNPayReturn
     public async Task<IActionResult> VNPayReturn()
     {
@@ -42,7 +82,9 @@ public class PaymentController : Controller
                 if (booking != null)
                 {
                     booking.Status = BookingStatus.Paid;
-                    // PaymentMethod already set during booking creation
+                    booking.PaymentMethod = PaymentMethod.VNPAY;
+                    booking.TransactionId = response.TransactionId.ToString();
+                    booking.UpdatedAt = DateTime.Now;
                     
                     _unitOfWork.Bookings.Update(booking);
                     await _unitOfWork.SaveChangesAsync();
@@ -61,7 +103,22 @@ public class PaymentController : Controller
                 if (booking != null)
                 {
                     booking.Status = BookingStatus.Cancelled;
+                    booking.UpdatedAt = DateTime.Now;
                     _unitOfWork.Bookings.Update(booking);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    // Release seats về trạng thái available
+                    var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
+                        .Where(bd => bd.BookingId == booking.Id);
+                    foreach (var detail in bookingDetails)
+                    {
+                        var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
+                        if (seat != null)
+                        {
+                            seat.Status = SeatStatus.Available;
+                            _unitOfWork.Seats.Update(seat);
+                        }
+                    }
                     await _unitOfWork.SaveChangesAsync();
                 }
                 
@@ -95,6 +152,9 @@ public class PaymentController : Controller
                 if (booking != null && booking.Status == BookingStatus.Pending)
                 {
                     booking.Status = BookingStatus.Paid;
+                    booking.PaymentMethod = PaymentMethod.VNPAY;
+                    booking.TransactionId = response.TransactionId.ToString();
+                    booking.UpdatedAt = DateTime.Now;
                     
                     _unitOfWork.Bookings.Update(booking);
                     await _unitOfWork.SaveChangesAsync();

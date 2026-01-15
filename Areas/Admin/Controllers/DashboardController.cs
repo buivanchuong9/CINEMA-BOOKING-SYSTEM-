@@ -21,13 +21,11 @@ public class DashboardController : Controller
         // Lấy thống kê cơ bản
         var totalMovies = await _unitOfWork.Movies.CountAsync();
         var totalCinemas = await _unitOfWork.Cinemas.CountAsync();
-        var totalBookings = await _unitOfWork.Bookings.CountAsync();
-        var totalUsers = await _unitOfWork.Users.CountAsync();
-
+        var totalRooms = await _unitOfWork.Rooms.CountAsync();
+        
         ViewBag.TotalMovies = totalMovies;
         ViewBag.TotalCinemas = totalCinemas;
-        ViewBag.TotalBookings = totalBookings;
-        ViewBag.TotalUsers = totalUsers;
+        ViewBag.TotalRooms = totalRooms;
 
         // Thống kê doanh thu
         var allBookings = await _unitOfWork.Bookings.GetAllAsync();
@@ -36,19 +34,19 @@ public class DashboardController : Controller
         ViewBag.TotalRevenue = totalRevenue;
 
         // Top 5 phim có nhiều booking nhất
-        var bookingDetails = await _unitOfWork.BookingDetails.GetAllAsync();
-        var topMovies = (await _unitOfWork.Movies.GetAllAsync())
+        var allShowtimes = await _unitOfWork.Showtimes.GetAllAsync();
+        var allMovies = await _unitOfWork.Movies.GetAllAsync();
+        
+        var topMovies = allMovies
             .Select(m => new
             {
-                Movie = m,
-                Count = bookingDetails.Count(bd => 
-                    _unitOfWork.Seats.GetByIdAsync(bd.SeatId).Result?.RoomId == 
-                    _unitOfWork.Showtimes.GetAllAsync().Result.FirstOrDefault(st => st.MovieId == m.Id)?.RoomId
-                )
+                Title = m.Title,
+                Count = allShowtimes.Count(st => st.MovieId == m.Id && 
+                    allBookings.Any(b => b.ShowtimeId == st.Id && b.Status == Core.Enums.BookingStatus.Paid))
             })
+            .Where(x => x.Count > 0)
             .OrderByDescending(x => x.Count)
             .Take(5)
-            .Select(x => new { x.Movie.Title, x.Count })
             .ToList();
         ViewBag.TopMovies = topMovies;
 

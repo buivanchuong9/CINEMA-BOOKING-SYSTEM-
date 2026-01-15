@@ -20,6 +20,11 @@ public class Booking
     public string UserId { get; set; } = string.Empty;
     
     /// <summary>
+    /// ID của lịch chiếu
+    /// </summary>
+    public int? ShowtimeId { get; set; }
+    
+    /// <summary>
     /// Thời gian tạo đơn
     /// </summary>
     [Required]

@@ -130,8 +130,9 @@ function getSeatStatusFromServer(seatId) {
     const status = seatStatusData.find(s => s.seatId === seatId);
     if (!status) return 'available';
 
-    if (status.isBooked) return 'sold';
-    if (status.isHeld) return 'held';
+    const statusLower = (status.status || 'Available').toLowerCase();
+    if (statusLower === 'sold') return 'sold';
+    if (statusLower === 'held') return 'held';
     return 'available';
 }
 
@@ -219,13 +220,16 @@ function updateSummary() {
 
     // Enable/disable continue button
     const continueBtn = document.getElementById('continueBtn');
+    const testPaymentBtn = document.getElementById('testPaymentBtn');
     const continueBtnMobile = document.getElementById('continueBtnMobile');
 
     if (selectedSeats.length > 0) {
         continueBtn.disabled = false;
+        if (testPaymentBtn) testPaymentBtn.disabled = false;
         continueBtnMobile.disabled = false;
     } else {
         continueBtn.disabled = true;
+        if (testPaymentBtn) testPaymentBtn.disabled = true;
         continueBtnMobile.disabled = true;
     }
 }
@@ -299,7 +303,7 @@ function calculateFoodTotal() {
 }
 
 // ========== PROCEED TO PAYMENT ==========
-async function proceedToPayment() {
+async function proceedToPayment(useTestPayment = false) {
     if (selectedSeats.length === 0) {
         Swal.fire({
             title: 'Chưa chọn ghế',
@@ -322,97 +326,57 @@ async function proceedToPayment() {
         }
     });
 
-    // Hold seats first
-    try {
-        const response = await fetch('/Booking/HoldSeats', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            },
-            body: JSON.stringify({
-                showtimeId: showtimeId,
-                seatIds: selectedSeats.map(s => s.id)
-            })
-        });
+    // Create booking form data - MVC THUẦN TÚY: Submit form POST trực tiếp
+    const bookingData = {
+        ShowtimeId: showtimeId,
+        SeatIds: selectedSeats.map(s => s.id),
+        Foods: foods,
+        Notes: '',
+        useTestPayment: useTestPayment // TEST MODE
+    };
 
-        const result = await response.json();
+    // Submit form POST to /Booking/Create
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/Booking/Create';
 
-        if (!result.success) {
-            Swal.fire({
-                title: 'Lỗi',
-                text: result.message || 'Không thể giữ ghế!',
-                icon: 'error',
-                confirmButtonColor: '#e11d48',
-                background: '#1e293b',
-                color: '#f8fafc'
-            });
-            return;
-        }
+    // Add CSRF token
+    const csrf = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (csrf) {
+        form.appendChild(csrf.cloneNode(true));
+    }
 
-        // Create booking
-        const bookingData = {
-            ShowtimeId: showtimeId,
-            SeatIds: selectedSeats.map(s => s.id),
-            Foods: foods,
-            PaymentMethod: 1, // Cash
-            Notes: ''
-        };
-
-        // Submit form
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/Booking/Create';
-
-        // Add CSRF token
-        const csrf = document.querySelector('input[name="__RequestVerificationToken"]');
-        if (csrf) {
-            form.appendChild(csrf.cloneNode(true));
-        }
-
-        // Add data as hidden inputs
-        Object.keys(bookingData).forEach(key => {
-            if (key === 'SeatIds' || key === 'Foods') {
-                bookingData[key].forEach((item, index) => {
-                    if (key === 'SeatIds') {
+    // Add data as hidden inputs
+    Object.keys(bookingData).forEach(key => {
+        if (key === 'SeatIds' || key === 'Foods') {
+            bookingData[key].forEach((item, index) => {
+                if (key === 'SeatIds') {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `${key}[${index}]`;
+                    input.value = item;
+                    form.appendChild(input);
+                } else {
+                    Object.keys(item).forEach(prop => {
                         const input = document.createElement('input');
                         input.type = 'hidden';
-                        input.name = `${key}[${index}]`;
-                        input.value = item;
+                        input.name = `${key}[${index}].${prop}`;
+                        input.value = item[prop];
                         form.appendChild(input);
-                    } else {
-                        Object.keys(item).forEach(prop => {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = `${key}[${index}].${prop}`;
-                            input.value = item[prop];
-                            form.appendChild(input);
-                        });
-                    }
-                });
-            } else {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = bookingData[key];
-                form.appendChild(input);
-            }
-        });
+                    });
+                }
+            });
+        } else {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = bookingData[key];
+            form.appendChild(input);
+        }
+    });
 
-        document.body.appendChild(form);
-        form.submit();
-
-    } catch (error) {
-        console.error('Error:', error);
-        Swal.fire({
-            title: 'Lỗi',
-            text: 'Có lỗi xảy ra!',
-            icon: 'error',
-            confirmButtonColor: '#e11d48',
-            background: '#1e293b',
-            color: '#f8fafc'
-        });
-    }
+    document.body.appendChild(form);
+    form.submit();
 }
 
 // ========== INITIALIZE PANZOOM ==========

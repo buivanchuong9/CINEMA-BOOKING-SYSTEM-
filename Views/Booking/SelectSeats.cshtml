@@ -175,9 +175,14 @@
 
                     <!-- Action Buttons -->
                     <button class="btn btn-cinema-red w-100 mb-2 rounded-pill" id="continueBtn" 
-                            onclick="proceedToPayment()" disabled>
+                            onclick="proceedToPayment(false)" disabled>
                         <i class="bi bi-credit-card me-2"></i>
-                        Thanh Toán
+                        Thanh Toán VNPay
+                    </button>
+                    <button class="btn btn-warning w-100 mb-2 rounded-pill" id="testPaymentBtn" 
+                            onclick="proceedToPayment(true)" disabled>
+                        <i class="bi bi-lightning-charge me-2"></i>
+                        Thanh Toán Test (Dev)
                     </button>
                     <button class="btn btn-outline-light w-100 rounded-pill" onclick="clearSelection()">
                         <i class="bi bi-arrow-counterclockwise me-2"></i>

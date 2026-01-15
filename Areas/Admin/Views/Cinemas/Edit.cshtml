@@ -1,0 +1,83 @@
+@model BE.Core.Entities.CinemaInfrastructure.Cinema
+@{
+    ViewData["Title"] = "Sửa Rạp - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-pencil-square me-2 text-cinema-red"></i>
+            Sửa Thông Tin Rạp
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label required">Tên Rạp</label>
+                            <input asp-for="Name" class="form-control form-control-lg" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="Address" class="form-label required">Địa Chỉ</label>
+                            <input asp-for="Address" class="form-control" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label">Số Điện Thoại</label>
+                            <input asp-for="Phone" class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="IsActive" class="form-label">Trạng Thái</label>
+                            <select asp-for="IsActive" class="form-select">
+                                <option value="true">Hoạt Động</option>
+                                <option value="false">Ngừng Hoạt Động</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="MapEmbedUrl" class="form-label">Google Maps Embed URL</label>
+                            <input asp-for="MapEmbedUrl" class="form-control" />
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Lấy embed URL từ Google Maps → Share → Embed a map
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <button type="submit" class="btn btn-cinema-red btn-lg">
+                                <i class="bi bi-save me-2"></i>
+                                Cập Nhật
+                            </button>
+                            <a href="/Admin/Cinemas" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

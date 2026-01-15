@@ -68,6 +68,12 @@ builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+// Configure Antiforgery for JSON requests
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+});
+
 // ===== 6. SESSION CONFIGURATION (for cart, temp data) =====
 builder.Services.AddSession(options =>
 {

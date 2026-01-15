@@ -42,9 +42,14 @@ public class RoomsController : Controller
     {
         try
         {
-            if (room.CinemaId <= 0 || string.IsNullOrWhiteSpace(room.Name))
+            ModelState.Remove("SeatMapMatrix");
+            ModelState.Remove("CreatedAt");
+            ModelState.Remove("IsActive");
+
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Vui lòng chọn rạp và nhập tên phòng!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 await PopulateDropdowns();
                 return View(room);
             }
@@ -96,9 +101,13 @@ public class RoomsController : Controller
 
         try
         {
-            if (room.CinemaId <= 0 || string.IsNullOrWhiteSpace(room.Name))
+            ModelState.Remove("SeatMapMatrix");
+            ModelState.Remove("CreatedAt");
+
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Vui lòng chọn rạp và nhập tên phòng!";
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 await PopulateDropdowns();
                 return View(room);
             }

@@ -1,0 +1,59 @@
+@model BE.Core.Entities.Movies.Genre
+@{
+    ViewData["Title"] = "Sửa Thể Loại - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-pencil-square me-2 text-cinema-red"></i>
+            Sửa Thể Loại
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label required">Tên Thể Loại</label>
+                        <input asp-for="Name" class="form-control form-control-lg" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label">Slug</label>
+                        <input asp-for="Slug" class="form-control" />
+                        <div class="form-text">URL-friendly: chữ thường, dấu - thay khoảng trắng</div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-cinema-red btn-lg">
+                            <i class="bi bi-save me-2"></i>
+                            Cập Nhật
+                        </button>
+                        <a href="/Admin/Genres" class="btn btn-outline-light btn-lg ms-2">
+                            <i class="bi bi-x-circle me-2"></i>
+                            Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

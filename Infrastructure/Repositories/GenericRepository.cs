@@ -36,7 +36,8 @@ public class GenericRepository<T> : IRepository<T> where T : class
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        // AsNoTracking để tránh cache, luôn lấy data mới từ DB
+        return await _dbSet.AsNoTracking().ToListAsync();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
