@@ -9,55 +9,147 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = BE
 build_property.RootNamespace = BE
-build_property.ProjectDir = /Users/chuong/Documents/BE/BE/
+build_property.ProjectDir = /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = /Users/chuong/Documents/BE/BE
+build_property.MSBuildProjectDirectory = /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-
 build_property._RazorSourceGeneratorDebug = 
 
-[/Users/chuong/Documents/BE/BE/Views/Admin/Dashboard.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Cinemas/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvQ2luZW1hcy9DcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Cinemas/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvQ2luZW1hcy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Dashboard/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvRGFzaGJvYXJkL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Foods/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvRm9vZHMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Foods/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvRm9vZHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Genres/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvR2VucmVzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Genres/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvR2VucmVzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Movies/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvTW92aWVzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Movies/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvTW92aWVzL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Movies/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvTW92aWVzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Rooms/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvUm9vbXMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Rooms/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvUm9vbXMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Showtimes/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvU2hvd3RpbWVzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/Showtimes/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvU2hvd3RpbWVzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Areas/Admin/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvQWRtaW4vVmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9Mb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Account/Profile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9Qcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Admin/Dashboard.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWRtaW4vRGFzaGJvYXJkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Booking/SeatSelection.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Booking/SeatSelection.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQm9va2luZy9TZWF0U2VsZWN0aW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Home/Index.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Booking/SelectSeats.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQm9va2luZy9TZWxlY3RTZWF0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Cinemas/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2luZW1hcy9JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Home/Privacy.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Movies/Detail.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Movies/Detail.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTW92aWVzL0RldGFpbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Shared/Error.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Movies/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTW92aWVzL0RldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Movies/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTW92aWVzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Shared/_LayoutAdmin.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Shared/_LayoutAdmin.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXRBZG1pbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Shared/_ValidationScriptsPartial.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/_ViewImports.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/_ViewStart.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/chuong/Documents/BE/BE/Views/Shared/_Layout.cshtml]
+[/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-e0jowmeh8d

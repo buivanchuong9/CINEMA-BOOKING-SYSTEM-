@@ -7,11 +7,40 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <!-- Entity Framework Core -->
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      
+      <!-- ASP.NET Core Identity -->
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.11" />
+      
+      <!-- Redis -->
+      <PackageReference Include="StackExchange.Redis" Version="2.7.10" />
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.0" />
+      
+      <!-- Quartz.NET (Background Jobs) -->
+      <PackageReference Include="Quartz" Version="3.8.0" />
+      <PackageReference Include="Quartz.Extensions.Hosting" Version="3.8.0" />
+      
+      <!-- QR Code Generation -->
+      <PackageReference Include="QRCoder" Version="1.4.3" />
+      
+      <!-- Excel Export -->
+      <PackageReference Include="EPPlus" Version="7.0.5" />
+      
+      <!-- PDF Generation -->
+      <PackageReference Include="DinkToPdf" Version="1.0.8" />
+      
+      <!-- JSON Handling -->
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
 </Project>

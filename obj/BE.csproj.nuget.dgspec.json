@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/chuong/Documents/BE/BE/BE.csproj": {}
+    "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/BE.csproj": {}
   },
   "projects": {
-    "/Users/chuong/Documents/BE/BE/BE.csproj": {
+    "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/BE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/chuong/Documents/BE/BE/BE.csproj",
+        "projectUniqueName": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/BE.csproj",
         "projectName": "BE",
-        "projectPath": "/Users/chuong/Documents/BE/BE/BE.csproj",
+        "projectPath": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/BE.csproj",
         "packagesPath": "/Users/chuong/.nuget/packages/",
-        "outputPath": "/Users/chuong/Documents/BE/BE/obj/",
+        "outputPath": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/chuong/.nuget/NuGet/NuGet.Config"
@@ -43,6 +43,22 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "DinkToPdf": {
+              "target": "Package",
+              "version": "[1.0.8, )"
+            },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.AspNetCore.Identity.UI": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -52,6 +68,36 @@
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[8.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.Extensions.Caching.StackExchangeRedis": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "QRCoder": {
+              "target": "Package",
+              "version": "[1.4.3, )"
+            },
+            "Quartz": {
+              "target": "Package",
+              "version": "[3.8.0, )"
+            },
+            "Quartz.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[3.8.0, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.7.10, )"
             }
           },
           "imports": [

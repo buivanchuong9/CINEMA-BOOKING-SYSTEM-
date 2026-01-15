@@ -1,0 +1,98 @@
+@model BE.Application.DTOs.LoginDto
+@{
+    ViewData["Title"] = "Đăng Nhập - CineMax";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="glass-card p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">
+                        <i class="bi bi-box-arrow-in-right me-2 text-cinema-red"></i>
+                        Đăng Nhập
+                    </h2>
+                    <p class="text-muted">Chào mừng bạn quay trở lại CineMax</p>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form method="post" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">
+                            <i class="bi bi-envelope me-1"></i>
+                            Email
+                        </label>
+                        <input asp-for="Email" class="form-control form-control-lg" placeholder="your@email.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">
+                            <i class="bi bi-lock me-1"></i>
+                            Mật khẩu
+                        </label>
+                        <input asp-for="Password" class="form-control form-control-lg" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">
+                            Ghi nhớ đăng nhập
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-cinema-red btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Đăng Nhập
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Chưa có tài khoản? 
+                            <a href="/Account/Register" class="text-cinema-red text-decoration-none fw-bold">
+                                Đăng ký ngay
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Hoặc đăng nhập với</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-light">
+                            <i class="bi bi-google"></i>
+                        </button>
+                        <button class="btn btn-outline-light">
+                            <i class="bi bi-facebook"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Test Account Info -->
+            <div class="alert alert-info mt-3" role="alert">
+                <strong>🔑 Tài khoản Admin test:</strong><br>
+                Email: <code>admin@cinemax.com</code><br>
+                Password: <code>Admin@123</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

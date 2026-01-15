@@ -1,0 +1,110 @@
+@model IEnumerable<BE.Core.Entities.CinemaInfrastructure.Room>
+@{
+    ViewData["Title"] = "Quản Lý Phòng Chiếu - Admin";
+    var cinemas = ViewBag.Cinemas as Dictionary<int, string>;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-door-open me-2 text-cinema-red"></i>
+                Quản Lý Phòng Chiếu
+            </h2>
+            <p class="text-muted mb-0">Tổng số: @Model.Count() phòng</p>
+        </div>
+        <a href="/Admin/Rooms/Create" class="btn btn-cinema-red">
+            <i class="bi bi-plus-circle me-2"></i>
+            Thêm Phòng Mới
+        </a>
+    </div>
+
+    <div class="glass-card p-4">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-door-open display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có phòng chiếu nào</h4>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Phòng</th>
+                            <th>Rạp</th>
+                            <th>Số Hàng</th>
+                            <th>Ghế/Hàng</th>
+                            <th>Tổng Ghế</th>
+                            <th>Ngày Tạo</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model)
+                        {
+                            <tr>
+                                <td>@room.Id</td>
+                                <td><strong>@room.Name</strong></td>
+                                <td>
+                                    @if (cinemas != null && cinemas.ContainsKey(room.CinemaId))
+                                    {
+                                        @cinemas[room.CinemaId]
+                                    }
+                                </td>
+                                <td>@room.TotalRows hàng</td>
+                                <td>@room.SeatsPerRow ghế</td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        @(room.TotalRows * room.SeatsPerRow) ghế
+                                    </span>
+                                </td>
+                                <td>@room.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/Admin/Rooms/Edit/@room.Id" class="btn btn-sm btn-outline-light">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@room.Id, '@room.Name')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc muốn xóa phòng "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = `/Admin/Rooms/Delete/${id}`;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

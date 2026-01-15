@@ -3,79 +3,45 @@
    Movie Info, Trailer, Showtime Selection
    ============================================ */
 
-// ========== MOCK DATA: MOVIE DETAIL ==========
-const movieDetail = {
-    id: 4,
-    title: "Avatar: The Way of Water",
-    posterUrl: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=400&h=600&fit=crop",
-    backdropUrl: "https://images.unsplash.com/photo-1594908900066-3f47337549d8?w=1920&h=800&fit=crop",
-    rating: 8.5,
-    ageRating: "PG-13",
-    genre: "Sci-Fi, Adventure, Fantasy",
-    duration: "192 min",
-    releaseDate: "2022-12-16",
-    description: "Set more than a decade after the events of the first film, Avatar: The Way of Water begins to tell the story of the Sully family, the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure.",
-    director: "James Cameron",
-    cast: "Sam Worthington, Zoe Saldana, Sigourney Weaver, Kate Winslet",
-    trailerUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0"
-};
+// ========== GET DATA FROM SERVER ==========
+const movieDetail = window.movieData || {};
+const showtimesFromServer = window.showtimesData || [];
 
-// ========== MOCK DATA: CINEMAS ==========
-const cinemas = [
-    { id: 1, name: "CineMax District 1", location: "123 Nguyen Hue, District 1" },
-    { id: 2, name: "CineMax District 3", location: "456 Vo Van Tan, District 3" },
-    { id: 3, name: "CineMax Thu Duc", location: "789 Xa Lo Ha Noi, Thu Duc" },
-    { id: 4, name: "CineMax Binh Thanh", location: "321 Dien Bien Phu, Binh Thanh" }
-];
+// ========== PROCESS SHOWTIMES DATA ==========
+// Group showtimes by date and cinema
+const showtimes = {};
+const cinemas = new Map();
 
-// ========== MOCK DATA: SHOWTIMES ==========
-const showtimes = {
-    "2026-01-14": [
-        { time: "09:00", type: "2D", available: 45, price: 80000, cinemaId: 1 },
-        { time: "12:30", type: "3D IMAX", available: 32, price: 150000, cinemaId: 1 },
-        { time: "15:00", type: "2D", available: 58, price: 80000, cinemaId: 1 },
-        { time: "18:30", type: "3D IMAX", available: 28, price: 150000, cinemaId: 1 },
-        { time: "21:00", type: "2D", available: 41, price: 80000, cinemaId: 1 },
-        { time: "10:00", type: "2D", available: 52, price: 80000, cinemaId: 2 },
-        { time: "13:00", type: "3D", available: 38, price: 120000, cinemaId: 2 },
-        { time: "16:30", type: "2D", available: 44, price: 80000, cinemaId: 2 },
-        { time: "20:00", type: "3D IMAX", available: 25, price: 150000, cinemaId: 2 }
-    ],
-    "2026-01-15": [
-        { time: "10:30", type: "2D", available: 60, price: 80000, cinemaId: 1 },
-        { time: "14:00", type: "3D IMAX", available: 40, price: 150000, cinemaId: 1 },
-        { time: "17:30", type: "2D", available: 55, price: 80000, cinemaId: 1 },
-        { time: "21:00", type: "3D", available: 35, price: 120000, cinemaId: 1 }
-    ]
-};
-
-// ========== MOCK DATA: REVIEWS ==========
-const reviews = [
-    {
-        id: 1,
-        userName: "John Smith",
-        rating: 5,
-        date: "2026-01-10",
-        comment: "Absolutely stunning! The visuals are breathtaking and the story is emotionally powerful. A must-see in IMAX 3D!",
-        avatar: "https://i.pravatar.cc/150?img=12"
-    },
-    {
-        id: 2,
-        userName: "Emily Chen",
-        rating: 4,
-        date: "2026-01-08",
-        comment: "A visual masterpiece. James Cameron delivers again. The underwater scenes are incredible.",
-        avatar: "https://i.pravatar.cc/150?img=45"
-    },
-    {
-        id: 3,
-        userName: "Michael Brown",
-        rating: 5,
-        date: "2026-01-05",
-        comment: "Worth the 13-year wait! The technology and storytelling blend perfectly. Emotional and epic.",
-        avatar: "https://i.pravatar.cc/150?img=33"
+showtimesFromServer.forEach(st => {
+    const date = st.startTime.split(' ')[0];
+    if (!showtimes[date]) {
+        showtimes[date] = [];
     }
-];
+    showtimes[date].push({
+        time: st.startTime.split(' ')[1],
+        type: "2D", // Default, can be extended
+        available: 50, // Default, will be calculated from seats
+        price: st.basePrice,
+        cinemaId: st.cinemaId,
+        showtimeId: st.id,
+        roomName: st.roomName
+    });
+    
+    // Collect unique cinemas
+    if (st.cinemaId && st.cinemaName) {
+        cinemas.set(st.cinemaId, {
+            id: st.cinemaId,
+            name: st.cinemaName,
+            location: "" // Will be from database if needed
+        });
+    }
+});
+
+// Convert cinemas Map to array
+const cinemasArray = Array.from(cinemas.values());
+
+// Convert cinemas Map to array
+const cinemasArray = Array.from(cinemas.values());
 
 // ========== GLOBAL STATE ==========
 let selectedDate = null;
@@ -87,40 +53,63 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMovieDetails();
     initializeDatePicker();
     populateCinemaSelect();
-    renderReviews();
 });
 
 // ========== LOAD MOVIE DETAILS ==========
 function loadMovieDetails() {
+    if (!movieDetail || !movieDetail.title) {
+        console.error('Movie data not available');
+        return;
+    }
+    
     // Set backdrop
-    document.getElementById('movieBackdrop').style.backgroundImage = 
-        `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.5)), url('${movieDetail.backdropUrl}')`;
+    if (movieDetail.posterUrl) {
+        document.getElementById('movieBackdrop').style.backgroundImage = 
+            `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.5)), url('${movieDetail.posterUrl}')`;
+    }
     
     // Set poster
-    document.getElementById('moviePoster').src = movieDetail.posterUrl;
+    const posterImg = document.getElementById('moviePoster');
+    if (posterImg && movieDetail.posterUrl) {
+        posterImg.src = movieDetail.posterUrl;
+        posterImg.alt = movieDetail.title;
+    }
     
-    // Set basic info
-    document.getElementById('movieRating').innerHTML = 
-        `<i class="bi bi-star-fill me-1"></i> ${movieDetail.rating}`;
-    document.getElementById('movieAgeRating').textContent = movieDetail.ageRating;
-    document.getElementById('movieTitle').textContent = movieDetail.title;
-    document.getElementById('movieDescription').textContent = movieDetail.description;
-    document.getElementById('movieDirector').textContent = movieDetail.director;
-    document.getElementById('movieCast').textContent = movieDetail.cast;
+    // Set basic info - with null checks
+    const ratingElem = document.getElementById('movieRating');
+    if (ratingElem && movieDetail.rating) {
+        ratingElem.innerHTML = `<i class="bi bi-star-fill me-1"></i> ${movieDetail.rating}`;
+    }
+    
+    const ageRatingElem = document.getElementById('movieAgeRating');
+    if (ageRatingElem && movieDetail.ageRating) {
+        ageRatingElem.textContent = movieDetail.ageRating;
+    }
+    
+    const titleElem = document.getElementById('movieTitle');
+    if (titleElem) titleElem.textContent = movieDetail.title;
+    
+    const descElem = document.getElementById('movieDescription');
+    if (descElem) descElem.textContent = movieDetail.description || '';
+    
+    const directorElem = document.getElementById('movieDirector');
+    if (directorElem) directorElem.textContent = movieDetail.director || 'N/A';
+    
+    const castElem = document.getElementById('movieCast');
+    if (castElem) castElem.textContent = movieDetail.cast || 'N/A';
     
     // Set metadata
-    const metaHtml = `
-        <span class="badge bg-secondary fs-6">
-            <i class="bi bi-tag-fill me-1"></i> ${movieDetail.genre}
-        </span>
-        <span class="badge bg-secondary fs-6">
-            <i class="bi bi-clock-fill me-1"></i> ${movieDetail.duration}
-        </span>
-        <span class="badge bg-secondary fs-6">
-            <i class="bi bi-calendar-fill me-1"></i> ${formatDate(movieDetail.releaseDate)}
-        </span>
-    `;
-    document.getElementById('movieMeta').innerHTML = metaHtml;
+    const metaElem = document.getElementById('movieMeta');
+    if (metaElem && movieDetail.durationMinutes && movieDetail.releaseDate) {
+        metaElem.innerHTML = `
+            <span class="badge bg-secondary fs-6">
+                <i class="bi bi-clock-fill me-1"></i> ${movieDetail.durationMinutes} phút
+            </span>
+            <span class="badge bg-secondary fs-6">
+                <i class="bi bi-calendar-fill me-1"></i> ${formatDate(movieDetail.releaseDate)}
+            </span>
+        `;
+    }
 }
 
 // ========== INITIALIZE FLATPICKR DATE PICKER ==========
@@ -148,8 +137,12 @@ function initializeDatePicker() {
 // ========== POPULATE CINEMA SELECT ==========
 function populateCinemaSelect() {
     const select = document.getElementById('cinemaSelect');
+    if (!select) return;
     
-    cinemas.forEach(cinema => {
+    // Clear existing options except first one
+    select.innerHTML = '<option value="">Tất cả rạp...</option>';
+    
+    cinemasArray.forEach(cinema => {
         const option = document.createElement('option');
         option.value = cinema.id;
         option.textContent = `${cinema.name} - ${cinema.location}`;
@@ -199,8 +192,8 @@ function loadShowtimes() {
         
         html += `
             <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="showtime-card glass-card p-3 text-center hover-scale" 
-                     onclick="selectShowtime('${show.time}', '${show.type}', ${show.price}, ${show.available})">
+                <a href="/Booking/SelectSeats?showtimeId=${show.showtimeId}" 
+                   class="showtime-card glass-card p-3 text-center hover-scale d-block text-decoration-none">
                     <div class="showtime-time mb-2">
                         <i class="bi bi-clock-fill text-cinema-red me-2"></i>
                         <span class="fs-4 fw-bold">${show.time}</span>
@@ -213,12 +206,12 @@ function loadShowtimes() {
                     <div class="showtime-price mb-2">
                         <span class="text-popcorn-gold fw-bold">${formatCurrency(show.price)}</span>
                     </div>
-                    <div class="showtime-availability">
-                        <small class="${availabilityClass}">
-                            <i class="bi bi-person-fill"></i> ${show.available} seats left
+                    <div class="showtime-room mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-door-open"></i> ${show.roomName || 'N/A'}
                         </small>
                     </div>
-                </div>
+                </a>
             </div>
         `;
     });

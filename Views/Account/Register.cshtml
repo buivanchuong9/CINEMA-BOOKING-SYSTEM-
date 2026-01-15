@@ -1,0 +1,119 @@
+@model BE.Application.DTOs.RegisterDto
+@{
+    ViewData["Title"] = "Đăng Ký - CineMax";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="glass-card p-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">
+                        <i class="bi bi-person-plus me-2 text-cinema-red"></i>
+                        Đăng Ký Tài Khoản
+                    </h2>
+                    <p class="text-muted">Tham gia CineMax để nhận ưu đãi độc quyền</p>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form method="post" asp-controller="Account" asp-action="Register">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label">
+                            <i class="bi bi-person me-1"></i>
+                            Họ và tên
+                        </label>
+                        <input asp-for="FullName" class="form-control form-control-lg" placeholder="Nguyễn Văn A" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">
+                            <i class="bi bi-envelope me-1"></i>
+                            Email
+                        </label>
+                        <input asp-for="Email" class="form-control form-control-lg" placeholder="your@email.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label">
+                            <i class="bi bi-phone me-1"></i>
+                            Số điện thoại
+                        </label>
+                        <input asp-for="PhoneNumber" class="form-control form-control-lg" placeholder="0123456789" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">
+                            <i class="bi bi-lock me-1"></i>
+                            Mật khẩu
+                        </label>
+                        <input asp-for="Password" class="form-control form-control-lg" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <div class="form-text">Mật khẩu phải có ít nhất 6 ký tự</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            Xác nhận mật khẩu
+                        </label>
+                        <input asp-for="ConfirmPassword" class="form-control form-control-lg" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="agreeTerms" required />
+                        <label class="form-check-label" for="agreeTerms">
+                            Tôi đồng ý với <a href="#" class="text-cinema-red">Điều khoản sử dụng</a>
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-cinema-red btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Đăng Ký
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Đã có tài khoản? 
+                            <a href="/Account/Login" class="text-cinema-red text-decoration-none fw-bold">
+                                Đăng nhập ngay
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Hoặc đăng ký với</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-light">
+                            <i class="bi bi-google"></i>
+                        </button>
+                        <button class="btn btn-outline-light">
+                            <i class="bi bi-facebook"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

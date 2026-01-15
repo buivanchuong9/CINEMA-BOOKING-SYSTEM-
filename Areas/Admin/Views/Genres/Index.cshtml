@@ -1,0 +1,97 @@
+@model IEnumerable<BE.Core.Entities.Movies.Genre>
+@{
+    ViewData["Title"] = "Quản Lý Thể Loại - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-tags me-2 text-cinema-red"></i>
+                Quản Lý Thể Loại Phim
+            </h2>
+            <p class="text-muted mb-0">Tổng số: @Model.Count() thể loại</p>
+        </div>
+        <a href="/Admin/Genres/Create" class="btn btn-cinema-red">
+            <i class="bi bi-plus-circle me-2"></i>
+            Thêm Thể Loại
+        </a>
+    </div>
+
+    <div class="glass-card p-4">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-tags display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có thể loại nào</h4>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var genre in Model)
+                {
+                    <div class="col-md-3">
+                        <div class="genre-card glass-card p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="mb-1">@genre.Name</h5>
+                                    <small class="text-muted">@genre.Slug</small>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <a href="/Admin/Genres/Edit/@genre.Id" class="btn btn-sm btn-outline-light">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@genre.Id, '@genre.Name')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                @genre.CreatedAt.ToString("dd/MM/yyyy")
+                            </small>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc muốn xóa thể loại "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = `/Admin/Genres/Delete/${id}`;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .genre-card {
+        border-radius: 8px;
+        transition: transform 0.2s;
+    }
+    .genre-card:hover {
+        transform: translateY(-3px);
+    }
+</style>

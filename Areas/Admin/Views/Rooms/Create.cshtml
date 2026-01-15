@@ -1,0 +1,117 @@
+@model BE.Core.Entities.CinemaInfrastructure.Room
+@{
+    ViewData["Title"] = "Thêm Phòng Chiếu - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-plus-circle me-2 text-cinema-red"></i>
+            Thêm Phòng Chiếu Mới
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CinemaId" class="form-label required">Chọn Rạp</label>
+                            <select asp-for="CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select">
+                                <option value="">-- Chọn rạp --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label required">Tên Phòng</label>
+                            <input asp-for="Name" class="form-control" placeholder="Phòng 1, RAP 1, Cinema 1..." />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="TotalRows" class="form-label required">Số Hàng Ghế</label>
+                            <input asp-for="TotalRows" type="number" class="form-control" value="10" min="1" max="26" />
+                            <div class="form-text">Hàng A → Z (tối đa 26)</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="SeatsPerRow" class="form-label required">Số Ghế Mỗi Hàng</label>
+                            <input asp-for="SeatsPerRow" type="number" class="form-control" value="12" min="1" max="30" />
+                            <div class="form-text">Ghế 1 → 30</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tổng Ghế</label>
+                            <input type="text" class="form-control" id="totalSeats" readonly value="120" />
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong> Seat map sẽ được tạo tự động. Mặc định tất cả ghế là loại "Ghế Thường".
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <button type="submit" class="btn btn-cinema-red btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Lưu Phòng
+                            </button>
+                            <a href="/Admin/Rooms" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-info-circle me-2 text-cinema-red"></i>
+                    Gợi Ý Cấu Hình
+                </h5>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <strong>Phòng Nhỏ:</strong> 8 hàng × 10 ghế = 80 ghế
+                    </li>
+                    <li class="mb-2">
+                        <strong>Phòng Trung Bình:</strong> 10 hàng × 12 ghế = 120 ghế
+                    </li>
+                    <li class="mb-2">
+                        <strong>Phòng Lớn:</strong> 15 hàng × 16 ghế = 240 ghế
+                    </li>
+                    <li class="mb-2">
+                        <strong>IMAX:</strong> 20 hàng × 20 ghế = 400 ghế
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto calculate total seats
+        function updateTotalSeats() {
+            var rows = parseInt($('#TotalRows').val()) || 0;
+            var seatsPerRow = parseInt($('#SeatsPerRow').val()) || 0;
+            var total = rows * seatsPerRow;
+            $('#totalSeats').val(total + ' ghế');
+        }
+        
+        $('#TotalRows, #SeatsPerRow').on('input', updateTotalSeats);
+        updateTotalSeats();
+    </script>
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

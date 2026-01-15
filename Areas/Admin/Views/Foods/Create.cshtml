@@ -1,0 +1,94 @@
+@model BE.Core.Entities.Concessions.Food
+@{
+    ViewData["Title"] = "Thêm Đồ Ăn - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-plus-circle me-2 text-cinema-red"></i>
+            Thêm Đồ Ăn & Nước Mới
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label required">Tên Món</label>
+                            <input asp-for="Name" class="form-control form-control-lg" placeholder="Combo 1 - Bắp + Nước" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="Description" class="form-label">Mô Tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="2" placeholder="1 Bắp Rang Bơ (L) + 1 Pepsi (L)"></textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Price" class="form-label required">Giá (VNĐ)</label>
+                            <input asp-for="Price" type="number" class="form-control" placeholder="80000" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="DisplayOrder" class="form-label">Thứ Tự Hiển Thị</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" value="1" />
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="ImageUrl" class="form-label">URL Hình Ảnh</label>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Loại</label>
+                            <div class="form-check">
+                                <input asp-for="IsCombo" class="form-check-input" />
+                                <label asp-for="IsCombo" class="form-check-label">
+                                    Đây là Combo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Trạng Thái</label>
+                            <div class="form-check">
+                                <input asp-for="IsAvailable" class="form-check-input" checked />
+                                <label asp-for="IsAvailable" class="form-check-label">
+                                    Còn Hàng
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <button type="submit" class="btn btn-cinema-red btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Lưu Món
+                            </button>
+                            <a href="/Admin/Foods" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

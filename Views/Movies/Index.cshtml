@@ -1,0 +1,178 @@
+@model IEnumerable<BE.Core.Entities.Movies.Movie>
+@{
+    ViewData["Title"] = "Danh Sách Phim - CineMax";
+}
+
+<!-- Movies Listing Page -->
+<section class="py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-up">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-film me-2 text-cinema-red"></i>
+                    @if (ViewBag.CurrentStatus == "NowShowing")
+                    {
+                        <text>Phim Đang Chiếu</text>
+                    }
+                    else if (ViewBag.CurrentStatus == "ComingSoon")
+                    {
+                        <text>Phim Sắp Chiếu</text>
+                    }
+                    else
+                    {
+                        <text>Tất Cả Phim</text>
+                    }
+                </h2>
+                <p class="text-muted mb-0">Tìm thấy @Model.Count() phim</p>
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="btn-group" role="group">
+                <a href="/Movies" class="btn @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "btn-cinema-red" : "btn-outline-light")">
+                    Tất Cả
+                </a>
+                <a href="/Movies/NowShowing" class="btn @(ViewBag.CurrentStatus == "NowShowing" ? "btn-cinema-red" : "btn-outline-light")">
+                    Đang Chiếu
+                </a>
+                <a href="/Movies/ComingSoon" class="btn @(ViewBag.CurrentStatus == "ComingSoon" ? "btn-cinema-red" : "btn-outline-light")">
+                    Sắp Chiếu
+                </a>
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <!-- Empty State -->
+            <div class="text-center py-5" data-aos="fade-up">
+                <i class="bi bi-film display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có phim nào</h4>
+                <p class="text-muted">Vui lòng thêm phim vào hệ thống</p>
+            </div>
+        }
+        else
+        {
+            <!-- Movie Grid -->
+            <div class="row g-4">
+                @foreach (var movie in Model)
+                {
+                    <div class="col-md-3" data-aos="fade-up">
+                        <div class="movie-card">
+                            <div class="movie-poster">
+                                @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                                {
+                                    <img src="@movie.PosterUrl" alt="@movie.Title" class="img-fluid">
+                                }
+                                else
+                                {
+                                    <div class="placeholder-poster d-flex align-items-center justify-content-center bg-dark" style="height: 400px;">
+                                        <i class="bi bi-film display-1 text-muted"></i>
+                                    </div>
+                                }
+                                
+                                <!-- Rating Badge -->
+                                @if (movie.Rating.HasValue)
+                                {
+                                    <div class="rating-badge">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        @movie.Rating.Value.ToString("0.0")
+                                    </div>
+                                }
+                                
+                                <!-- Age Rating Badge -->
+                                @if (!string.IsNullOrEmpty(movie.AgeRating))
+                                {
+                                    <div class="age-rating-badge">
+                                        @movie.AgeRating
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="movie-info p-3">
+                                <h5 class="movie-title mb-2">@movie.Title</h5>
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-clock me-1"></i>
+                                    @movie.Duration phút
+                                </p>
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    @movie.ReleaseDate.ToString("dd/MM/yyyy")
+                                </p>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="/Movies/Details/@movie.Id" class="btn btn-cinema-red btn-sm">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Chi Tiết
+                                    </a>
+                                    @if (movie.Status == BE.Core.Enums.MovieStatus.NowShowing)
+                                    {
+                                        <a href="/Booking/SelectSeats?movieId=@movie.Id" class="btn btn-outline-light btn-sm">
+                                            <i class="bi bi-ticket-perforated me-1"></i>
+                                            Đặt Vé
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<style>
+    .movie-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .movie-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
+    }
+    
+    .movie-poster {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .movie-poster img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+    
+    .rating-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    
+    .age-rating-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #dc2626;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+    
+    .movie-title {
+        font-weight: 600;
+        min-height: 50px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+

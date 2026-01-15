@@ -1,0 +1,341 @@
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Admin Dashboard - CineMax";
+    var bookingByStatus = ViewBag.BookingByStatus as List<dynamic> ?? new List<dynamic>();
+    var topMovies = ViewBag.TopMovies as List<dynamic> ?? new List<dynamic>();
+    var revenueChart = ViewBag.RevenueChart as List<dynamic> ?? new List<dynamic>();
+}
+
+<!-- Admin Dashboard -->
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">
+                <i class="bi bi-speedometer2 me-2 text-cinema-red"></i>
+                Dashboard Quản Trị
+            </h2>
+            <p class="text-muted">Chào mừng quay trở lại, @User.Identity?.Name</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Tổng Phim</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalMovies</h3>
+                    </div>
+                    <div class="stat-icon bg-cinema-red">
+                        <i class="bi bi-film"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Rạp Chiếu</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalCinemas</h3>
+                    </div>
+                    <div class="stat-icon bg-popcorn-gold">
+                        <i class="bi bi-building"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Đơn Đặt Vé</p>
+                        <h3 class="fw-bold mb-0">@ViewBag.TotalBookings</h3>
+                    </div>
+                    <div class="stat-icon bg-success">
+                        <i class="bi bi-ticket-perforated"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Doanh Thu</p>
+                        <h3 class="fw-bold mb-0">@(((decimal)ViewBag.TotalRevenue / 1000000).ToString("N1"))M</h3>
+                    </div>
+                    <div class="stat-icon bg-info">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-graph-up me-2 text-cinema-red"></i>
+                    Doanh Thu 7 Ngày Qua
+                </h5>
+                <div id="revenueChart" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- Booking Status Pie Chart -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-pie-chart me-2 text-popcorn-gold"></i>
+                    Trạng Thái Đặt Vé
+                </h5>
+                <div id="statusChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Movies Chart -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-star me-2 text-cinema-red"></i>
+                    Top 5 Phim Hot Nhất
+                </h5>
+                <div id="topMoviesChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-lightning-charge me-2 text-cinema-red"></i>
+                    Thao Tác Nhanh
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="/Admin/Movies/Create" class="btn btn-cinema-red w-100">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Thêm Phim Mới
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/Admin/Showtimes/Create" class="btn btn-outline-light w-100">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Tạo Lịch Chiếu
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/Admin/Genres" class="btn btn-outline-light w-100">
+                            <i class="bi bi-tags me-2"></i>
+                            Quản Lý Thể Loại
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/Admin/Foods" class="btn btn-outline-light w-100">
+                            <i class="bi bi-cup-straw me-2"></i>
+                            Quản Lý Đồ Ăn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    
+    <script>
+        // Revenue Chart (Column Chart)
+        Highcharts.chart('revenueChart', {
+            chart: {
+                type: 'column',
+                backgroundColor: 'transparent'
+            },
+            title: {
+                text: null
+            },
+            xAxis: {
+                categories: @Html.Raw(JsonSerializer.Serialize(revenueChart.Select(x => x.Date))),
+                labels: {
+                    style: { color: '#888' }
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Doanh thu (VNĐ)',
+                    style: { color: '#888' }
+                },
+                labels: {
+                    style: { color: '#888' }
+                },
+                gridLineColor: '#333'
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                column: {
+                    borderRadius: 8,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.y:,.0f}',
+                        style: { color: '#fff', textOutline: 'none' }
+                    }
+                }
+            },
+            series: [{
+                name: 'Doanh thu',
+                data: @Html.Raw(JsonSerializer.Serialize(revenueChart.Select(x => x.Revenue))),
+                color: {
+                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                    stops: [
+                        [0, '#dc2626'],
+                        [1, '#991b1b']
+                    ]
+                }
+            }],
+            credits: {
+                enabled: false
+            }
+        });
+
+        // Booking Status Pie Chart
+        Highcharts.chart('statusChart', {
+            chart: {
+                type: 'pie',
+                backgroundColor: 'transparent'
+            },
+            title: {
+                text: null
+            },
+            tooltip: {
+                pointFormat: '<b>{point.percentage:.1f}%</b> ({point.y} đơn)'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.y}',
+                        style: {
+                            color: '#fff',
+                            textOutline: 'none'
+                        }
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Đơn đặt vé',
+                colorByPoint: true,
+                data: @Html.Raw(JsonSerializer.Serialize(bookingByStatus.Select(x => new { 
+                    name = x.Status, 
+                    y = x.Count 
+                })))
+            }],
+            legend: {
+                itemStyle: { color: '#888' }
+            },
+            credits: {
+                enabled: false
+            }
+        });
+
+        // Top Movies Bar Chart
+        Highcharts.chart('topMoviesChart', {
+            chart: {
+                type: 'bar',
+                backgroundColor: 'transparent'
+            },
+            title: {
+                text: null
+            },
+            xAxis: {
+                categories: @Html.Raw(JsonSerializer.Serialize(topMovies.Select(x => x.Title))),
+                labels: {
+                    style: { color: '#fff' }
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Số lượng đặt vé',
+                    style: { color: '#888' }
+                },
+                labels: {
+                    style: { color: '#888' }
+                },
+                gridLineColor: '#333'
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 8,
+                    dataLabels: {
+                        enabled: true,
+                        style: { color: '#fff', textOutline: 'none' }
+                    }
+                }
+            },
+            series: [{
+                name: 'Đặt vé',
+                data: @Html.Raw(JsonSerializer.Serialize(topMovies.Select(x => x.Count))),
+                color: {
+                    linearGradient: { x1: 0, x2: 1, y1: 0, y2: 0 },
+                    stops: [
+                        [0, '#f59e0b'],
+                        [1, '#d97706']
+                    ]
+                }
+            }],
+            credits: {
+                enabled: false
+            }
+        });
+    </script>
+}
+
+<style>
+    .stat-card {
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .bg-cinema-red {
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+    }
+
+    .bg-popcorn-gold {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+</style>

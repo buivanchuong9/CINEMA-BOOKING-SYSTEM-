@@ -1,6 +1,39 @@
+@model BE.Core.Entities.Movies.Movie
+
 @{
-    ViewData["Title"] = "Movie Details - CineMax";
+    ViewData["Title"] = Model.Title + " - CineMax";
+    var showtimes = ViewBag.Showtimes as List<BE.Core.Entities.Movies.Showtime>;
 }
+
+<!-- Inject server data to JS -->
+<script>
+    var movieData = @Html.Raw(Json.Serialize(new {
+        id = Model.Id,
+        title = Model.Title,
+        posterUrl = Model.PosterUrl,
+        rating = Model.Rating,
+        ageRating = Model.AgeRating,
+        durationMinutes = Model.DurationMinutes,
+        releaseDate = Model.ReleaseDate.ToString("yyyy-MM-dd"),
+        description = Model.Description,
+        director = Model.Director,
+        cast = Model.Cast,
+        trailerUrl = Model.TrailerUrl
+    }));
+    window.movieData = movieData;
+    
+    var showtimesData = @Html.Raw(Json.Serialize(
+        (showtimes ?? new List<BE.Core.Entities.Movies.Showtime>()).Select(s => new {
+            id = s.Id,
+            startTime = s.StartTime.ToString("yyyy-MM-dd HH:mm"),
+            basePrice = s.BasePrice,
+            roomName = s.Room?.Name,
+            cinemaName = s.Room?.Cinema?.Name,
+            cinemaId = s.Room?.CinemaId
+        }).ToList()
+    ));
+    window.showtimesData = showtimesData;
+</script>
 
 <!-- Movie Detail Hero Section -->
 <section class="movie-detail-hero">
@@ -113,29 +146,6 @@
     </div>
 </section>
 
-<!-- Reviews Section -->
-<section class="py-5 bg-gradient-section">
-    <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-            <h2 class="fw-bold mb-2">
-                <i class="bi bi-star-fill me-2 text-popcorn-gold"></i>
-                User Reviews
-            </h2>
-            <p class="text-muted">See what others are saying</p>
-        </div>
-
-        <div class="row g-4" id="reviewsContainer">
-            <!-- Reviews will be dynamically loaded -->
-        </div>
-
-        <div class="text-center mt-4">
-            <button class="btn btn-outline-light rounded-pill px-5" onclick="showReviewForm()">
-                <i class="bi bi-pencil-square me-2"></i> Write a Review
-            </button>
-        </div>
-    </div>
-</section>
-
 @section Scripts {
-    <script src="~/js/movie-detail.js" asp-append-version="true"></script>
+    <script src="~/js/movie-detail-real.js" asp-append-version="true"></script>
 }

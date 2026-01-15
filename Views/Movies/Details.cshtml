@@ -1,0 +1,223 @@
+@model BE.Core.Entities.Movies.Movie
+@{
+    ViewData["Title"] = Model.Title + " - CineMax";
+    var showtimes = ViewBag.Showtimes as List<BE.Core.Entities.Movies.Showtime> ?? new List<BE.Core.Entities.Movies.Showtime>();
+}
+
+<!-- Movie Details Hero -->
+<section class="movie-hero" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('@(Model.PosterUrl ?? "/images/default-movie.jpg")');">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Model.PosterUrl))
+                {
+                    <img src="@Model.PosterUrl" alt="@Model.Title" class="img-fluid rounded shadow-lg">
+                }
+                else
+                {
+                    <div class="poster-placeholder bg-dark rounded d-flex align-items-center justify-content-center" style="height: 500px;">
+                        <i class="bi bi-film display-1 text-muted"></i>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <div class="movie-info">
+                    @if (!string.IsNullOrEmpty(Model.AgeRating))
+                    {
+                        <span class="badge bg-cinema-red mb-3">@Model.AgeRating</span>
+                    }
+                    
+                    <h1 class="fw-bold display-4 mb-3">@Model.Title</h1>
+                    
+                    <div class="movie-meta mb-4">
+                        @if (Model.Rating.HasValue)
+                        {
+                            <span class="me-4">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <strong>@Model.Rating.Value.ToString("0.0")</strong>/10
+                            </span>
+                        }
+                        <span class="me-4">
+                            <i class="bi bi-clock text-cinema-red"></i>
+                            @Model.Duration phút
+                        </span>
+                        <span>
+                            <i class="bi bi-calendar text-cinema-red"></i>
+                            @Model.ReleaseDate.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="lead mb-4">@Model.Description</p>
+                    }
+
+                    <div class="movie-crew mb-4">
+                        @if (!string.IsNullOrEmpty(Model.Director))
+                        {
+                            <p class="mb-2">
+                                <strong>Đạo diễn:</strong> @Model.Director
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Cast))
+                        {
+                            <p class="mb-2">
+                                <strong>Diễn viên:</strong> @Model.Cast
+                            </p>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        @if (Model.Status == BE.Core.Enums.MovieStatus.NowShowing)
+                        {
+                            @if (showtimes.Any())
+                            {
+                                <a href="#showtimesSection" class="btn btn-cinema-red btn-lg" onclick="scrollToShowtimes(); return false;">
+                                    <i class="bi bi-ticket-perforated me-2"></i>
+                                    Chọn Suất Chiếu
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-cinema-red btn-lg" disabled>
+                                    <i class="bi bi-ticket-perforated me-2"></i>
+                                    Chưa có lịch chiếu
+                                </button>
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                        {
+                            <button class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#trailerModal">
+                                <i class="bi bi-play-circle me-2"></i>
+                                Xem Trailer
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Showtimes Section -->
+<section class="py-5" id="showtimesSection">
+    <div class="container">
+        <h3 class="fw-bold mb-4">
+            <i class="bi bi-calendar-event me-2 text-cinema-red"></i>
+            Lịch Chiếu
+        </h3>
+        
+        @if (showtimes.Any())
+        {
+            // Group by date
+            var showtimesByDate = showtimes.GroupBy(st => st.StartTime.Date).OrderBy(g => g.Key);
+            
+            foreach (var dateGroup in showtimesByDate)
+            {
+                <div class="mb-4">
+                    <h5 class="text-popcorn-gold mb-3">
+                        <i class="bi bi-calendar3 me-2"></i>
+                        @dateGroup.Key.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
+                    </h5>
+                    @{
+                        // Group by cinema
+                        var byCinema = dateGroup.GroupBy(st => st.Room?.Cinema?.Name ?? "Rạp không xác định");
+                    }
+                    @foreach (var cinemaGroup in byCinema)
+                    {
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">
+                                <i class="bi bi-building me-2"></i>@cinemaGroup.Key
+                            </h6>
+                            <div class="row g-2">
+                                @foreach (var showtime in cinemaGroup.OrderBy(st => st.StartTime))
+                                {
+                                    <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                                        <a href="/Booking/SelectSeats?showtimeId=@showtime.Id" 
+                                           class="btn btn-outline-light w-100 showtime-btn">
+                                            <div class="fw-bold fs-5 text-cinema-red">@showtime.StartTime.ToString("HH:mm")</div>
+                                            <div class="small text-muted">@(showtime.Room?.Name ?? "")</div>
+                                            <div class="small text-success">@showtime.BasePrice.ToString("N0") ₫</div>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                Chưa có lịch chiếu cho phim này. Vui lòng quay lại sau!
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Trailer Modal -->
+@if (!string.IsNullOrEmpty(Model.TrailerUrl))
+{
+    <div class="modal fade" id="trailerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Trailer - @Model.Title</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="@Model.TrailerUrl" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .movie-hero {
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        min-height: 600px;
+    }
+
+    .movie-meta span {
+        font-size: 1.1rem;
+    }
+
+    .movie-crew p {
+        font-size: 0.95rem;
+    }
+    
+    .showtime-btn {
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 12px 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .showtime-btn:hover {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+    
+    .showtime-btn:active {
+        transform: translateY(0);
+    }
+</style>
+
+<script>
+    function scrollToShowtimes() {
+        const element = document.getElementById('showtimesSection');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+</script>

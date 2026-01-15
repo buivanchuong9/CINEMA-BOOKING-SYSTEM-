@@ -1,0 +1,131 @@
+@model IEnumerable<BE.Core.Entities.Movies.Showtime>
+@{
+    ViewData["Title"] = "Quản Lý Lịch Chiếu - Admin";
+    var movies = ViewBag.Movies as Dictionary<int, string>;
+    var cinemas = ViewBag.Cinemas as Dictionary<int, string>;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-calendar-event me-2 text-cinema-red"></i>
+                Quản Lý Lịch Chiếu
+            </h2>
+            <p class="text-muted mb-0">Tổng số: @Model.Count() suất chiếu</p>
+        </div>
+        <a href="/Admin/Showtimes/Create" class="btn btn-cinema-red">
+            <i class="bi bi-plus-circle me-2"></i>
+            Tạo Lịch Chiếu
+        </a>
+    </div>
+
+    <div class="glass-card p-4">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có lịch chiếu nào</h4>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Phim</th>
+                            <th>Ngày Giờ</th>
+                            <th>Phòng</th>
+                            <th>Giá Vé</th>
+                            <th>Đặt/Tổng</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var showtimeData = ViewBag.ShowtimeData as List<dynamic>;
+                            var movieNames = ViewBag.Movies as Dictionary<int, string>;
+                            var rooms = ViewBag.Rooms as Dictionary<int, string>;
+                        }
+                        @if (showtimeData != null)
+                        {
+                            @foreach (var item in showtimeData)
+                            {
+                                var showtime = item.Showtime as BE.Core.Entities.Movies.Showtime;
+                                var isPast = showtime.StartTime < DateTime.Now;
+                                <tr class="@(isPast ? "text-muted" : "")">
+                                    <td>@showtime.Id</td>
+                                    <td>
+                                        @if (movieNames != null && movieNames.ContainsKey(showtime.MovieId))
+                                        {
+                                            <strong>@movieNames[showtime.MovieId]</strong>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>@showtime.StartTime.ToString("dd/MM/yyyy")</div>
+                                        <strong class="text-cinema-red">@showtime.StartTime.ToString("HH:mm")</strong>
+                                    </td>
+                                    <td>
+                                        @if (rooms != null && rooms.ContainsKey(showtime.RoomId))
+                                        {
+                                            @rooms[showtime.RoomId]
+                                        }
+                                    </td>
+                                    <td>
+                                        <strong>@showtime.BasePrice.ToString("N0")đ</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge @((int)item.AvailableSeats > 0 ? "bg-success" : "bg-danger")">
+                                            @item.BookedSeats / @item.TotalSeats
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!isPast)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@showtime.Id, '@(movies != null && movies.ContainsKey(showtime.MovieId) ? movies[showtime.MovieId] : "")')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Đã qua</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, movieName) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Xóa suất chiếu phim "${movieName}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = `/Admin/Showtimes/Delete/${id}`;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

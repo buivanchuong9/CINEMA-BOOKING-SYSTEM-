@@ -1,0 +1,144 @@
+@model IEnumerable<BE.Core.Entities.Movies.Movie>
+@{
+    ViewData["Title"] = "Quản Lý Phim - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-film me-2 text-cinema-red"></i>
+                Quản Lý Phim
+            </h2>
+            <p class="text-muted mb-0">Tổng số: @Model.Count() phim</p>
+        </div>
+        <a href="/Admin/Movies/Create" class="btn btn-cinema-red">
+            <i class="bi bi-plus-circle me-2"></i>
+            Thêm Phim Mới
+        </a>
+    </div>
+
+    <div class="glass-card p-4">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-film display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có phim nào</h4>
+                <p class="text-muted">Hãy thêm phim đầu tiên</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Poster</th>
+                            <th>Tên Phim</th>
+                            <th>Thời Lượng</th>
+                            <th>Ngày Chiếu</th>
+                            <th>Trạng Thái</th>
+                            <th>Đánh Giá</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var movie in Model)
+                        {
+                            <tr>
+                                <td>@movie.Id</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                                    {
+                                        <img src="@movie.PosterUrl" alt="@movie.Title" style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px;">
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-secondary" style="width: 50px; height: 75px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-film text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@movie.Title</strong>
+                                    @if (!string.IsNullOrEmpty(movie.AgeRating))
+                                    {
+                                        <span class="badge bg-cinema-red ms-2">@movie.AgeRating</span>
+                                    }
+                                </td>
+                                <td>@movie.Duration phút</td>
+                                <td>@movie.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @switch (movie.Status)
+                                    {
+                                        case BE.Core.Enums.MovieStatus.NowShowing:
+                                            <span class="badge bg-success">Đang Chiếu</span>
+                                            break;
+                                        case BE.Core.Enums.MovieStatus.ComingSoon:
+                                            <span class="badge bg-warning text-dark">Sắp Chiếu</span>
+                                            break;
+                                        case BE.Core.Enums.MovieStatus.Ended:
+                                            <span class="badge bg-secondary">Đã Kết Thúc</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (movie.Rating.HasValue)
+                                    {
+                                        <span>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            @movie.Rating.Value.ToString("0.0")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/Admin/Movies/Edit/@movie.Id" class="btn btn-sm btn-outline-light">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@movie.Id, '@movie.Title')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, title) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc muốn xóa phim "${title}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = `/Admin/Movies/Delete/${id}`;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

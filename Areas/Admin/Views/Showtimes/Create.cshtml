@@ -1,0 +1,117 @@
+@model BE.Core.Entities.Movies.Showtime
+@{
+    ViewData["Title"] = "Tạo Lịch Chiếu - Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-plus-circle me-2 text-cinema-red"></i>
+            Tạo Lịch Chiếu Mới
+        </h2>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <form method="post" asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="MovieId" class="form-label required">Chọn Phim</label>
+                            <select asp-for="MovieId" asp-items="ViewBag.MovieSelectList" class="form-select form-select-lg">
+                                <option value="">-- Chọn phim đang chiếu --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ShowDateTime" class="form-label required">Ngày Chiếu</label>
+                            <input asp-for="ShowDateTime" type="date" class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Giờ Chiếu</label>
+                            <select id="showTime" class="form-select">
+                                <option value="">-- Chọn giờ --</option>
+                                <option value="08:00">08:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="20:30">20:30</option>
+                                <option value="22:45">22:45</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label required">Chọn Rạp</label>
+                            <select asp-for="Room.CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select" id="cinemaSelect">
+                                <option value="">-- Chọn rạp --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="RoomId" class="form-label required">Chọn Phòng</label>
+                            <select asp-for="RoomId" class="form-select" id="roomSelect">
+                                <option value="">-- Chọn phòng --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="BasePrice" class="form-label required">Giá Vé Cơ Bản (VNĐ)</label>
+                            <input asp-for="BasePrice" type="number" class="form-control" value="75000" step="1000" />
+                            <div class="form-text">Giá sẽ điều chỉnh theo loại ghế</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Tổng Ghế Khả Dụng</label>
+                            <input type="text" class="form-control" id="totalSeats" readonly value="0 ghế" />
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <button type="submit" class="btn btn-cinema-red btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Tạo Lịch Chiếu
+                            </button>
+                            <a href="/Admin/Showtimes" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Hủy
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Combine date + time
+        $('#showTime').on('change', function() {
+            var date = $('#ShowDateTime').val();
+            var time = $(this).val();
+            if (date && time) {
+                $('#ShowDateTime').val(date + 'T' + time);
+            }
+        });
+
+        // Load rooms when cinema selected (simplified - in production use AJAX)
+        $('#cinemaSelect').on('change', function() {
+            var cinemaId = $(this).val();
+            if (cinemaId) {
+                // TODO: Load rooms via AJAX based on cinemaId
+                // For now, just enable room dropdown
+                $('#roomSelect').prop('disabled', false);
+            }
+        });
+    </script>
+}
+
+<style>
+    .required::after {
+        content: " *";
+        color: #dc2626;
+    }
+</style>

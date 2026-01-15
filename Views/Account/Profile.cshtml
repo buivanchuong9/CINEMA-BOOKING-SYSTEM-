@@ -1,0 +1,130 @@
+@model BE.Core.Entities.Business.User
+@{
+    ViewData["Title"] = "Hồ Sơ Của Tôi - CineMax";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="glass-card p-4 text-center">
+                <div class="mb-3">
+                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                    {
+                        <img src="@Model.AvatarUrl" alt="Avatar" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="avatar-placeholder">
+                            <i class="bi bi-person-circle display-1 text-muted"></i>
+                        </div>
+                    }
+                </div>
+                <h5 class="fw-bold">@Model.FullName</h5>
+                <p class="text-muted small mb-3">@Model.Email</p>
+                
+                <div class="membership-badge mb-3">
+                    <span class="badge bg-gradient-gold fs-6">
+                        <i class="bi bi-star-fill me-1"></i>
+                        @Model.MembershipLevel
+                    </span>
+                </div>
+
+                <div class="points-display mb-3">
+                    <p class="mb-1 small text-muted">Điểm tích lũy</p>
+                    <h3 class="fw-bold text-cinema-red">@Model.Points</h3>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="text-start">
+                    <p class="mb-2 small">
+                        <i class="bi bi-calendar-check text-cinema-red me-2"></i>
+                        Tham gia: @Model.CreatedAt.ToString("dd/MM/yyyy")
+                    </p>
+                    @if (Model.LastLoginAt.HasValue)
+                    {
+                        <p class="mb-0 small">
+                            <i class="bi bi-clock text-cinema-red me-2"></i>
+                            Đăng nhập: @Model.LastLoginAt.Value.ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Profile Info -->
+            <div class="glass-card p-4 mb-4">
+                <h4 class="fw-bold mb-4">
+                    <i class="bi bi-person-lines-fill me-2 text-cinema-red"></i>
+                    Thông Tin Cá Nhân
+                </h4>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Họ và tên</label>
+                        <p class="fw-bold">@Model.FullName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Email</label>
+                        <p class="fw-bold">@Model.Email</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Số điện thoại</label>
+                        <p class="fw-bold">@(Model.PhoneNumber ?? "Chưa cập nhật")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Giới tính</label>
+                        <p class="fw-bold">@(Model.Gender ?? "Chưa cập nhật")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Ngày sinh</label>
+                        <p class="fw-bold">
+                            @(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Cấp độ thành viên</label>
+                        <p class="fw-bold text-popcorn-gold">@Model.MembershipLevel</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-cinema-red">
+                        <i class="bi bi-pencil me-2"></i>
+                        Chỉnh Sửa Thông Tin
+                    </button>
+                </div>
+            </div>
+
+            <!-- Booking History -->
+            <div class="glass-card p-4">
+                <h4 class="fw-bold mb-4">
+                    <i class="bi bi-clock-history me-2 text-cinema-red"></i>
+                    Lịch Sử Đặt Vé
+                </h4>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Bạn chưa có đơn đặt vé nào. Hãy <a href="/Movies" class="alert-link">khám phá phim ngay</a>!
+                </div>
+
+                <!-- TODO: Load booking history from database -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-gold {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+</style>
