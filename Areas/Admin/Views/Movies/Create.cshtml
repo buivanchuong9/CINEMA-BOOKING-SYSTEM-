@@ -139,6 +139,44 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Configure validation to be less strict
+            $.validator.setDefaults({
+                ignore: [],
+                errorClass: 'is-invalid',
+                validClass: 'is-valid',
+                errorElement: 'span',
+                errorPlacement: function(error, element) {
+                    error.addClass('invalid-feedback');
+                    element.closest('.col-md-12, .col-md-6').find('.text-danger').html(error);
+                },
+                highlight: function(element) {
+                    $(element).addClass('is-invalid').removeClass('is-valid');
+                },
+                unhighlight: function(element) {
+                    $(element).removeClass('is-invalid').addClass('is-valid');
+                }
+            });
+
+            // Ensure form validation is properly initialized
+            var form = $('form');
+            if (form.length > 0) {
+                form.removeData('validator');
+                form.removeData('unobtrusiveValidation');
+                $.validator.unobtrusive.parse(form);
+            }
+
+            // Debug: Log validation state on form submit
+            form.on('submit', function(e) {
+                var isValid = $(this).valid();
+                console.log('Form validation state:', isValid);
+                if (!isValid) {
+                    console.log('Validation errors:', $(this).validate().errorList);
+                }
+            });
+        });
+    </script>
 }
 
 <style>

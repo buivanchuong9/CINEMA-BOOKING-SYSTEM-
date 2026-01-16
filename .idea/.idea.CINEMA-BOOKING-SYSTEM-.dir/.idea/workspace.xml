@@ -10,36 +10,19 @@
   <component name="ChangeListManager">
     <list default="true" id="eeef43fb-7576-458d-af98-25d9d14e3419" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/Services/BookingService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/Services/BookingService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Controllers/HomeController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/HomeController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Controllers/MoviesController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/MoviesController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Controllers/PaymentController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/PaymentController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Views/Booking/SelectSeats.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Views/Booking/SelectSeats.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Views/Movies/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Views/Movies/Index.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Views/Shared/_Layout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Views/Shared/_Layout.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Movies/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Movies/Create.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Movies/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Movies/Edit.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Shared/_Layout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Shared/_Layout.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.staticwebassets.runtime.json" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.staticwebassets.runtime.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.csproj.CoreCompileInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.csproj.CoreCompileInputs.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.sourcelink.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.sourcelink.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/ref/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/ref/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/refint/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/refint/BE.dll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.build.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.build.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.development.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.development.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.pack.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets.pack.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets/msbuild.BE.Microsoft.AspNetCore.StaticWebAssets.props" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/staticwebassets/msbuild.BE.Microsoft.AspNetCore.StaticWebAssets.props" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/admin-dashboard.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/movie-detail-real.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/movie-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/wwwroot/js/movie-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/seat-selection-real.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/seat-selection.js" beforeDir="false" afterPath="$PROJECT_DIR$/wwwroot/js/seat-selection.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wwwroot/js/site.js" beforeDir="false" afterPath="$PROJECT_DIR$/wwwroot/js/site.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +94,7 @@
       <workItem from="1768456620909" duration="432000" />
       <workItem from="1768457088782" duration="56000" />
       <workItem from="1768480509055" duration="10902000" />
-      <workItem from="1768543183519" duration="4468000" />
+      <workItem from="1768543183519" duration="7108000" />
     </task>
     <servers />
   </component>
