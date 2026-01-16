@@ -17,10 +17,6 @@
       "PackagePath": "staticwebassets/favicon.ico"
     },
     {
-      "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/admin-dashboard.js",
-      "PackagePath": "staticwebassets/js/admin-dashboard.js"
-    },
-    {
       "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/admin.js",
       "PackagePath": "staticwebassets/js/admin.js"
     },
@@ -29,16 +25,8 @@
       "PackagePath": "staticwebassets/js/home.js"
     },
     {
-      "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/movie-detail-real.js",
-      "PackagePath": "staticwebassets/js/movie-detail-real.js"
-    },
-    {
       "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/movie-detail.js",
       "PackagePath": "staticwebassets/js/movie-detail.js"
-    },
-    {
-      "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/seat-selection-real.js",
-      "PackagePath": "staticwebassets/js/seat-selection-real.js"
     },
     {
       "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/seat-selection.js",

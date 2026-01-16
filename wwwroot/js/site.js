@@ -7,44 +7,51 @@
 const globalSearchInput = document.getElementById('globalSearch');
 
 if (globalSearchInput) {
-    globalSearchInput.addEventListener('input', debounce(function(e) {
+    globalSearchInput.addEventListener('input', debounce(function (e) {
         const query = e.target.value.trim();
-        
+
         if (query.length < 2) {
             document.getElementById('searchResults').innerHTML = '';
             return;
         }
-        
+
         performSearch(query);
     }, 300));
 }
 
-function performSearch(query) {
-    // Mock search functionality - would call API in production
-    const mockResults = [
-        { type: 'movie', title: 'Avatar: The Way of Water', id: 4 },
-        { type: 'movie', title: 'Oppenheimer', id: 5 },
-        { type: 'cinema', title: 'CineMax District 1', id: 1 },
-        { type: 'cinema', title: 'CineMax District 3', id: 2 }
-    ].filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
-    
-    displaySearchResults(mockResults);
+async function performSearch(query) {
+    try {
+        // Call real API endpoint to search from database
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+
+        if (!response.ok) {
+            console.error('Search API error:', response.status);
+            displaySearchResults([]);
+            return;
+        }
+
+        const results = await response.json();
+        displaySearchResults(results);
+    } catch (error) {
+        console.error('Search error:', error);
+        displaySearchResults([]);
+    }
 }
 
 function displaySearchResults(results) {
     const container = document.getElementById('searchResults');
-    
+
     if (results.length === 0) {
         container.innerHTML = '<p class="text-muted text-center p-3">No results found</p>';
         return;
     }
-    
+
     let html = '<div class="list-group">';
-    
+
     results.forEach(result => {
         const icon = result.type === 'movie' ? 'bi-film' : 'bi-building';
         const url = result.type === 'movie' ? `/Movies/Detail/${result.id}` : `/Cinemas/${result.id}`;
-        
+
         html += `
             <a href="${url}" class="list-group-item list-group-item-action bg-dark text-white border-secondary">
                 <i class="bi ${icon} me-2"></i>
@@ -53,7 +60,7 @@ function displaySearchResults(results) {
             </a>
         `;
     });
-    
+
     html += '</div>';
     container.innerHTML = html;
 }
@@ -78,7 +85,7 @@ const navbar = document.querySelector('.cinema-navbar');
 if (navbar) {
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
-        
+
         if (currentScroll > 100) {
             navbar.style.background = 'rgba(15, 23, 42, 0.98)';
             navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.5)';
@@ -86,7 +93,7 @@ if (navbar) {
             navbar.style.background = 'rgba(15, 23, 42, 0.95)';
             navbar.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4)';
         }
-        
+
         lastScroll = currentScroll;
     });
 }
@@ -96,15 +103,15 @@ const navbarToggler = document.querySelector('.navbar-toggler');
 const navbarCollapse = document.querySelector('.navbar-collapse');
 
 if (navbarToggler && navbarCollapse) {
-    navbarToggler.addEventListener('click', function() {
+    navbarToggler.addEventListener('click', function () {
         navbarCollapse.classList.toggle('show');
     });
-    
+
     // Close menu when clicking outside
-    document.addEventListener('click', function(event) {
-        const isClickInside = navbarToggler.contains(event.target) || 
-                             navbarCollapse.contains(event.target);
-        
+    document.addEventListener('click', function (event) {
+        const isClickInside = navbarToggler.contains(event.target) ||
+            navbarCollapse.contains(event.target);
+
         if (!isClickInside && navbarCollapse.classList.contains('show')) {
             navbarCollapse.classList.remove('show');
         }
@@ -142,7 +149,7 @@ if ('IntersectionObserver' in window) {
             }
         });
     });
-    
+
     document.querySelectorAll('img[data-src]').forEach(img => {
         imageObserver.observe(img);
     });
@@ -163,7 +170,7 @@ function showToast(message, type = 'info') {
             toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
     });
-    
+
     Toast.fire({
         icon: type,
         title: message
@@ -256,17 +263,17 @@ function showLoginModal() {
         preConfirm: () => {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            
+
             if (!email || !password) {
                 Swal.showValidationMessage('Please fill in all fields');
                 return false;
             }
-            
+
             if (!CineMax.validateEmail(email)) {
                 Swal.showValidationMessage('Please enter a valid email');
                 return false;
             }
-            
+
             return { email, password };
         }
     }).then((result) => {
@@ -319,32 +326,32 @@ function showRegisterModal() {
             const phone = document.getElementById('regPhone').value;
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
-            
+
             if (!name || !email || !phone || !password || !confirmPassword) {
                 Swal.showValidationMessage('Please fill in all fields');
                 return false;
             }
-            
+
             if (!CineMax.validateEmail(email)) {
                 Swal.showValidationMessage('Please enter a valid email');
                 return false;
             }
-            
+
             if (!CineMax.validatePhone(phone)) {
                 Swal.showValidationMessage('Please enter a valid phone number');
                 return false;
             }
-            
+
             if (password.length < 6) {
                 Swal.showValidationMessage('Password must be at least 6 characters');
                 return false;
             }
-            
+
             if (password !== confirmPassword) {
                 Swal.showValidationMessage('Passwords do not match');
                 return false;
             }
-            
+
             return { name, email, phone, password };
         }
     }).then((result) => {

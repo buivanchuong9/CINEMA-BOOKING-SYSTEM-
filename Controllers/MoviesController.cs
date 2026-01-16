@@ -82,6 +82,7 @@ public class MoviesController : Controller
     public async Task<IActionResult> NowShowing()
     {
         var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.NowShowing);
+        ViewBag.CurrentStatus = "NowShowing";
         return View("Index", movies.OrderByDescending(m => m.ReleaseDate));
     }
 
@@ -89,6 +90,7 @@ public class MoviesController : Controller
     public async Task<IActionResult> ComingSoon()
     {
         var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.ComingSoon);
-        return View("Index", movies.OrderBy(m => m.ReleaseDate));
+        ViewBag.CurrentStatus = "ComingSoon";
+        return View("Index", movies.OrderByDescending(m => m.ReleaseDate));
     }
 }

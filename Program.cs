@@ -121,9 +121,14 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Seed roles and admin user
         var userManager = services.GetRequiredService<UserManager<User>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         await BE.Infrastructure.Data.DbSeeder.SeedRolesAndAdminAsync(roleManager, userManager);
+        
+        // Seed sample data (movies, cinemas, showtimes, etc.)
+        var context = services.GetRequiredService<AppDbContext>();
+        await BE.Data.DbInitializer.SeedAsync(context);
     }
     catch (Exception ex)
     {

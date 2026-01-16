@@ -153,7 +153,7 @@ public class BookingService : IBookingService
             }
 
             // MVC PATTERN: Validate và Book ghế TRỰC TIẾP trong transaction
-            // Không cần hold seats trước qua Redis/API
+            // CRITICAL: Phải check cả DB status VÀ Redis hold status
             foreach (var seatId in dto.SeatIds)
             {
                 var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
@@ -167,6 +167,7 @@ public class BookingService : IBookingService
                     };
                 }
 
+                // CHECK 1: Database status
                 if (seat.Status != SeatStatus.Available)
                 {
                     _logger.LogWarning($"[CreateBooking] Seat {seatId} NOT AVAILABLE! Current status: {seat.Status}");
@@ -175,6 +176,30 @@ public class BookingService : IBookingService
                         Success = false,
                         Message = $"Ghế {seat.Row}-{seat.Number} đã được đặt. Vui lòng chọn ghế khác!"
                     };
+                }
+
+
+                // CHECK 2: Redis hold status - CRITICAL FIX
+                var isHeldInRedis = await _redisService.IsSeatHeldAsync(dto.ShowtimeId, seatId);
+                _logger.LogInformation($"[CreateBooking] Seat {seatId} - IsHeldInRedis: {isHeldInRedis}");
+                
+                if (isHeldInRedis)
+                {
+                    var heldBy = await _redisService.GetSeatHolderAsync(dto.ShowtimeId, seatId);
+                    _logger.LogInformation($"[CreateBooking] Seat {seatId} - HeldBy: '{heldBy}', CurrentUser: '{dto.UserId}'");
+                    
+                    // Nếu ghế đang được hold bởi USER KHÁC → Reject
+                    if (!string.IsNullOrEmpty(heldBy) && heldBy != dto.UserId)
+                    {
+                        _logger.LogWarning($"[CreateBooking] Seat {seatId} is HELD by another user: {heldBy}");
+                        return new CreateBookingResult
+                        {
+                            Success = false,
+                            Message = $"Ghế {seat.Row}-{seat.Number} đang được giữ bởi người khác. Vui lòng chọn ghế khác!"
+                        };
+                    }
+                    
+                    _logger.LogInformation($"[CreateBooking] Seat {seatId} is held by current user {dto.UserId} - OK to proceed");
                 }
             }
 
@@ -200,7 +225,7 @@ public class BookingService : IBookingService
             
             _logger.LogInformation($"[CreateBooking] Created Booking ID={booking.Id}");
 
-            // Create BookingDetails (seats) và CẬP NHẬT STATUS NGAY
+            // Create BookingDetails (seats) - KHÔNG UPDATE STATUS, CHỈ HOLD TRONG REDIS
             foreach (var seatId in dto.SeatIds)
             {
                 var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
@@ -216,12 +241,12 @@ public class BookingService : IBookingService
                 };
 
                 await _unitOfWork.BookingDetails.AddAsync(bookingDetail);
-
-                // ĐẶT GHẾ NGAY - Update seat status to Booked
-                seat.Status = SeatStatus.Booked;
-                _unitOfWork.Seats.Update(seat);
                 
-                _logger.LogInformation($"[CreateBooking] Booked Seat {seat.Row}-{seat.Number}");
+                // HOLD GHẾ TRONG REDIS (15 phút) - Chờ thanh toán
+                // Không update DB status ngay để tránh lock vĩnh viễn nếu user bỏ dở
+                await _redisService.HoldSeatAsync(dto.ShowtimeId, seatId, dto.UserId, TimeSpan.FromMinutes(15));
+                
+                _logger.LogInformation($"[CreateBooking] Held seat {seat.Row}-{seat.Number} in Redis for 15 minutes");
             }
 
             // Add Foods if any
@@ -246,6 +271,12 @@ public class BookingService : IBookingService
             }
 
             await _unitOfWork.SaveChangesAsync();
+            
+            // Ghế vẫn được HOLD trong Redis (15 phút)
+            // Sẽ được release khi:
+            // 1. Payment SUCCESS → ConfirmPaymentAsync() sẽ set Status = Booked và release Redis
+            // 2. Payment FAIL → PaymentController sẽ cancel booking và release Redis
+            // 3. Timeout 15 phút → Redis tự động expire
             
             _logger.LogInformation($"[CreateBooking] SUCCESS - Booking ID={booking.Id}, Total={totalAmount}");
 
@@ -279,6 +310,28 @@ public class BookingService : IBookingService
         booking.UpdatedAt = DateTime.Now;
 
         _unitOfWork.Bookings.Update(booking);
+        
+        // CRITICAL: Set seat status to Booked AFTER payment success
+        var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
+            .Where(bd => bd.BookingId == bookingId);
+        
+        foreach (var detail in bookingDetails)
+        {
+            var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
+            if (seat != null)
+            {
+                seat.Status = SeatStatus.Booked;
+                _unitOfWork.Seats.Update(seat);
+                
+                // Release from Redis
+                if (booking.ShowtimeId.HasValue)
+                {
+                    await _redisService.ReleaseSeatAsync(booking.ShowtimeId.Value, seat.Id);
+                    _logger.LogInformation($"[ConfirmPayment] Booked seat {seat.Row}-{seat.Number} and released from Redis");
+                }
+            }
+        }
+        
         await _unitOfWork.SaveChangesAsync();
 
         return true;
@@ -303,6 +356,13 @@ public class BookingService : IBookingService
             {
                 seat.Status = SeatStatus.Available;
                 _unitOfWork.Seats.Update(seat);
+                
+                // Release from Redis if held
+                if (booking.ShowtimeId.HasValue)
+                {
+                    await _redisService.ReleaseSeatAsync(booking.ShowtimeId.Value, seat.Id);
+                    _logger.LogInformation($"[CancelBooking] Released seat {seat.Row}-{seat.Number} from Redis");
+                }
             }
         }
 

@@ -306,3 +306,4 @@
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.pdb
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.genruntimeconfig.cache
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/ref/BE.dll
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/bin/Debug/net8.0/appsettings.Example.json

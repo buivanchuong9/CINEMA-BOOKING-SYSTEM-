@@ -1,0 +1,194 @@
+@model List<BE.Core.Entities.Bookings.Booking>
+@{
+    ViewData["Title"] = "Vé Của Tôi - CineMax";
+}
+
+<!-- My Bookings Page -->
+<section class="py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="mb-4" data-aos="fade-up">
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-ticket-perforated me-2 text-cinema-red"></i>
+                Vé Của Tôi
+            </h2>
+            <p class="text-muted mb-0">Quản lý tất cả vé đã đặt</p>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <!-- Empty State -->
+            <div class="text-center py-5" data-aos="fade-up">
+                <i class="bi bi-ticket-perforated display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có vé nào</h4>
+                <p class="text-muted mb-4">Bạn chưa đặt vé nào. Hãy chọn phim yêu thích và đặt vé ngay!</p>
+                <a href="/Movies" class="btn btn-cinema-red">
+                    <i class="bi bi-film me-2"></i>
+                    Xem Phim
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Bookings List -->
+            <div class="row g-4">
+                @foreach (var booking in Model)
+                {
+                    <div class="col-12" data-aos="fade-up">
+                        <div class="booking-card glass-card p-4">
+                            <div class="row align-items-center">
+                                <!-- Booking Info -->
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="booking-id-badge me-3">
+                                            #@booking.Id.ToString("D6")
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-2">
+                                                @{
+                                                    var statusClass = booking.Status switch
+                                                    {
+                                                        BE.Core.Enums.BookingStatus.Paid => "success",
+                                                        BE.Core.Enums.BookingStatus.Pending => "warning",
+                                                        BE.Core.Enums.BookingStatus.Cancelled => "danger",
+                                                        _ => "secondary"
+                                                    };
+                                                    var statusText = booking.Status switch
+                                                    {
+                                                        BE.Core.Enums.BookingStatus.Paid => "Đã thanh toán",
+                                                        BE.Core.Enums.BookingStatus.Pending => "Chờ thanh toán",
+                                                        BE.Core.Enums.BookingStatus.Cancelled => "Đã hủy",
+                                                        _ => "Không xác định"
+                                                    };
+                                                }
+                                                <span class="badge bg-@statusClass">@statusText</span>
+                                            </h5>
+                                            <div class="booking-meta">
+                                                <div class="mb-2">
+                                                    <i class="bi bi-calendar3 text-cinema-red me-2"></i>
+                                                    <strong>Ngày đặt:</strong> @booking.BookingDate.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(booking.TransactionId))
+                                                {
+                                                    <div class="mb-2">
+                                                        <i class="bi bi-credit-card text-popcorn-gold me-2"></i>
+                                                        <strong>Mã GD:</strong> @booking.TransactionId
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrEmpty(booking.Notes))
+                                                {
+                                                    <div>
+                                                        <i class="bi bi-chat-left-text text-muted me-2"></i>
+                                                        <strong>Ghi chú:</strong> @booking.Notes
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Price & Actions -->
+                                <div class="col-md-4 text-md-end">
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Tổng tiền</small>
+                                        <h3 class="text-cinema-red mb-0">
+                                            @booking.TotalAmount.ToString("N0") ₫
+                                        </h3>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <a href="/Booking/Details/@booking.Id" class="btn btn-outline-light btn-sm">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Xem chi tiết
+                                        </a>
+                                        @if (booking.Status == BE.Core.Enums.BookingStatus.Paid)
+                                        {
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="confirmCancel(@booking.Id)">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                Hủy vé
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function confirmCancel(bookingId) {
+            Swal.fire({
+                title: 'Xác nhận hủy vé?',
+                text: 'Bạn có chắc chắn muốn hủy vé này? Hành động này không thể hoàn tác!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Hủy vé',
+                cancelButtonText: 'Không',
+                background: '#1e293b',
+                color: '#f8fafc'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit form to cancel booking
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/Booking/Cancel/${bookingId}`;
+                    
+                    // Add CSRF token
+                    const csrf = document.querySelector('input[name="__RequestVerificationToken"]');
+                    if (csrf) {
+                        form.appendChild(csrf.cloneNode(true));
+                    }
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .booking-card {
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2);
+    }
+    
+    .booking-id-badge {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 18px;
+        min-width: 100px;
+        text-align: center;
+    }
+    
+    .booking-meta {
+        font-size: 14px;
+    }
+    
+    .booking-meta i {
+        width: 20px;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<!-- CSRF Token for cancel form -->
+@Html.AntiForgeryToken()

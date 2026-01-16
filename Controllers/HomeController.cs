@@ -22,12 +22,12 @@ public class HomeController : Controller
         // Load movies for homepage - CHỈ HIỂN THỊ ĐANG CHIẾU VÀ SẮP CHIẾU
         var allMovies = await _unitOfWork.Movies.GetAllAsync();
         
-        var nowShowing = allMovies.Where(m => (int)m.Status == (int)MovieStatus.NowShowing)
+        var nowShowing = allMovies.Where(m => m.Status == MovieStatus.NowShowing)
                                   .OrderByDescending(m => m.Rating)
                                   .Take(8)
                                   .ToList();
         
-        var comingSoon = allMovies.Where(m => (int)m.Status == (int)MovieStatus.ComingSoon)
+        var comingSoon = allMovies.Where(m => m.Status == MovieStatus.ComingSoon)
                                   .OrderBy(m => m.ReleaseDate)
                                   .Take(6)
                                   .ToList();

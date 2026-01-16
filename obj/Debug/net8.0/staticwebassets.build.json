@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "GqMtNXxYmZkYpcsMRPRo4eo6kbiBUmwuxNh+nAZRW7Q=",
+  "Hash": "fYq27fqTBTAC61cIcxyvYHidh/4hP1lS7ARz+M7r9Wo=",
   "Source": "BE",
   "BasePath": "_content/BE",
   "Mode": "Default",
@@ -1252,25 +1252,6 @@
       "OriginalItemSpec": "wwwroot/favicon.ico"
     },
     {
-      "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/admin-dashboard.js",
-      "SourceId": "BE",
-      "SourceType": "Discovered",
-      "ContentRoot": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/",
-      "BasePath": "_content/BE",
-      "RelativePath": "js/admin-dashboard.js",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/js/admin-dashboard.js"
-    },
-    {
       "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/admin.js",
       "SourceId": "BE",
       "SourceType": "Discovered",
@@ -1309,25 +1290,6 @@
       "OriginalItemSpec": "wwwroot/js/home.js"
     },
     {
-      "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/movie-detail-real.js",
-      "SourceId": "BE",
-      "SourceType": "Discovered",
-      "ContentRoot": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/",
-      "BasePath": "_content/BE",
-      "RelativePath": "js/movie-detail-real.js",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/js/movie-detail-real.js"
-    },
-    {
       "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/movie-detail.js",
       "SourceId": "BE",
       "SourceType": "Discovered",
@@ -1345,25 +1307,6 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/js/movie-detail.js"
-    },
-    {
-      "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/seat-selection-real.js",
-      "SourceId": "BE",
-      "SourceType": "Discovered",
-      "ContentRoot": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/",
-      "BasePath": "_content/BE",
-      "RelativePath": "js/seat-selection-real.js",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/js/seat-selection-real.js"
     },
     {
       "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/js/seat-selection.js",

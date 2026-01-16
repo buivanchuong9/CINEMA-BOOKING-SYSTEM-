@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
+using BE.Core.Interfaces.Services;
 using BE.Core.Enums;
 using BE.Infrastructure.Payment;
 
@@ -8,15 +9,18 @@ namespace BE.Controllers;
 public class PaymentController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBookingService _bookingService;
     private readonly VNPayHelper _vnPayHelper;
     private readonly ILogger<PaymentController> _logger;
 
     public PaymentController(
-        IUnitOfWork unitOfWork, 
+        IUnitOfWork unitOfWork,
+        IBookingService bookingService,
         VNPayHelper vnPayHelper,
         ILogger<PaymentController> logger)
     {
         _unitOfWork = unitOfWork;
+        _bookingService = bookingService;
         _vnPayHelper = vnPayHelper;
         _logger = logger;
     }
@@ -76,21 +80,17 @@ public class PaymentController : Controller
 
             if (response.Success && response.SecureHashValid)
             {
-                // Payment successful - update booking status
-                var booking = await _unitOfWork.Bookings.GetByIdAsync((int)response.OrderId);
+                // Payment successful - use BookingService to confirm payment
+                // This will: 1) Update booking status, 2) Set seats to Booked, 3) Release from Redis
+                var confirmed = await _bookingService.ConfirmPaymentAsync(
+                    (int)response.OrderId, 
+                    response.TransactionId.ToString()
+                );
                 
-                if (booking != null)
+                if (confirmed)
                 {
-                    booking.Status = BookingStatus.Paid;
-                    booking.PaymentMethod = PaymentMethod.VNPAY;
-                    booking.TransactionId = response.TransactionId.ToString();
-                    booking.UpdatedAt = DateTime.Now;
-                    
-                    _unitOfWork.Bookings.Update(booking);
-                    await _unitOfWork.SaveChangesAsync();
-                    
                     TempData["Success"] = "Thanh toán thành công! Vé của bạn đã được xác nhận.";
-                    return RedirectToAction("Details", "Booking", new { id = booking.Id });
+                    return RedirectToAction("Details", "Booking", new { id = (int)response.OrderId });
                 }
             }
             else
@@ -98,29 +98,8 @@ public class PaymentController : Controller
                 _logger.LogWarning($"VNPay payment failed: OrderId={response.OrderId}, ResponseCode={response.ResponseCode}");
                 TempData["Error"] = "Thanh toán không thành công. Vui lòng thử lại!";
                 
-                // Cancel booking if payment failed
-                var booking = await _unitOfWork.Bookings.GetByIdAsync((int)response.OrderId);
-                if (booking != null)
-                {
-                    booking.Status = BookingStatus.Cancelled;
-                    booking.UpdatedAt = DateTime.Now;
-                    _unitOfWork.Bookings.Update(booking);
-                    await _unitOfWork.SaveChangesAsync();
-                    
-                    // Release seats về trạng thái available
-                    var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
-                        .Where(bd => bd.BookingId == booking.Id);
-                    foreach (var detail in bookingDetails)
-                    {
-                        var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
-                        if (seat != null)
-                        {
-                            seat.Status = SeatStatus.Available;
-                            _unitOfWork.Seats.Update(seat);
-                        }
-                    }
-                    await _unitOfWork.SaveChangesAsync();
-                }
+                // Cancel booking if payment failed - use BookingService
+                await _bookingService.CancelBookingAsync((int)response.OrderId);
                 
                 return RedirectToAction("Index", "Home");
             }
@@ -151,15 +130,16 @@ public class PaymentController : Controller
                 
                 if (booking != null && booking.Status == BookingStatus.Pending)
                 {
-                    booking.Status = BookingStatus.Paid;
-                    booking.PaymentMethod = PaymentMethod.VNPAY;
-                    booking.TransactionId = response.TransactionId.ToString();
-                    booking.UpdatedAt = DateTime.Now;
+                    // Use BookingService to confirm payment
+                    var confirmed = await _bookingService.ConfirmPaymentAsync(
+                        (int)response.OrderId,
+                        response.TransactionId.ToString()
+                    );
                     
-                    _unitOfWork.Bookings.Update(booking);
-                    await _unitOfWork.SaveChangesAsync();
-                    
-                    return Json(new { RspCode = "00", Message = "Confirm Success" });
+                    if (confirmed)
+                    {
+                        return Json(new { RspCode = "00", Message = "Confirm Success" });
+                    }
                 }
             }
             
