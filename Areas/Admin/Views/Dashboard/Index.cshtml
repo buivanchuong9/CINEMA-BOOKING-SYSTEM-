@@ -7,7 +7,7 @@
 }
 
 <!-- Admin Dashboard -->
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 dashboard-container">
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="fw-bold">
@@ -67,7 +67,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-1">Doanh Thu</p>
-                        <h3 class="fw-bold mb-0">@(((decimal)ViewBag.TotalRevenue / 1000000).ToString("N1"))M</h3>
+                        <h3 class="fw-bold mb-0">@(((decimal)ViewBag.TotalRevenue).ToString("N0")) VNĐ</h3>
                     </div>
                     <div class="stat-icon bg-info">
                         <i class="bi bi-currency-dollar"></i>
@@ -154,171 +154,40 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    
-    <script>
-        // Revenue Chart (Column Chart)
-        Highcharts.chart('revenueChart', {
-            chart: {
-                type: 'column',
-                backgroundColor: 'transparent'
-            },
-            title: {
-                text: null
-            },
-            xAxis: {
-                categories: @Html.Raw(JsonSerializer.Serialize(revenueChart.Select(x => x.Date))),
-                labels: {
-                    style: { color: '#888' }
-                }
-            },
-            yAxis: {
-                title: {
-                    text: 'Doanh thu (VNĐ)',
-                    style: { color: '#888' }
-                },
-                labels: {
-                    style: { color: '#888' }
-                },
-                gridLineColor: '#333'
-            },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                column: {
-                    borderRadius: 8,
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.y:,.0f}',
-                        style: { color: '#fff', textOutline: 'none' }
-                    }
-                }
-            },
-            series: [{
-                name: 'Doanh thu',
-                data: @Html.Raw(JsonSerializer.Serialize(revenueChart.Select(x => x.Revenue))),
-                color: {
-                    linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
-                    stops: [
-                        [0, '#dc2626'],
-                        [1, '#991b1b']
-                    ]
-                }
-            }],
-            credits: {
-                enabled: false
-            }
-        });
-
-        // Booking Status Pie Chart
-        Highcharts.chart('statusChart', {
-            chart: {
-                type: 'pie',
-                backgroundColor: 'transparent'
-            },
-            title: {
-                text: null
-            },
-            tooltip: {
-                pointFormat: '<b>{point.percentage:.1f}%</b> ({point.y} đơn)'
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: true,
-                        format: '<b>{point.name}</b>: {point.y}',
-                        style: {
-                            color: '#fff',
-                            textOutline: 'none'
-                        }
-                    },
-                    showInLegend: true
-                }
-            },
-            series: [{
-                name: 'Đơn đặt vé',
-                colorByPoint: true,
-                data: @Html.Raw(JsonSerializer.Serialize(bookingByStatus.Select(x => new { 
-                    name = x.Status, 
-                    y = x.Count 
-                })))
-            }],
-            legend: {
-                itemStyle: { color: '#888' }
-            },
-            credits: {
-                enabled: false
-            }
-        });
-
-        // Top Movies Bar Chart
-        Highcharts.chart('topMoviesChart', {
-            chart: {
-                type: 'bar',
-                backgroundColor: 'transparent'
-            },
-            title: {
-                text: null
-            },
-            xAxis: {
-                categories: @Html.Raw(JsonSerializer.Serialize(topMovies.Select(x => x.Title))),
-                labels: {
-                    style: { color: '#fff' }
-                }
-            },
-            yAxis: {
-                title: {
-                    text: 'Số lượng đặt vé',
-                    style: { color: '#888' }
-                },
-                labels: {
-                    style: { color: '#888' }
-                },
-                gridLineColor: '#333'
-            },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 8,
-                    dataLabels: {
-                        enabled: true,
-                        style: { color: '#fff', textOutline: 'none' }
-                    }
-                }
-            },
-            series: [{
-                name: 'Đặt vé',
-                data: @Html.Raw(JsonSerializer.Serialize(topMovies.Select(x => x.Count))),
-                color: {
-                    linearGradient: { x1: 0, x2: 1, y1: 0, y2: 0 },
-                    stops: [
-                        [0, '#f59e0b'],
-                        [1, '#d97706']
-                    ]
-                }
-            }],
-            credits: {
-                enabled: false
-            }
-        });
-    </script>
-}
 
 <style>
-    .stat-card {
+    /* Dashboard Specific Styles for High Visibility */
+    .dashboard-container {
+        color: #fff;
+    }
+
+    .dashboard-container .text-muted {
+        color: #cbd5e1 !important; /* Lighter gray for better visibility */
+    }
+    
+    .dashboard-container h2, 
+    .dashboard-container h3, 
+    .dashboard-container h5 {
+        color: #fff !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Text shadow for contrast */
+    }
+
+    /* Enhanced Cards - Higher Opacity */
+    .dashboard-container .stat-card,
+    .dashboard-container .glass-card {
+        background: rgba(30, 41, 59, 0.95) !important; /* High opacity */
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         border-radius: 12px;
         transition: transform 0.3s ease;
     }
 
-    .stat-card:hover {
+    .dashboard-container .stat-card:hover,
+    .dashboard-container .glass-card:hover {
         transform: translateY(-5px);
+        background: rgba(30, 41, 59, 1) !important;
+        border-color: rgba(255, 255, 255, 0.5);
     }
 
     .stat-icon {
@@ -329,6 +198,7 @@
         align-items: center;
         justify-content: center;
         font-size: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .bg-cinema-red {
@@ -338,4 +208,205 @@
     .bg-popcorn-gold {
         background: linear-gradient(135deg, #f59e0b, #d97706);
     }
+    
+    /* Ensure Highcharts text is visible via CSS override */
+    .highcharts-axis-labels text,
+    .highcharts-axis-title text,
+    .highcharts-legend-item text {
+        fill: #e2e8f0 !important;
+        font-weight: 500 !important;
+    }
+    .highcharts-data-label text {
+        fill: #fff !important;
+        text-shadow: 0 0 2px black;
+    }
 </style>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+<script>
+    window.addEventListener('load', function() {
+        console.log('Page loaded, initializing charts...');
+        
+        // Check if data is available
+        var revenueData = @Html.Raw(JsonSerializer.Serialize(revenueChart));
+        var statusData = @Html.Raw(JsonSerializer.Serialize(bookingByStatus));
+        var moviesData = @Html.Raw(JsonSerializer.Serialize(topMovies));
+        
+        console.log('Revenue data:', revenueData);
+        console.log('Status data:', statusData);
+        console.log('Movies data:', moviesData);
+        
+        try {
+            // Revenue Chart (Column Chart)
+            if (revenueData && revenueData.length > 0) {
+                console.log('Creating revenue chart...');
+                Highcharts.chart('revenueChart', {
+                    chart: {
+                        type: 'column',
+                        backgroundColor: 'transparent'
+                    },
+                    title: {
+                        text: null
+                    },
+                    xAxis: {
+                        categories: revenueData.map(x => x.Date),
+                        labels: {
+                            style: { color: '#e2e8f0' }
+                        }
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Doanh thu (VNĐ)',
+                            style: { color: '#e2e8f0' }
+                        },
+                        labels: {
+                            style: { color: '#e2e8f0' }
+                        },
+                        gridLineColor: '#333'
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        column: {
+                            borderRadius: 8,
+                            dataLabels: {
+                                enabled: true,
+                                format: '{point.y:,.0f}',
+                                style: { color: '#fff', textOutline: 'none' }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Doanh thu',
+                        data: revenueData.map(x => x.Revenue),
+                        color: {
+                            linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                            stops: [
+                                [0, '#dc2626'],
+                                [1, '#991b1b']
+                            ]
+                        }
+                    }],
+                    credits: {
+                        enabled: false
+                    }
+                });
+                console.log('Revenue chart created successfully');
+            } else {
+                console.warn('No revenue data available');
+            }
+
+            // Booking Status Pie Chart
+            if (statusData && statusData.length > 0) {
+                console.log('Creating status chart...');
+                Highcharts.chart('statusChart', {
+                    chart: {
+                        type: 'pie',
+                        backgroundColor: 'transparent'
+                    },
+                    title: {
+                        text: null
+                    },
+                    tooltip: {
+                        pointFormat: '<b>{point.percentage:.1f}%</b> ({point.y} đơn)'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.y}',
+                                style: {
+                                    color: '#fff',
+                                    textOutline: 'none'
+                                }
+                            },
+                            showInLegend: true
+                        }
+                    },
+                    series: [{
+                        name: 'Đơn đặt vé',
+                        colorByPoint: true,
+                        data: statusData.map(x => ({ name: x.Status, y: x.Count }))
+                    }],
+                    legend: {
+                        itemStyle: { color: '#888' }
+                    },
+                    credits: {
+                        enabled: false
+                    }
+                });
+                console.log('Status chart created successfully');
+            } else {
+                console.warn('No status data available');
+            }
+
+            // Top Movies Bar Chart
+            if (moviesData && moviesData.length > 0) {
+                console.log('Creating top movies chart...');
+                Highcharts.chart('topMoviesChart', {
+                    chart: {
+                        type: 'bar',
+                        backgroundColor: 'transparent'
+                    },
+                    title: {
+                        text: null
+                    },
+                    xAxis: {
+                        categories: moviesData.map(x => x.Title),
+                        labels: {
+                            style: { color: '#fff' }
+                        }
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Số lượng đặt vé',
+                            style: { color: '#e2e8f0' }
+                        },
+                        labels: {
+                            style: { color: '#e2e8f0' }
+                        },
+                        gridLineColor: '#333'
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 8,
+                            dataLabels: {
+                                enabled: true,
+                                style: { color: '#fff', textOutline: 'none' }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Đặt vé',
+                        data: moviesData.map(x => x.Count),
+                        color: {
+                            linearGradient: { x1: 0, x2: 1, y1: 0, y2: 0 },
+                            stops: [
+                                [0, '#f59e0b'],
+                                [1, '#d97706']
+                            ]
+                        }
+                    }],
+                    credits: {
+                        enabled: false
+                    }
+                });
+                console.log('Top movies chart created successfully');
+            } else {
+                console.warn('No movies data available');
+            }
+            
+            console.log('All charts initialized!');
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
+    });
+</script>

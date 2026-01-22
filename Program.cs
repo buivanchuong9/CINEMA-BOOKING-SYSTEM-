@@ -64,8 +64,7 @@ builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
     return new BE.Infrastructure.Payment.VNPayHelper(config);
 });
 
-// ===== 6. MVC & RAZOR PAGES =====
-builder.Services.AddControllersWithViews();
+// ===== 6. RAZOR PAGES =====
 builder.Services.AddRazorPages();
 
 // Configure Antiforgery for JSON requests
@@ -82,6 +81,26 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// ===== 7. LOCALIZATION CONFIGURATION =====
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { "vi-VN", "en-US" };
+    options.SetDefaultCulture("vi-VN")
+        .AddSupportedCultures(supportedCultures)
+        .AddSupportedUICultures(supportedCultures);
+    
+    options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider
+    {
+        CookieName = "CineMax.Culture"
+    });
+});
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization();
+
 var app = builder.Build();
 
 // ===== MIDDLEWARE PIPELINE =====
@@ -95,6 +114,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Localization middleware
+var localizationOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
+app.UseRequestLocalization(localizationOptions.Value);
 
 app.UseAuthentication(); // QUAN TRỌNG: Phải đặt trước UseAuthorization
 app.UseAuthorization();

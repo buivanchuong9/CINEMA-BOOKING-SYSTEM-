@@ -63,6 +63,9 @@
                 
                 <!-- Search & Auth -->
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Language Switcher -->
+                    <partial name="_LanguageSwitcher" />
+                    
                     <!-- Search Icon -->
                     <button class="btn btn-link text-white p-0" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
                         <i class="bi bi-search fs-5"></i>
@@ -284,6 +287,9 @@
         });
     </script>
     
-    @await RenderSectionAsync("Scripts", required: false)
+    @if (IsSectionDefined("Scripts"))
+    {
+        @RenderSection("Scripts", required: false)
+    }
 </body>
 </html>

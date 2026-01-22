@@ -144,6 +144,26 @@ public class RoomsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // GET: /Admin/Rooms/GetRoomsByCinema?cinemaId=1
+    [HttpGet]
+    public async Task<IActionResult> GetRoomsByCinema(int cinemaId)
+    {
+        var rooms = await _unitOfWork.Rooms.GetAllAsync();
+        var filteredRooms = rooms
+            .Where(r => r.CinemaId == cinemaId && r.IsActive)
+            .OrderBy(r => r.Name)
+            .Select(r => new
+            {
+                id = r.Id,
+                name = r.Name,
+                totalRows = r.TotalRows,
+                seatsPerRow = r.SeatsPerRow
+            })
+            .ToList();
+
+        return Json(filteredRooms);
+    }
+
     private async Task PopulateDropdowns()
     {
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();

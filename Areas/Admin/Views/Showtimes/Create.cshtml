@@ -14,7 +14,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="glass-card p-4">
-                <form method="post" asp-action="Create">
+                <form method="post" asp-action="Create" id="showtimeForm">
                     @Html.AntiForgeryToken()
                     
                     <div class="row g-3">
@@ -23,16 +23,17 @@
                             <select asp-for="MovieId" asp-items="ViewBag.MovieSelectList" class="form-select form-select-lg">
                                 <option value="">-- Chọn phim đang chiếu --</option>
                             </select>
+                            <span asp-validation-for="MovieId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="ShowDateTime" class="form-label required">Ngày Chiếu</label>
-                            <input asp-for="ShowDateTime" type="date" class="form-control" />
+                            <label class="form-label required">Ngày Chiếu</label>
+                            <input type="date" id="showDate" class="form-control" required />
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label required">Giờ Chiếu</label>
-                            <select id="showTime" class="form-select">
+                            <select id="showTime" class="form-select" required>
                                 <option value="">-- Chọn giờ --</option>
                                 <option value="08:00">08:00</option>
                                 <option value="10:30">10:30</option>
@@ -44,24 +45,29 @@
                             </select>
                         </div>
 
+                        <!-- Hidden field for StartTime -->
+                        <input type="hidden" asp-for="StartTime" id="StartTime" />
+
                         <div class="col-md-6">
                             <label class="form-label required">Chọn Rạp</label>
-                            <select asp-for="Room.CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select" id="cinemaSelect">
+                            <select asp-items="ViewBag.CinemaSelectList" class="form-select" id="cinemaSelect" required>
                                 <option value="">-- Chọn rạp --</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="RoomId" class="form-label required">Chọn Phòng</label>
-                            <select asp-for="RoomId" class="form-select" id="roomSelect">
-                                <option value="">-- Chọn phòng --</option>
+                            <select asp-for="RoomId" class="form-select" id="roomSelect" style="pointer-events: none; opacity: 0.6;" required>
+                                <option value="">-- Chọn rạp trước --</option>
                             </select>
+                            <span asp-validation-for="RoomId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="BasePrice" class="form-label required">Giá Vé Cơ Bản (VNĐ)</label>
                             <input asp-for="BasePrice" type="number" class="form-control" value="75000" step="1000" />
                             <div class="form-text">Giá sẽ điều chỉnh theo loại ghế</div>
+                            <span asp-validation-for="BasePrice" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
@@ -86,32 +92,121 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Combine date + time
-        $('#showTime').on('change', function() {
-            var date = $('#ShowDateTime').val();
-            var time = $(this).val();
-            if (date && time) {
-                $('#ShowDateTime').val(date + 'T' + time);
-            }
-        });
-
-        // Load rooms when cinema selected (simplified - in production use AJAX)
-        $('#cinemaSelect').on('change', function() {
-            var cinemaId = $(this).val();
-            if (cinemaId) {
-                // TODO: Load rooms via AJAX based on cinemaId
-                // For now, just enable room dropdown
-                $('#roomSelect').prop('disabled', false);
-            }
-        });
-    </script>
-}
-
 <style>
     .required::after {
         content: " *";
         color: #dc2626;
     }
 </style>
+
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Combine date + time into StartTime before submit
+    function updateStartTime() {
+        var date = $('#showDate').val();
+        var time = $('#showTime').val();
+        if (date && time) {
+            var dateTimeString = date + 'T' + time + ':00';
+            $('#StartTime').val(dateTimeString);
+        }
+    }
+
+    $('#showDate, #showTime').on('change', updateStartTime);
+
+    // Load rooms when cinema selected via AJAX
+    $('#cinemaSelect').on('change', function() {
+        var cinemaId = $(this).val();
+        var $roomSelect = $('#roomSelect');
+        
+        console.log('Cinema selected:', cinemaId);
+        
+        $roomSelect.html('<option value="">-- Đang tải... --</option>');
+        $roomSelect.css({'pointer-events': 'none', 'opacity': '0.6'});
+        $('#totalSeats').val('0 ghế');
+        
+        if (!cinemaId) {
+            $roomSelect.html('<option value="">-- Chọn rạp trước --</option>');
+            return;
+        }
+
+        // AJAX call to get rooms by cinema
+        $.ajax({
+            url: '/Admin/Rooms/GetRoomsByCinema',
+            type: 'GET',
+            data: { cinemaId: cinemaId },
+            success: function(rooms) {
+                console.log('Rooms loaded:', rooms);
+                $roomSelect.html('<option value="">-- Chọn phòng --</option>');
+                
+                if (rooms && rooms.length > 0) {
+                    rooms.forEach(function(room) {
+                        var totalSeats = room.totalRows * room.seatsPerRow;
+                        $roomSelect.append(
+                            $('<option></option>')
+                                .val(room.id)
+                                .text(room.name + ' (' + totalSeats + ' ghế)')
+                                .data('seats', totalSeats)
+                        );
+                    });
+                    // Enable dropdown
+                    $roomSelect.css({'pointer-events': 'auto', 'opacity': '1'});
+                    console.log('Room dropdown enabled with', rooms.length, 'rooms');
+                } else {
+                    $roomSelect.html('<option value="">-- Không có phòng nào --</option>');
+                    console.warn('No rooms found for cinema:', cinemaId);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading rooms:', error, xhr.responseText);
+                $roomSelect.html('<option value="">-- Lỗi tải phòng --</option>');
+                $roomSelect.css({'pointer-events': 'auto', 'opacity': '1'});
+                alert('Lỗi khi tải danh sách phòng. Vui lòng thử lại!');
+            }
+        });
+    });
+
+    // Update total seats when room selected
+    $('#roomSelect').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var seats = selectedOption.data('seats');
+        if (seats) {
+            $('#totalSeats').val(seats + ' ghế');
+        } else {
+            $('#totalSeats').val('0 ghế');
+        }
+    });
+
+    // Validate before submit
+    $('#showtimeForm').on('submit', function(e) {
+        updateStartTime();
+        
+        var movieId = $('#MovieId').val();
+        var startTime = $('#StartTime').val();
+        var roomId = $('#RoomId').val();
+        
+        if (!movieId) {
+            e.preventDefault();
+            alert('Vui lòng chọn phim!');
+            return false;
+        }
+        
+        if (!startTime) {
+            e.preventDefault();
+            alert('Vui lòng chọn ngày và giờ chiếu!');
+            return false;
+        }
+        
+        if (!roomId) {
+            e.preventDefault();
+            alert('Vui lòng chọn rạp và phòng chiếu!');
+            return false;
+        }
+        
+        // All validations passed, allow submit
+        return true;
+    });
+});
+</script>

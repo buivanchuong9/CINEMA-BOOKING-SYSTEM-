@@ -200,6 +200,7 @@ public class ShowtimesController : Controller
     {
         var movies = await _unitOfWork.Movies.GetAllAsync();
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
+        var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         
         ViewBag.MovieSelectList = new SelectList(
             movies.Where(m => m.IsActive).OrderBy(m => m.Title), 
@@ -208,6 +209,11 @@ public class ShowtimesController : Controller
         
         ViewBag.RoomSelectList = new SelectList(
             rooms.Where(r => r.IsActive).OrderBy(r => r.Name), 
+            "Id", "Name"
+        );
+        
+        ViewBag.CinemaSelectList = new SelectList(
+            cinemas.Where(c => c.IsActive).OrderBy(c => c.Name),
             "Id", "Name"
         );
     }

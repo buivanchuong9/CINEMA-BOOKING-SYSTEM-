@@ -307,3 +307,12 @@
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.genruntimeconfig.cache
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/ref/BE.dll
 /Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/bin/Debug/net8.0/appsettings.Example.json
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/bin/Debug/net8.0/en-US/BE.resources.dll
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/bin/Debug/net8.0/vi-VN/BE.resources.dll
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.Resources.Views.Shared._Layout.en-US.resources
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.Resources.Views.Shared._Layout.vi-VN.resources
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/BE.csproj.GenerateResource.cache
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/en-US/BE.resources.cs
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/en-US/BE.resources.dll
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/vi-VN/BE.resources.cs
+/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/obj/Debug/net8.0/vi-VN/BE.resources.dll
