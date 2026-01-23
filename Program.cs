@@ -130,6 +130,9 @@ using (var scope = app.Services.CreateScope())
         // Seed sample data (movies, cinemas, showtimes, etc.)
         var context = services.GetRequiredService<AppDbContext>();
         await BE.Data.DbInitializer.SeedAsync(context);
+        
+        // Cập nhật showtimes cũ sang tương lai
+        await BE.Infrastructure.Data.DbSeeder.UpdateShowtimesToFutureAsync(context);
     }
     catch (Exception ex)
     {

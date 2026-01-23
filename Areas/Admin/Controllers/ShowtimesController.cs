@@ -66,6 +66,8 @@ public class ShowtimesController : Controller
     {
         try
         {
+            ModelState.Remove("Movie");
+            ModelState.Remove("Room");
             ModelState.Remove("EndTime");
             ModelState.Remove("CreatedAt");
             ModelState.Remove("IsActive");
@@ -136,6 +138,8 @@ public class ShowtimesController : Controller
 
         try
         {
+            ModelState.Remove("Movie");
+            ModelState.Remove("Room");
             ModelState.Remove("EndTime");
             ModelState.Remove("CreatedAt");
 

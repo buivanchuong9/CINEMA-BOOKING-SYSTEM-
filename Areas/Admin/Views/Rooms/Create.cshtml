@@ -20,9 +20,10 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="CinemaId" class="form-label required">Chọn Rạp</label>
-                            <select asp-for="CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select">
+                            <select asp-for="CinemaId" asp-items="ViewBag.CinemaSelectList" class="form-select" required>
                                 <option value="">-- Chọn rạp --</option>
                             </select>
+                            <span asp-validation-for="CinemaId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
@@ -94,20 +95,19 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Auto calculate total seats
-        function updateTotalSeats() {
-            var rows = parseInt($('#TotalRows').val()) || 0;
-            var seatsPerRow = parseInt($('#SeatsPerRow').val()) || 0;
-            var total = rows * seatsPerRow;
-            $('#totalSeats').val(total + ' ghế');
-        }
-        
-        $('#TotalRows, #SeatsPerRow').on('input', updateTotalSeats);
-        updateTotalSeats();
-    </script>
-}
+
+<script>
+    // Auto calculate total seats
+    function updateTotalSeats() {
+        var rows = parseInt($('#TotalRows').val()) || 0;
+        var seatsPerRow = parseInt($('#SeatsPerRow').val()) || 0;
+        var total = rows * seatsPerRow;
+        $('#totalSeats').val(total + ' ghế');
+    }
+    
+    $('#TotalRows, #SeatsPerRow').on('input', updateTotalSeats);
+    updateTotalSeats();
+</script>
 
 <style>
     .required::after {

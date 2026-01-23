@@ -58,23 +58,10 @@ public class MoviesController : Controller
             return NotFound();
         }
 
-        // Load showtimes cho phim này (chỉ lấy suất chiếu chưa qua)
-        var showtimes = (await _unitOfWork.Showtimes.GetAllAsync())
-            .Where(st => st.MovieId == id && st.StartTime >= DateTime.Now)
-            .OrderBy(st => st.StartTime)
-            .ToList();
+        // Load showtimes với thông tin Room và Cinema (sử dụng Include)
+        var showtimes = await _unitOfWork.Showtimes.GetShowtimesWithDetailsAsync(id);
 
-        // Load thông tin phòng chiếu và rạp
-        foreach (var showtime in showtimes)
-        {
-            showtime.Room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
-            if (showtime.Room != null)
-            {
-                showtime.Room.Cinema = await _unitOfWork.Cinemas.GetByIdAsync(showtime.Room.CinemaId);
-            }
-        }
-
-        ViewBag.Showtimes = showtimes;
+        ViewBag.Showtimes = showtimes.ToList();
         return View(movie);
     }
 

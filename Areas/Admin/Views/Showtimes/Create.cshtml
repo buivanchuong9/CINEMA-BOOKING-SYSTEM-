@@ -99,93 +99,90 @@
     }
 </style>
 
-<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-
-<script>
-$(document).ready(function() {
+<script defer>
+window.addEventListener('load', function() {
     // Combine date + time into StartTime before submit
     function updateStartTime() {
-        var date = $('#showDate').val();
-        var time = $('#showTime').val();
+        var date = document.getElementById('showDate').value;
+        var time = document.getElementById('showTime').value;
         if (date && time) {
             var dateTimeString = date + 'T' + time + ':00';
-            $('#StartTime').val(dateTimeString);
+            document.getElementById('StartTime').value = dateTimeString;
         }
     }
 
-    $('#showDate, #showTime').on('change', updateStartTime);
+    document.getElementById('showDate').addEventListener('change', updateStartTime);
+    document.getElementById('showTime').addEventListener('change', updateStartTime);
 
     // Load rooms when cinema selected via AJAX
-    $('#cinemaSelect').on('change', function() {
-        var cinemaId = $(this).val();
-        var $roomSelect = $('#roomSelect');
+    document.getElementById('cinemaSelect').addEventListener('change', function() {
+        var cinemaId = this.value;
+        var roomSelect = document.getElementById('roomSelect');
         
         console.log('Cinema selected:', cinemaId);
         
-        $roomSelect.html('<option value="">-- Đang tải... --</option>');
-        $roomSelect.css({'pointer-events': 'none', 'opacity': '0.6'});
-        $('#totalSeats').val('0 ghế');
+        roomSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+        roomSelect.style.pointerEvents = 'none';
+        roomSelect.style.opacity = '0.6';
+        document.getElementById('totalSeats').value = '0 ghế';
         
         if (!cinemaId) {
-            $roomSelect.html('<option value="">-- Chọn rạp trước --</option>');
+            roomSelect.innerHTML = '<option value="">-- Chọn rạp trước --</option>';
             return;
         }
 
         // AJAX call to get rooms by cinema
-        $.ajax({
-            url: '/Admin/Rooms/GetRoomsByCinema',
-            type: 'GET',
-            data: { cinemaId: cinemaId },
-            success: function(rooms) {
+        fetch('/Admin/Rooms/GetRoomsByCinema?cinemaId=' + cinemaId)
+            .then(response => response.json())
+            .then(rooms => {
                 console.log('Rooms loaded:', rooms);
-                $roomSelect.html('<option value="">-- Chọn phòng --</option>');
+                roomSelect.innerHTML = '<option value="">-- Chọn phòng --</option>';
                 
                 if (rooms && rooms.length > 0) {
                     rooms.forEach(function(room) {
                         var totalSeats = room.totalRows * room.seatsPerRow;
-                        $roomSelect.append(
-                            $('<option></option>')
-                                .val(room.id)
-                                .text(room.name + ' (' + totalSeats + ' ghế)')
-                                .data('seats', totalSeats)
-                        );
+                        var option = document.createElement('option');
+                        option.value = room.id;
+                        option.textContent = room.name + ' (' + totalSeats + ' ghế)';
+                        option.dataset.seats = totalSeats;
+                        roomSelect.appendChild(option);
                     });
                     // Enable dropdown
-                    $roomSelect.css({'pointer-events': 'auto', 'opacity': '1'});
+                    roomSelect.style.pointerEvents = 'auto';
+                    roomSelect.style.opacity = '1';
                     console.log('Room dropdown enabled with', rooms.length, 'rooms');
                 } else {
-                    $roomSelect.html('<option value="">-- Không có phòng nào --</option>');
+                    roomSelect.innerHTML = '<option value="">-- Không có phòng nào --</option>';
                     console.warn('No rooms found for cinema:', cinemaId);
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error loading rooms:', error, xhr.responseText);
-                $roomSelect.html('<option value="">-- Lỗi tải phòng --</option>');
-                $roomSelect.css({'pointer-events': 'auto', 'opacity': '1'});
+            })
+            .catch(error => {
+                console.error('Error loading rooms:', error);
+                roomSelect.innerHTML = '<option value="">-- Lỗi tải phòng --</option>';
+                roomSelect.style.pointerEvents = 'auto';
+                roomSelect.style.opacity = '1';
                 alert('Lỗi khi tải danh sách phòng. Vui lòng thử lại!');
-            }
-        });
+            });
     });
 
     // Update total seats when room selected
-    $('#roomSelect').on('change', function() {
-        var selectedOption = $(this).find('option:selected');
-        var seats = selectedOption.data('seats');
+    document.getElementById('roomSelect').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        var seats = selectedOption.dataset.seats;
         if (seats) {
-            $('#totalSeats').val(seats + ' ghế');
+            document.getElementById('totalSeats').value = seats + ' ghế';
         } else {
-            $('#totalSeats').val('0 ghế');
+            document.getElementById('totalSeats').value = '0 ghế';
         }
     });
 
     // Validate before submit
-    $('#showtimeForm').on('submit', function(e) {
+    document.getElementById('showtimeForm').addEventListener('submit', function(e) {
         updateStartTime();
         
-        var movieId = $('#MovieId').val();
-        var startTime = $('#StartTime').val();
-        var roomId = $('#RoomId').val();
+        var movieId = document.getElementById('MovieId').value;
+        var startTime = document.getElementById('StartTime').value;
+        var roomId = document.getElementById('RoomId').value;
         
         if (!movieId) {
             e.preventDefault();

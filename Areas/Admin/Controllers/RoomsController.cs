@@ -42,6 +42,8 @@ public class RoomsController : Controller
     {
         try
         {
+            ModelState.Remove("Cinema");
+            ModelState.Remove("Seats");
             ModelState.Remove("SeatMapMatrix");
             ModelState.Remove("CreatedAt");
             ModelState.Remove("IsActive");
@@ -65,7 +67,10 @@ public class RoomsController : Controller
             await _unitOfWork.Rooms.AddAsync(room);
             await _unitOfWork.SaveChangesAsync();
 
-            TempData["Success"] = $"Đã tạo phòng '{room.Name}' thành công!";
+            // Tạo ghế tự động cho phòng mới
+            await GenerateSeatsForRoom(room.Id, room.TotalRows, room.SeatsPerRow);
+
+            TempData["Success"] = $"Đã tạo phòng '{room.Name}' với {room.TotalRows * room.SeatsPerRow} ghế thành công!";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -101,6 +106,8 @@ public class RoomsController : Controller
 
         try
         {
+            ModelState.Remove("Cinema");
+            ModelState.Remove("Seats");
             ModelState.Remove("SeatMapMatrix");
             ModelState.Remove("CreatedAt");
 
@@ -186,5 +193,45 @@ public class RoomsController : Controller
         }
         
         return string.Join(";", seatRows);
+    }
+
+    private async Task GenerateSeatsForRoom(int roomId, int totalRows, int seatsPerRow)
+    {
+        var seats = new List<Seat>();
+        var seatTypes = (await _unitOfWork.SeatTypes.GetAllAsync()).ToList();
+        
+        // Lấy loại ghế mặc định (Standard)
+        var standardSeatType = seatTypes.FirstOrDefault(st => st.Name == "Standard") 
+                               ?? seatTypes.FirstOrDefault();
+        
+        if (standardSeatType == null)
+        {
+            throw new Exception("Không tìm thấy loại ghế nào trong hệ thống!");
+        }
+
+        // Tạo ghế cho từng hàng
+        for (int row = 0; row < totalRows; row++)
+        {
+            char rowLabel = (char)('A' + row); // A, B, C, ...
+            
+            for (int seatNum = 1; seatNum <= seatsPerRow; seatNum++)
+            {
+                var seat = new Seat
+                {
+                    RoomId = roomId,
+                    Row = rowLabel.ToString(),
+                    Number = seatNum,
+                    SeatTypeId = standardSeatType.Id,
+                    Status = BE.Core.Enums.SeatStatus.Available,
+                    CreatedAt = DateTime.Now
+                };
+                
+                seats.Add(seat);
+            }
+        }
+
+        // Lưu tất cả ghế vào database
+        await _unitOfWork.Seats.AddRangeAsync(seats);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

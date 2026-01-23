@@ -21,7 +21,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Movie> Movies { get; }
     IRepository<Genre> Genres { get; }
     IRepository<MovieGenre> MovieGenres { get; }
-    IRepository<Showtime> Showtimes { get; }
+    IShowtimeRepository Showtimes { get; }
     
     // Booking Repositories
     IRepository<Booking> Bookings { get; }

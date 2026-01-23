@@ -100,12 +100,14 @@
 </section>
 
 <!-- Showtimes Section -->
-<section class="py-5" id="showtimesSection">
+<section class="py-5 bg-dark-subtle" id="showtimesSection">
     <div class="container">
-        <h3 class="fw-bold mb-4">
-            <i class="bi bi-calendar-event me-2 text-cinema-red"></i>
-            Lịch Chiếu
-        </h3>
+        <div class="d-flex align-items-center mb-4">
+            <div class="showtime-header-icon me-3">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <h3 class="fw-bold mb-0">Lịch Chiếu</h3>
+        </div>
         
         @if (showtimes.Any())
         {
@@ -114,30 +116,31 @@
             
             foreach (var dateGroup in showtimesByDate)
             {
-                <div class="mb-4">
-                    <h5 class="text-popcorn-gold mb-3">
+                <div class="showtime-date-group mb-4">
+                    <div class="date-header">
                         <i class="bi bi-calendar3 me-2"></i>
-                        @dateGroup.Key.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))
-                    </h5>
+                        <span class="fw-semibold">@dateGroup.Key.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</span>
+                    </div>
                     @{
                         // Group by cinema
                         var byCinema = dateGroup.GroupBy(st => st.Room?.Cinema?.Name ?? "Rạp không xác định");
                     }
                     @foreach (var cinemaGroup in byCinema)
                     {
-                        <div class="mb-3">
-                            <h6 class="text-muted mb-2">
-                                <i class="bi bi-building me-2"></i>@cinemaGroup.Key
-                            </h6>
-                            <div class="row g-2">
+                        <div class="cinema-group mb-4">
+                            <div class="cinema-name mb-3">
+                                <i class="bi bi-building me-2"></i>
+                                <span>@cinemaGroup.Key</span>
+                            </div>
+                            <div class="row g-3">
                                 @foreach (var showtime in cinemaGroup.OrderBy(st => st.StartTime))
                                 {
-                                    <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6">
                                         <a href="/Booking/SelectSeats?showtimeId=@showtime.Id" 
-                                           class="btn btn-outline-light w-100 showtime-btn">
-                                            <div class="fw-bold fs-5 text-cinema-red">@showtime.StartTime.ToString("HH:mm")</div>
-                                            <div class="small text-muted">@(showtime.Room?.Name ?? "")</div>
-                                            <div class="small text-success">@showtime.BasePrice.ToString("N0") ₫</div>
+                                           class="showtime-card">
+                                            <div class="showtime-time">@showtime.StartTime.ToString("HH:mm")</div>
+                                            <div class="showtime-room">@(showtime.Room?.Name ?? "N/A")</div>
+                                            <div class="showtime-price">@showtime.BasePrice.ToString("N0") ₫</div>
                                         </a>
                                     </div>
                                 }
@@ -149,9 +152,12 @@
         }
         else
         {
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                Chưa có lịch chiếu cho phim này. Vui lòng quay lại sau!
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle me-3 fs-4"></i>
+                <div>
+                    <strong>Chưa có lịch chiếu</strong>
+                    <p class="mb-0 small">Vui lòng quay lại sau để xem lịch chiếu mới nhất!</p>
+                </div>
             </div>
         }
     </div>
@@ -193,23 +199,130 @@
         font-size: 0.95rem;
     }
     
-    .showtime-btn {
-        border: 1px solid #444;
-        border-radius: 12px;
-        padding: 12px 8px;
-        transition: all 0.3s ease;
-        text-decoration: none;
+    /* Showtimes Section Styling */
+    #showtimesSection {
+        background: linear-gradient(180deg, rgba(17, 24, 39, 0.5) 0%, rgba(17, 24, 39, 0.8) 100%);
     }
     
-    .showtime-btn:hover {
-        border-color: #dc2626;
-        background: rgba(220, 38, 38, 0.1);
-        transform: translateY(-2px);
+    .showtime-header-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
         box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
     }
     
-    .showtime-btn:active {
-        transform: translateY(0);
+    .showtime-date-group {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .date-header {
+        color: #fbbf24;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(251, 191, 36, 0.3);
+    }
+    
+    .cinema-name {
+        color: #9ca3af;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .showtime-card {
+        display: block;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1.5px solid rgba(100, 116, 139, 0.3);
+        border-radius: 14px;
+        padding: 1rem 0.75rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .showtime-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(153, 27, 27, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .showtime-card:hover {
+        border-color: #dc2626;
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4),
+                    0 0 0 1px rgba(220, 38, 38, 0.2);
+    }
+    
+    .showtime-card:hover::before {
+        opacity: 1;
+    }
+    
+    .showtime-card:active {
+        transform: translateY(-2px) scale(1.01);
+    }
+    
+    .showtime-time {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+        text-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+    
+    .showtime-room {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 0.4rem;
+        position: relative;
+        z-index: 1;
+        font-weight: 500;
+    }
+    
+    .showtime-price {
+        font-size: 0.85rem;
+        color: #10b981;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+    }
+    
+    
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .showtime-header-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        
+        .showtime-time {
+            font-size: 1.3rem;
+        }
+        
+        .showtime-card {
+            padding: 0.75rem 0.5rem;
+        }
     }
 </style>
 
