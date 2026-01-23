@@ -1,94 +1,96 @@
 @model BE.Application.DTOs.LoginDto
 @{
     ViewData["Title"] = "Đăng Nhập - CineMax";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="glass-card p-5">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold">
-                        <i class="bi bi-box-arrow-in-right me-2 text-cinema-red"></i>
-                        Đăng Nhập
-                    </h2>
-                    <p class="text-muted">Chào mừng bạn quay trở lại CineMax</p>
+<div class="auth-wrapper">
+    <div class="auth-panel left-panel">
+        <div class="content-container fade-in-left">
+            <div class="auth-header mb-5">
+                <a href="/" class="brand-link text-decoration-none">
+                    <i class="bi bi-film me-2 text-cinema-red"></i>
+                    <span class="fw-bold text-white tracking-wider fs-4">CINEMAX</span>
+                </a>
+            </div>
+
+            <div class="mb-5">
+                <h1 class="fw-bold text-white mb-2 fs-2">Chào Mừng Trở&nbsp;Lại!</h1>
+                <p class="text-secondary">Đăng nhập để trải nghiệm hệ thống.</p>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-custom mb-4 shake-animation">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @Html.ValidationSummary(false, "", new { @class = "mb-0 d-inline" })
                 </div>
+            }
 
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div class="alert alert-danger" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
-                    </div>
-                }
+            <form method="post" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                @Html.AntiForgeryToken()
+                
+                <div class="form-floating mb-4 custom-floating">
+                    <input asp-for="Email" class="form-control" placeholder="Email" />
+                    <label asp-for="Email">Email / Tên đăng nhập</label>
+                    <i class="bi bi-person-circle position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                </div>
+                <span asp-validation-for="Email" class="text-danger small mb-3 d-block"></span>
 
-                <form method="post" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-                    @Html.AntiForgeryToken()
-                    
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label">
-                            <i class="bi bi-envelope me-1"></i>
-                            Email
-                        </label>
-                        <input asp-for="Email" class="form-control form-control-lg" placeholder="your@email.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
+                <div class="form-floating mb-4 custom-floating">
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" />
+                    <label asp-for="Password">Mật khẩu</label>
+                    <i class="bi bi-key position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                </div>
+                <span asp-validation-for="Password" class="text-danger small mb-3 d-block"></span>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label">
-                            <i class="bi bi-lock me-1"></i>
-                            Mật khẩu
-                        </label>
-                        <input asp-for="Password" class="form-control form-control-lg" placeholder="••••••••" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check custom-checkbox">
+                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" id="rememberCheck">
+                        <label class="form-check-label text-secondary small" for="rememberCheck">
                             Ghi nhớ đăng nhập
                         </label>
                     </div>
+                    <a href="#" class="text-secondary small text-decoration-none hover-link">Quên mật khẩu?</a>
+                </div>
 
-                    <div class="d-grid gap-2 mb-3">
-                        <button type="submit" class="btn btn-cinema-red btn-lg">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>
-                            Đăng Nhập
-                        </button>
-                    </div>
+                <button type="submit" class="btn btn-cinema-primary w-100 py-3 mb-4 fw-bold">
+                    ĐĂNG NHẬP <i class="bi bi-box-arrow-in-right ms-2"></i>
+                </button>
 
-                    <div class="text-center">
-                        <p class="text-muted mb-0">
-                            Chưa có tài khoản? 
-                            <a href="/Account/Register" class="text-cinema-red text-decoration-none fw-bold">
-                                Đăng ký ngay
-                            </a>
-                        </p>
-                    </div>
-                </form>
-
-                <hr class="my-4">
-
-                <div class="text-center">
-                    <p class="text-muted small mb-2">Hoặc đăng nhập với</p>
-                    <div class="d-flex gap-2 justify-content-center">
-                        <button class="btn btn-outline-light">
-                            <i class="bi bi-google"></i>
-                        </button>
-                        <button class="btn btn-outline-light">
-                            <i class="bi bi-facebook"></i>
-                        </button>
+                <div class="text-center mb-4">
+                    <p class="text-secondary small mb-3 position-relative"><span class="bg-dark-panel px-2">Hoặc tiếp tục với</span></p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="social-btn google" title="Google"><i class="bi bi-google"></i></button>
+                        <button type="button" class="social-btn facebook" title="Facebook"><i class="bi bi-facebook"></i></button>
+                        <button type="button" class="social-btn apple" title="Apple"><i class="bi bi-apple"></i></button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Admin Test Account Info -->
-            <div class="alert alert-info mt-3" role="alert">
-                <strong>🔑 Tài khoản Admin test:</strong><br>
-                Email: <code>admin@cinemax.com</code><br>
-                Password: <code>Admin@123</code>
+                <div class="text-center text-secondary mt-4">
+                    Chưa có tài khoản? 
+                    <a href="/Account/Register" class="text-white fw-bold text-decoration-none hover-link">Đăng ký ngay</a>
+                </div>
+            </form>
+            
+            <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-center">
+                 <small class="text-muted d-block mb-1">Demo Account:</small>
+                 <code class="text-cinema-red bg-dark px-2 py-1 rounded">admin@cinemax.com / Admin@123</code>
             </div>
+        </div>
+    </div>
+
+    <div class="auth-panel right-panel">
+        <div class="overlay"></div>
+        <div class="visual-content text-center fade-in-up">
+            <div class="play-icon-wrapper mb-4">
+                <div class="play-icon">
+                    <i class="bi bi-play-fill"></i>
+                </div>
+                <div class="ripple"></div>
+            </div>
+            <h2 class="display-6 fw-bold text-white mb-3">Thế Giới Phim Giải Trí Trong Tầm Tay</h2>
+            <p class="text-white-50 fs-5">Cập nhật những bộ phim bom tấn mới nhất tại CineMax.</p>
         </div>
     </div>
 </div>
@@ -96,3 +98,231 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+
+<style>
+    /* Sử dụng mã màu trực tiếp để tránh lỗi biến CSS */
+
+    body {
+        background-color: #000000;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+        color: #ffffff;
+    }
+
+    .auth-wrapper {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    /* LEFT PANEL */
+    .left-panel {
+        width: 500px;
+        background-color: #141414; /* Dark Background */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    }
+
+    .content-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+    }
+
+    .bg-dark-panel {
+        background-color: #141414;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Custom Floating Input */
+    .custom-floating .form-control {
+        background-color: #333333;
+        border: 1px solid transparent;
+        color: #ffffff;
+        border-radius: 8px;
+        height: 55px;
+        font-weight: 500;
+    }
+
+    .custom-floating .form-control:focus {
+        background-color: #404040;
+        border-color: #e50914; /* Cinema Red */
+        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2);
+        color: #ffffff;
+    }
+
+    .custom-floating label {
+        color: #aaaaaa;
+    }
+
+    .custom-floating .form-control:focus ~ label,
+    .custom-floating .form-control:not(:placeholder-shown) ~ label {
+        color: #e50914;
+        opacity: 1;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+
+    .custom-floating i {
+        pointer-events: none;
+    }
+
+    /* Checkbox */
+    .custom-checkbox .form-check-input {
+        background-color: #333333;
+        border-color: #444444;
+        cursor: pointer;
+    }
+    
+    .custom-checkbox .form-check-input:checked {
+        background-color: #e50914;
+        border-color: #e50914;
+    }
+
+    /* Primary Button */
+    .btn-cinema-primary {
+        background: linear-gradient(45deg, #e50914, #b20710);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-cinema-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(229, 9, 20, 0.4);
+        background: linear-gradient(45deg, #ff1f1f, #d30913);
+        color: white;
+    }
+
+    /* Social Buttons */
+    .social-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid #333;
+        background: #222;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+    }
+
+    .social-btn:hover {
+        transform: translateY(-3px);
+        background: #fff;
+    }
+    
+    .social-btn.google:hover { color: #db4437; }
+    .social-btn.facebook:hover { color: #4267B2; }
+    .social-btn.apple:hover { color: #000; }
+
+    /* Alert */
+    .alert-custom {
+        background: rgba(229, 9, 20, 0.1);
+        border: 1px solid #e50914;
+        color: #ff4d4d;
+        font-size: 0.9rem;
+    }
+
+    /* Utility */
+    .text-cinema-red { color: #e50914 !important; }
+    .hover-link:hover { color: #e50914 !important; transition: color 0.3s; }
+
+    /* RIGHT PANEL */
+    .right-panel {
+        flex: 1;
+        /* Ảnh nền rạp chiếu phim tối */
+        background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2670&auto=format&fit=crop'); 
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .right-panel .overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(229, 9, 20, 0.4));
+    }
+
+    .visual-content {
+        position: relative;
+        z-index: 3;
+        max-width: 500px;
+        padding: 2rem;
+    }
+
+    /* Play Icon Animation */
+    .play-icon-wrapper {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .play-icon {
+        width: 60px;
+        height: 60px;
+        background: #e50914;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        z-index: 2;
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
+    }
+
+    .ripple {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid #e50914;
+        animation: ripple 2s infinite;
+    }
+
+    /* Animations */
+    @@keyframes ripple {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .fade-in-left { animation: fadeIn 0.8s ease-out; }
+    
+    .shake-animation {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    
+    @@keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .right-panel { display: none; }
+        .left-panel { width: 100%; box-shadow: none; }
+    }
+</style>

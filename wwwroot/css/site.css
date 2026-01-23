@@ -9,33 +9,38 @@
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
-  
+
   /* Text Colors */
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  
+
   /* Accent Colors */
   --cinema-red: #e11d48;
   --cinema-red-hover: #be123c;
   --popcorn-gold: #f59e0b;
   --popcorn-gold-hover: #d97706;
-  
+
   /* Status Colors */
   --seat-available: #10b981;
   --seat-selected: var(--cinema-red);
   --seat-holding: var(--popcorn-gold);
   --seat-sold: #64748b;
-  
+
   /* UI Effects */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
   --shadow-cinema: 0 10px 40px rgba(225, 29, 72, 0.3);
-  
-  /* Transitions */
+
+  /* Transition base */
   --transition-base: all 0.3s ease;
   --transition-fast: all 0.15s ease;
+
+  /* Custom Cinema Theme Colors */
+  --cinema-dark: #141414;
+  --cinema-gray: #222222;
+  --cinema-black: #000000;
 }
 
 /* ========== GLOBAL STYLES ========== */
@@ -350,6 +355,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -365,6 +371,7 @@ body {
     opacity: 0;
     transform: translateY(40px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -395,11 +402,11 @@ body {
   html {
     font-size: 14px;
   }
-  
+
   .cinema-navbar .navbar-brand {
     font-size: 1.25rem;
   }
-  
+
   .glass-card {
     padding: 1rem;
   }
@@ -617,7 +624,7 @@ body {
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at 20% 50%, rgba(225, 29, 72, 0.1), transparent 50%),
-              radial-gradient(circle at 80% 50%, rgba(245, 158, 11, 0.1), transparent 50%);
+    radial-gradient(circle at 80% 50%, rgba(245, 158, 11, 0.1), transparent 50%);
   pointer-events: none;
 }
 
@@ -642,15 +649,15 @@ body {
     height: 70vh;
     min-height: 500px;
   }
-  
+
   .hero-content {
     padding: 1rem;
   }
-  
+
   .hero-slide h1 {
     font-size: 2.5rem;
   }
-  
+
   .hero-slide .lead {
     font-size: 1rem;
   }
@@ -661,20 +668,20 @@ body {
     height: 60vh;
     min-height: 450px;
   }
-  
+
   .hero-slide h1 {
     font-size: 2rem;
   }
-  
+
   .hero-content .d-flex {
     flex-direction: column;
     gap: 0.75rem !important;
   }
-  
+
   .hero-content .btn {
     width: 100%;
   }
-  
+
   .swiper-button-next,
   .swiper-button-prev {
     width: 40px;
@@ -789,10 +796,10 @@ body {
   width: 80%;
   max-width: 600px;
   height: 8px;
-  background: linear-gradient(90deg, 
-    rgba(225, 29, 72, 0.3), 
-    rgba(225, 29, 72, 0.8), 
-    rgba(225, 29, 72, 0.3));
+  background: linear-gradient(90deg,
+      rgba(225, 29, 72, 0.3),
+      rgba(225, 29, 72, 0.8),
+      rgba(225, 29, 72, 0.3));
   margin: 0 auto;
   border-radius: 50%;
   box-shadow: 0 4px 20px rgba(225, 29, 72, 0.5);
@@ -806,10 +813,10 @@ body {
   left: 10%;
   width: 80%;
   height: 14px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(225, 29, 72, 0.3), 
-    transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(225, 29, 72, 0.3),
+      transparent);
   border-radius: 50%;
   filter: blur(8px);
 }
@@ -933,9 +940,17 @@ body {
 }
 
 @keyframes seatPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Sold Seat */
@@ -1021,20 +1036,20 @@ body {
     overflow: hidden;
     touch-action: pan-x pan-y;
   }
-  
+
   .seat-map {
     min-width: 600px;
   }
-  
+
   .seat {
     width: 36px;
     height: 36px;
   }
-  
+
   .couple-seat {
     width: 80px !important;
   }
-  
+
   .sticky-summary {
     position: static;
     margin-top: 2rem;
@@ -1045,24 +1060,22 @@ body {
   .booking-info-bar .col-md-3 {
     font-size: 0.85rem;
   }
-  
+
   .seat {
     width: 32px;
     height: 32px;
   }
-  
+
   .couple-seat {
     width: 72px !important;
   }
-  
+
   .seat-row-label {
     width: 30px;
     font-size: 0.9rem;
   }
-  
+
   .seat-number {
     font-size: 0.6rem;
   }
 }
-
-

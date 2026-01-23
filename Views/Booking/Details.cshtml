@@ -178,7 +178,7 @@
                                             @foreach (var (food, quantity) in foods)
                                             {
                                                 <div class="food-item-row">
-                                                    <span class="food-name">@food.Name <span class="text-muted">x@quantity</span></span>
+                                                    <span class="food-name">@food.Name <span class="text-muted">x@(quantity)</span></span>
                                                     <span class="food-price">@((food.Price * quantity).ToString("N0"))₫</span>
                                                 </div>
                                             }
