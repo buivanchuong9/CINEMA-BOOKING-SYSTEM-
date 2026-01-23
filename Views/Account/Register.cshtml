@@ -30,39 +30,45 @@
             <form method="post" asp-controller="Account" asp-action="Register">
                 @Html.AntiForgeryToken()
 
-                <div class="form-floating mb-3 custom-floating">
-                    <input asp-for="FullName" class="form-control" placeholder="Họ và tên" />
-                    <label asp-for="FullName">Họ và tên</label>
-                    <i class="bi bi-person position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label text-secondary small fw-bold">HỌ VÀ TÊN</label>
+                    <div class="position-relative">
+                        <input asp-for="FullName" class="form-control custom-input" placeholder="Nhập họ và tên" />
+                        <i class="bi bi-person position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                    </div>
                 </div>
                 <span asp-validation-for="FullName" class="text-danger small mb-3 d-block"></span>
 
-                <div class="form-floating mb-3 custom-floating">
-                    <input asp-for="Email" class="form-control" placeholder="Email" />
-                    <label asp-for="Email">Email đăng nhập</label>
-                    <i class="bi bi-envelope position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label text-secondary small fw-bold">EMAIL ĐĂNG NHẬP</label>
+                    <div class="position-relative">
+                        <input asp-for="Email" class="form-control custom-input" placeholder="name@example.com" />
+                        <i class="bi bi-envelope position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                    </div>
                 </div>
                 <span asp-validation-for="Email" class="text-danger small mb-3 d-block"></span>
 
-                <div class="form-floating mb-3 custom-floating">
-                    <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại" />
-                    <label asp-for="PhoneNumber">Số điện thoại</label>
-                    <i class="bi bi-telephone position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold">SỐ ĐIỆN THOẠI</label>
+                    <div class="position-relative">
+                        <input asp-for="PhoneNumber" class="form-control custom-input" placeholder="Nhập số điện thoại" />
+                        <i class="bi bi-telephone position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                    </div>
                 </div>
                 <span asp-validation-for="PhoneNumber" class="text-danger small mb-3 d-block"></span>
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="form-floating mb-3 custom-floating">
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" />
-                            <label asp-for="Password">Mật khẩu</label>
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label text-secondary small fw-bold">MẬT KHẨU</label>
+                            <input asp-for="Password" type="password" class="form-control custom-input" placeholder="Nhập mật khẩu" />
                         </div>
                         <span asp-validation-for="Password" class="text-danger small d-block"></span>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-floating mb-3 custom-floating">
-                            <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Xác nhận" />
-                            <label asp-for="ConfirmPassword">Xác nhận</label>
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label text-secondary small fw-bold">XÁC NHẬN</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control custom-input" placeholder="Nhập lại mật khẩu" />
                         </div>
                         <span asp-validation-for="ConfirmPassword" class="text-danger small d-block"></span>
                     </div>
@@ -147,37 +153,38 @@
         padding: 2rem;
     }
 
-    /* Custom Floating Input */
-    .custom-floating .form-control {
+    /* Custom Input (Non-floating) */
+    .custom-input {
         background-color: #333;
         border: 1px solid transparent;
-        color: #fff;
+        color: #fff !important;
         border-radius: 8px;
-        height: 55px;
+        height: 50px;
         font-weight: 500;
+        padding-right: 45px;
     }
 
-    .custom-floating .form-control:focus {
+    .custom-input:focus {
         background-color: #404040;
         border-color: var(--cinema-red);
         box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2);
         color: #fff;
     }
-
-    .custom-floating label {
-        color: #aaa;
+    
+    .custom-input::placeholder {
+        color: #666;
+        font-size: 0.95rem;
     }
 
-    .custom-floating .form-control:focus ~ label,
-    .custom-floating .form-control:not(:placeholder-shown) ~ label {
-        color: var(--cinema-red);
-        opacity: 1;
-        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-    }
-
-    /* Input Icons */
-    .custom-floating i {
-        pointer-events: none;
+    /* Autofill Fix for Dark Theme */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #333 inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+        caret-color: white;
     }
 
     /* Checkbox */

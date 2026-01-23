@@ -30,17 +30,21 @@
             <form method="post" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]">
                 @Html.AntiForgeryToken()
                 
-                <div class="form-floating mb-4 custom-floating">
-                    <input asp-for="Email" class="form-control" placeholder="Email" />
-                    <label asp-for="Email">Email / Tên đăng nhập</label>
-                    <i class="bi bi-person-circle position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                <div class="mb-4">
+                    <label asp-for="Email" class="form-label text-secondary small fw-bold">EMAIL / TÊN ĐĂNG NHẬP</label>
+                    <div class="position-relative">
+                        <input asp-for="Email" class="form-control custom-input" placeholder="Nhập email hoặc tên đăng nhập" />
+                        <i class="bi bi-person-circle position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                    </div>
                 </div>
                 <span asp-validation-for="Email" class="text-danger small mb-3 d-block"></span>
 
-                <div class="form-floating mb-4 custom-floating">
-                    <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" />
-                    <label asp-for="Password">Mật khẩu</label>
-                    <i class="bi bi-key position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label text-secondary small fw-bold">MẬT KHẨU</label>
+                    <div class="position-relative">
+                        <input asp-for="Password" type="password" class="form-control custom-input" placeholder="Nhập mật khẩu" />
+                        <i class="bi bi-key position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                    </div>
                 </div>
                 <span asp-validation-for="Password" class="text-danger small mb-3 d-block"></span>
 
@@ -139,36 +143,38 @@
         z-index: 1;
     }
 
-    /* Custom Floating Input */
-    .custom-floating .form-control {
+    /* Custom Input (Non-floating) */
+    .custom-input {
         background-color: #333333;
         border: 1px solid transparent;
-        color: #ffffff;
+        color: #ffffff !important;
         border-radius: 8px;
-        height: 55px;
+        height: 50px;
         font-weight: 500;
+        padding-right: 45px; /* Space for icon */
     }
 
-    .custom-floating .form-control:focus {
+    .custom-input:focus {
         background-color: #404040;
         border-color: #e50914; /* Cinema Red */
         box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.2);
         color: #ffffff;
     }
-
-    .custom-floating label {
-        color: #aaaaaa;
+    
+    .custom-input::placeholder {
+        color: #666;
+        font-size: 0.95rem;
     }
 
-    .custom-floating .form-control:focus ~ label,
-    .custom-floating .form-control:not(:placeholder-shown) ~ label {
-        color: #e50914;
-        opacity: 1;
-        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-    }
-
-    .custom-floating i {
-        pointer-events: none;
+    /* Autofill Fix for Dark Theme */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #333333 inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+        caret-color: white;
     }
 
     /* Checkbox */
