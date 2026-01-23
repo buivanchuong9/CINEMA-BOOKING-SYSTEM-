@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets/css/site.css"
     },
     {
+      "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/css/typography-fix.css",
+      "PackagePath": "staticwebassets/css/typography-fix.css"
+    },
+    {
       "Id": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/favicon.ico",
       "PackagePath": "staticwebassets/favicon.ico"
     },

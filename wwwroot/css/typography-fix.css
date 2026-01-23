@@ -1,0 +1,300 @@
+/* ============================================
+   TYPOGRAPHY FIXES - Improved Text Visibility
+   ============================================ */
+
+/* Cải thiện màu text để dễ đọc hơn */
+:root {
+    /* Override text colors for better contrast */
+    --text-primary: #ffffff !important;
+    --text-secondary: #e2e8f0 !important;
+    --text-muted: #cbd5e1 !important;
+}
+
+/* Đảm bảo tất cả text có màu rõ ràng */
+body {
+    color: #ffffff !important;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* Paragraphs */
+p {
+    color: #e2e8f0 !important;
+}
+
+/* Labels */
+label,
+.form-label {
+    color: #e2e8f0 !important;
+    font-weight: 500;
+}
+
+/* Small text */
+small,
+.small {
+    color: #cbd5e1 !important;
+}
+
+/* Text muted - make it more visible */
+.text-muted {
+    color: #cbd5e1 !important;
+    opacity: 1 !important;
+}
+
+/* Text secondary */
+.text-secondary {
+    color: #e2e8f0 !important;
+}
+
+/* Card text */
+.card-text {
+    color: #e2e8f0 !important;
+}
+
+/* Form controls */
+.form-control,
+.form-select {
+    color: #ffffff !important;
+}
+
+.form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1;
+}
+
+/* Dropdown options */
+option {
+    background: #1e293b;
+    color: #ffffff;
+}
+
+/* Table text */
+table {
+    color: #e2e8f0 !important;
+}
+
+th {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+td {
+    color: #e2e8f0 !important;
+}
+
+/* Alert text */
+.alert {
+    color: #1e293b !important;
+}
+
+.alert-info {
+    background-color: #3b82f6;
+    border-color: #2563eb;
+    color: #ffffff !important;
+}
+
+.alert-success {
+    background-color: #10b981;
+    border-color: #059669;
+    color: #ffffff !important;
+}
+
+.alert-danger {
+    background-color: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff !important;
+}
+
+.alert-warning {
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: #1e293b !important;
+}
+
+/* Badge text */
+.badge {
+    font-weight: 600;
+}
+
+/* List items */
+li {
+    color: #e2e8f0 !important;
+}
+
+/* Links */
+a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #93c5fd;
+}
+
+/* Navbar links */
+.nav-link {
+    color: #e2e8f0 !important;
+}
+
+.nav-link:hover {
+    color: #ffffff !important;
+}
+
+/* Breadcrumb */
+.breadcrumb-item {
+    color: #cbd5e1 !important;
+}
+
+.breadcrumb-item.active {
+    color: #ffffff !important;
+}
+
+/* Pagination */
+.page-link {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0 !important;
+}
+
+.page-link:hover {
+    background-color: #334155;
+    color: #ffffff !important;
+}
+
+.page-item.active .page-link {
+    background-color: #e11d48;
+    border-color: #e11d48;
+    color: #ffffff !important;
+}
+
+/* Modal text */
+.modal-body {
+    color: #e2e8f0 !important;
+}
+
+.modal-title {
+    color: #ffffff !important;
+}
+
+/* Ensure all text in glass cards is visible */
+.glass-card,
+.glass-card * {
+    color: #e2e8f0 !important;
+}
+
+.glass-card h1,
+.glass-card h2,
+.glass-card h3,
+.glass-card h4,
+.glass-card h5,
+.glass-card h6 {
+    color: #ffffff !important;
+}
+
+/* Booking details text */
+.booking-info-bar {
+    color: #ffffff !important;
+}
+
+.booking-info-bar strong {
+    color: #ffffff !important;
+}
+
+/* Seat legend text */
+.seat-legend {
+    color: #e2e8f0 !important;
+}
+
+/* Price text - make it stand out */
+.price,
+[class*="price"] {
+    color: #10b981 !important;
+    font-weight: 600;
+}
+
+/* Cinema name, room name - important info */
+.cinema-name,
+.room-name,
+[class*="cinema"],
+[class*="room"] {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+/* Date and time - important info */
+.date,
+.time,
+[class*="date"],
+[class*="time"] {
+    color: #fbbf24 !important;
+    font-weight: 500;
+}
+
+/* Admin panel specific */
+.admin-nav-link {
+    color: #cbd5e1 !important;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+    color: #ffffff !important;
+}
+
+/* Ensure input text is always visible */
+input,
+textarea,
+select {
+    color: #ffffff !important;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+    color: #94a3b8 !important;
+    opacity: 0.7;
+}
+
+/* Fix for any remaining low-contrast text */
+* {
+    text-shadow: none !important;
+}
+
+/* Specific fixes for common UI elements */
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-light {
+    color: #f8fafc !important;
+}
+
+.text-dark {
+    color: #1e293b !important;
+}
+
+/* Ensure buttons have good contrast */
+.btn {
+    font-weight: 600;
+}
+
+.btn-outline-light {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-outline-light:hover {
+    color: #1e293b !important;
+    background-color: #ffffff;
+}

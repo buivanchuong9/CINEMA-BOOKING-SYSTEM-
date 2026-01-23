@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "fYq27fqTBTAC61cIcxyvYHidh/4hP1lS7ARz+M7r9Wo=",
+  "Hash": "wHQTBy43kbDnQQym9MfOSu57JTjYss9TgzC/yml+udE=",
   "Source": "BE",
   "BasePath": "_content/BE",
   "Mode": "Default",
@@ -1231,6 +1231,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/css/site.css"
+    },
+    {
+      "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/css/typography-fix.css",
+      "SourceId": "BE",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/",
+      "BasePath": "_content/BE",
+      "RelativePath": "css/typography-fix.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/css/typography-fix.css"
     },
     {
       "Identity": "/Users/chuong/Desktop/beCinema/CINEMA-BOOKING-SYSTEM-/wwwroot/favicon.ico",
