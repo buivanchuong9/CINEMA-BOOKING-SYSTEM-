@@ -73,7 +73,7 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-CSRF-TOKEN";
 });
 
-// ===== 6. SESSION CONFIGURATION (for cart, temp data) =====
+// ===== 7. SESSION CONFIGURATION (for cart, temp data) =====
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -81,25 +81,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ===== 7. LOCALIZATION CONFIGURATION =====
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var supportedCultures = new[] { "vi-VN", "en-US" };
-    options.SetDefaultCulture("vi-VN")
-        .AddSupportedCultures(supportedCultures)
-        .AddSupportedUICultures(supportedCultures);
-    
-    options.RequestCultureProviders.Insert(0, new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider
-    {
-        CookieName = "CineMax.Culture"
-    });
-});
-
-builder.Services.AddControllersWithViews()
-    .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
-    .AddDataAnnotationsLocalization();
+builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
@@ -114,10 +96,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-// Localization middleware
-var localizationOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
-app.UseRequestLocalization(localizationOptions.Value);
 
 app.UseAuthentication(); // QUAN TRỌNG: Phải đặt trước UseAuthorization
 app.UseAuthorization();

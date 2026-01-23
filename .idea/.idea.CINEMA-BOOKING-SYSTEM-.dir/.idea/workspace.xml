@@ -10,19 +10,14 @@
   <component name="ChangeListManager">
     <list default="true" id="eeef43fb-7576-458d-af98-25d9d14e3419" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/RoomsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/RoomsController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/ShowtimesController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/ShowtimesController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Cinemas/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Cinemas/Edit.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/DashboardController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/DashboardController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Foods/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Foods/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Genres/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Genres/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Rooms/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Rooms/Edit.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Shared/_Layout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Shared/_Layout.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Showtimes/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Showtimes/Create.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Showtimes/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Showtimes/Edit.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Controllers/LanguageController.cs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Views/Home/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Views/Home/Index.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Resources/Views/Shared/_Layout.en-US.resx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Resources/Views/Shared/_Layout.vi-VN.resx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Views/Shared/_LanguageSwitcher.cshtml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Views/Shared/_Layout.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Views/Shared/_Layout.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" afterDir="false" />
@@ -110,6 +105,7 @@
       <workItem from="1768543183519" duration="7108000" />
       <workItem from="1768789176207" duration="111000" />
       <workItem from="1769006787245" duration="4619000" />
+      <workItem from="1769091734205" duration="4666000" />
     </task>
     <servers />
   </component>
@@ -149,6 +145,9 @@
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Areas/Admin/Views/Cinemas/Edit.cshtml</url>
           <line>67</line>
+          <properties isMultiMethodBreakpoint="true">
+            <option name="multiMethodBreakpoint" value="true" />
+          </properties>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
