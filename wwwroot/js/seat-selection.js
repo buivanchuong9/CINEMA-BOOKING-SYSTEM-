@@ -140,15 +140,19 @@ function getSeatStatusFromServer(seatId) {
 function getSeatClass(seatType, status) {
     let classes = ['seat'];
 
+    // Status class - Mutually Exclusive
+    if (status === 'sold') {
+        classes.push('seat-sold');
+    } else if (status === 'held') {
+        classes.push('seat-held');
+    } else {
+        classes.push('seat-available');
+    }
+
     // Type class
     if (seatType === 'vip') classes.push('seat-vip');
     else if (seatType === 'couple') classes.push('seat-couple');
-    else classes.push('seat-standard');
-
-    // Status class
-    if (status === 'sold') classes.push('seat-sold');
-    else if (status === 'held') classes.push('seat-held');
-    else classes.push('seat-available');
+    // Default standard styling is applied by base .seat class or explicit standard class if needed
 
     return classes.join(' ');
 }

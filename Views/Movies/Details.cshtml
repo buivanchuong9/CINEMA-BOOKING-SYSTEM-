@@ -135,9 +135,10 @@
                             <div class="row g-3">
                                 @foreach (var showtime in cinemaGroup.OrderBy(st => st.StartTime))
                                 {
+                                    var isExpired = showtime.StartTime < DateTime.Now;
                                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6">
-                                        <a href="/Booking/SelectSeats?showtimeId=@showtime.Id" 
-                                           class="showtime-card">
+                                        <a href="@(isExpired ? "javascript:void(0)" : "/Booking/SelectSeats?showtimeId=" + showtime.Id)" 
+                                           class="showtime-card @(isExpired ? "expired" : "")">
                                             <div class="showtime-time">@showtime.StartTime.ToString("HH:mm")</div>
                                             <div class="showtime-room">@(showtime.Room?.Name ?? "N/A")</div>
                                             <div class="showtime-price">@showtime.BasePrice.ToString("N0") ₫</div>
@@ -278,6 +279,18 @@
     
     .showtime-card:active {
         transform: translateY(-2px) scale(1.01);
+    }
+    
+    .showtime-card.expired {
+        opacity: 0.5;
+        cursor: not-allowed;
+        filter: grayscale(1);
+    }
+    
+    .showtime-card.expired:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: rgba(100, 116, 139, 0.3);
     }
     
     .showtime-time {

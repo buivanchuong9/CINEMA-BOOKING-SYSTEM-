@@ -26,14 +26,53 @@
                 <div class="membership-badge mb-3">
                     <span class="badge bg-gradient-gold fs-6">
                         <i class="bi bi-star-fill me-1"></i>
-                        @Model.MembershipLevel
+                        @switch (Model.MembershipLevel)
+                        {
+                            case "Bronze":
+                                <text>Đồng</text>
+                                break;
+                            case "Silver":
+                                <text>Bạc</text>
+                                break;
+                            case "Gold":
+                                <text>Vàng</text>
+                                break;
+                            case "Platinum":
+                                <text>Bạch Kim</text>
+                                break;
+                            default:
+                                @Model.MembershipLevel
+                                break;
+                        }
                     </span>
                 </div>
 
                 <div class="points-display mb-3">
                     <p class="mb-1 small text-muted">Điểm tích lũy</p>
                     <h3 class="fw-bold text-cinema-red">@Model.Points</h3>
+                    <p class="small text-muted mb-0">(@Model.TotalTicketsPurchased vé đã mua)</p>
                 </div>
+                
+                @if (Model.MembershipLevel != "Platinum")
+                {
+                    <div class="progress-container mb-3 text-start">
+                        @{
+                            int current = Model.TotalTicketsPurchased;
+                            int target = Model.MembershipLevel == "Bronze" ? 2 : 10;
+                            int nextTarget = Model.MembershipLevel == "Bronze" ? 2 : 10;
+                            string nextRank = Model.MembershipLevel == "Bronze" ? "Bạc" : "Bạch Kim";
+                            int percent = (int)((double)current / nextTarget * 100);
+                            if (percent > 100) percent = 100;
+                        }
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted">Tiến độ lên @nextRank</span>
+                            <span class="fw-bold">@current/@nextTarget vé</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-cinema-red" role="progressbar" style="width: @percent%"></div>
+                        </div>
+                    </div>
+                }
 
                 <hr class="my-3">
 
@@ -55,6 +94,71 @@
 
         <!-- Main Content -->
         <div class="col-md-9">
+            <!-- Rewards & Vouchers -->
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">
+                        <i class="bi bi-gift me-2 text-cinema-red"></i>
+                        Kho Voucher & Đổi Thưởng
+                    </h4>
+                    
+                    @if (Model.Points >= 1000)
+                    {
+                        <form asp-action="RedeemVoucher" method="post">
+                            <button type="submit" class="btn btn-warning fw-bold pulse-animation">
+                                <i class="bi bi-stars me-2"></i>
+                                Đổi 1000 điểm lấy Voucher
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                         <button class="btn btn-secondary" disabled>
+                            <i class="bi bi-lock me-2"></i>
+                            Cần 1000 điểm để đổi
+                        </button>
+                    }
+                </div>
+
+                <!-- Active Vouchers List -->
+                @{
+                    var vouchers = ViewBag.Vouchers as List<BE.Core.Entities.Business.Voucher>;
+                }
+                
+                @if (vouchers != null && vouchers.Any())
+                {
+                    <div class="row g-3">
+                        @foreach (var v in vouchers)
+                        {
+                            <div class="col-md-6">
+                                <div class="voucher-ticket p-3 d-flex align-items-center">
+                                    <div class="voucher-left text-center pe-3 border-end border-dashed">
+                                        <div class="display-6 fw-bold text-cinema-red">@v.DiscountPercent.ToString("0")%</div>
+                                        <div class="small text-uppercase">OFF</div>
+                                    </div>
+                                    <div class="voucher-right ps-3 flex-grow-1">
+                                        <h6 class="fw-bold text-warning mb-1">@v.Code</h6>
+                                        <p class="small text-muted mb-1">@v.Description</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-dark-subtle text-light border border-secondary">
+                                                HSD: @v.ExpiryDate.ToString("dd/MM/yyyy")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted border border-dashed rounded-3">
+                        <i class="bi bi-ticket-perforated display-4 mb-3 d-block opacity-50"></i>
+                        <p class="mb-0">Bạn chưa có voucher nào. Hãy đổi điểm ngay!</p>
+                    </div>
+                }
+            </div>
+
             <!-- Profile Info -->
             <div class="glass-card p-4 mb-4">
                 <h4 class="fw-bold mb-4">
@@ -87,7 +191,16 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small text-muted">Cấp độ thành viên</label>
-                        <p class="fw-bold text-popcorn-gold">@Model.MembershipLevel</p>
+                        <p class="fw-bold text-popcorn-gold">
+                            @switch (Model.MembershipLevel)
+                            {
+                                case "Bronze": <text>Đồng</text>; break;
+                                case "Silver": <text>Bạc</text>; break;
+                                case "Gold": <text>Vàng</text>; break;
+                                case "Platinum": <text>Bạch Kim</text>; break;
+                                default: @Model.MembershipLevel; break;
+                            }
+                        </p>
                     </div>
                 </div>
 
@@ -126,5 +239,42 @@
         width: 120px;
         height: 120px;
         margin: 0 auto;
+    }
+    
+    .voucher-ticket {
+        background: linear-gradient(to right, #2a2a2a, #202020);
+        border: 1px solid #444;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .voucher-ticket::before, .voucher-ticket::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        background-color: #0f172a; /* Match body bg */
+        border-radius: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .voucher-ticket::before { left: -10px; }
+    .voucher-ticket::after { right: -10px; }
+
+    .border-dashed {
+        border-color: #555 !important;
+        border-style: dashed !important;
+    }
+    
+    @@keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+    
+    .pulse-animation {
+        animation: pulse-red 2s infinite;
     }
 </style>

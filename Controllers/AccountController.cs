@@ -13,15 +13,18 @@ public class AccountController : Controller
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly BE.Core.Interfaces.IUnitOfWork _unitOfWork;
 
     public AccountController(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        BE.Core.Interfaces.IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
+        _unitOfWork = unitOfWork;
     }
 
     // GET: /Account/Register
@@ -176,6 +179,61 @@ public class AccountController : Controller
             return RedirectToAction("Login");
         }
 
+        // Load active vouchers
+        ViewBag.Vouchers = (await _unitOfWork.Vouchers.GetAllAsync())
+            .Where(v => v.UserId == user.Id && v.IsActive && v.ExpiryDate > DateTime.Now && v.UsedCount < (v.UsageLimit ?? 1))
+            .OrderByDescending(v => v.CreatedAt)
+            .ToList();
+
         return View(user);
+    }
+
+    // POST: /Account/RedeemVoucher
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RedeemVoucher()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return RedirectToAction("Login");
+
+        const int VOUCHER_COST = 1000;
+
+        if (user.Points < VOUCHER_COST)
+        {
+            TempData["Error"] = $"Bạn cần tích lũy đủ {VOUCHER_COST} điểm để đổi voucher!";
+            return RedirectToAction("Profile");
+        }
+
+        // Deduct points
+        user.Points -= VOUCHER_COST;
+        await _userManager.UpdateAsync(user);
+
+        // Randomize discount 30-70%
+        var rnd = new Random();
+        int discount = rnd.Next(30, 71); // 30 to 70
+
+        // Create Voucher
+        var voucher = new Voucher
+        {
+            Code = $"REWARD-{DateTime.Now.Ticks.ToString().Substring(10)}-{discount}",
+            Name = $"Voucher Ưu Đãi {discount}%",
+            Description = "Voucher đổi từ điểm tích lũy",
+            UserId = user.Id,
+            DiscountPercent = discount,
+            MaxAmount = 100000, // Max 100k
+            MinOrderAmount = 0,
+            StartDate = DateTime.Now,
+            ExpiryDate = DateTime.Now.AddDays(30),
+            IsActive = true,
+            UsageLimit = 1,
+            UsedCount = 0,
+            CreatedAt = DateTime.Now
+        };
+
+        await _unitOfWork.Vouchers.AddAsync(voucher);
+        await _unitOfWork.SaveChangesAsync();
+
+        TempData["Success"] = $"Chúc mừng! Bạn nhận được voucher giảm {discount}% (Code: {voucher.Code})";
+        return RedirectToAction("Profile");
     }
 }

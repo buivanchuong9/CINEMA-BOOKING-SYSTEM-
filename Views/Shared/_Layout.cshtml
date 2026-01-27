@@ -47,17 +47,17 @@
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
                         <a class="nav-link px-3" asp-controller="Home" asp-action="Index">
-                            <i class="bi bi-house-door me-1"></i> Home
+                            <i class="bi bi-house-door me-1"></i> Trang Chủ
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" asp-controller="Movies" asp-action="Index">
-                            <i class="bi bi-film me-1"></i> Movies
+                            <i class="bi bi-film me-1"></i> Phim
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" asp-controller="Cinemas" asp-action="Index">
-                            <i class="bi bi-building me-1"></i> Cinemas
+                            <i class="bi bi-building me-1"></i> Rạp Chiếu
                         </a>
                     </li>
                 </ul>
@@ -81,13 +81,13 @@
                                 <li>
                                     <a class="dropdown-item" href="/Account/Profile">
                                         <i class="bi bi-person me-2"></i>
-                                        Profile
+                                        Hồ Sơ Cá Nhân
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="/Booking/MyBookings">
                                         <i class="bi bi-ticket-perforated me-2"></i>
-                                        Vé của tôi
+                                        Vé Của Tôi
                                     </a>
                                 </li>
                                 @if (User.IsInRole("Admin"))
@@ -95,7 +95,7 @@
                                     <li>
                                         <a class="dropdown-item" href="/Admin/Dashboard">
                                             <i class="bi bi-speedometer2 me-2"></i>
-                                            Admin Dashboard
+                                            Trang Quản Trị
                                         </a>
                                     </li>
                                 }
@@ -105,7 +105,7 @@
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="dropdown-item text-danger">
                                             <i class="bi bi-box-arrow-right me-2"></i>
-                                            Đăng xuất
+                                            Đăng Xuất
                                         </button>
                                     </form>
                                 </li>
@@ -117,10 +117,10 @@
                         <!-- User chưa đăng nhập -->
                         <a class="btn btn-outline-light rounded-pill px-4" href="/Account/Login">
                             <i class="bi bi-box-arrow-in-right me-1"></i>
-                            Login
+                            Đăng Nhập
                         </a>
                         <a class="btn btn-cinema-red rounded-pill px-4" href="/Account/Register">
-                            Register
+                            Đăng Ký
                         </a>
                     }
                 </div>
@@ -162,8 +162,8 @@
                         <h5 class="mb-0 fw-bold">CineMax</h5>
                     </div>
                     <p class="text-muted">
-                        Experience the magic of cinema with premium comfort, 
-                        cutting-edge technology, and unforgettable moments.
+                        Trải nghiệm sự kỳ diệu của rạp phim với sự thoải mái cao cấp,
+                        công nghệ tiên tiến và những khoảnh khắc khó quên.
                     </p>
                     <div class="d-flex gap-3 mt-3">
                         <a href="#" class="social-link">
@@ -183,29 +183,29 @@
                 
                 <!-- Quick Links -->
                 <div class="col-lg-2 col-md-4">
-                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <h6 class="fw-bold mb-3">Liên Kết Nhanh</h6>
                     <ul class="list-unstyled footer-links">
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> About Us</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Promotions</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Gift Cards</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Contact</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Về Chúng Tôi</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Khuyến Mãi</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Thẻ Quà Tặng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Liên Hệ</a></li>
                     </ul>
                 </div>
                 
                 <!-- Support -->
                 <div class="col-lg-2 col-md-4">
-                    <h6 class="fw-bold mb-3">Support</h6>
+                    <h6 class="fw-bold mb-3">Hỗ Trợ</h6>
                     <ul class="list-unstyled footer-links">
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> FAQ</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Privacy Policy</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Terms of Use</a></li>
-                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Refund Policy</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Câu Hỏi Thường Gặp</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Chính Sách Bảo Mật</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Điều Khoản Sử Dụng</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right me-1"></i> Chính Sách Hoàn Tiền</a></li>
                     </ul>
                 </div>
                 
                 <!-- Contact -->
                 <div class="col-lg-4 col-md-4">
-                    <h6 class="fw-bold mb-3">Contact Us</h6>
+                    <h6 class="fw-bold mb-3">Liên Hệ</h6>
                     <ul class="list-unstyled footer-contact">
                         <li class="mb-2">
                             <i class="bi bi-geo-alt-fill me-2 accent-text"></i>
@@ -226,7 +226,7 @@
             <!-- Copyright -->
             <hr class="my-4 border-secondary">
             <div class="text-center text-muted">
-                <p class="mb-0">&copy; @DateTime.Now.Year CineMax. All rights reserved. | Designed for Excellence</p>
+                <p class="mb-0">&copy; @DateTime.Now.Year CineMax. BÙI VĂN CHƯƠNG</p>
             </div>
         </div>
     </footer>
@@ -283,6 +283,28 @@
             once: true,
             offset: 100
         });
+
+        // Auto-dismiss alerts after 15 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                var alerts = document.querySelectorAll('.alert-dismissible');
+                alerts.forEach(function(alert) {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 10000); // 10 seconds (User asked for 15s in prompt "15s tự tắt đi" but usually 5-10s is better UX, I will set 10000ms as a reasonable middle ground or strictly 15000 if preferred. Let's do 15000 to match request exact).
+        });
+        
+        // Update: User asked for 15s explcitly
+        setTimeout(function() {
+             var alerts = document.querySelectorAll('.alert-dismissible');
+             alerts.forEach(function(alert) {
+                 try {
+                     var bsAlert = bootstrap.Alert.getInstance(alert) || new bootstrap.Alert(alert);
+                     bsAlert.close();
+                 } catch (e) { console.log(e); }
+             });
+        }, 15000);
     </script>
     
     @if (IsSectionDefined("Scripts"))

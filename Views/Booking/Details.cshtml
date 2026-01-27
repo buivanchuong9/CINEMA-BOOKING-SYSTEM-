@@ -37,8 +37,8 @@
 <!-- Success Alert -->
 @if (booking?.Status == BookingStatus.Paid)
 {
-    <div class="container no-print mb-4">
-        <div class="alert alert-success border-0 shadow-sm">
+    <div class="container no-print mb-4" id="successAlert">
+        <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show">
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill fs-3 me-3"></i>
                 <div>
@@ -46,8 +46,26 @@
                     <p class="mb-0 small">Vé của bạn đã được xác nhận. Vui lòng xuất trình mã QR này tại quầy vé.</p>
                 </div>
             </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
+
+    <script>
+        // Auto dismiss success alert after 10 seconds
+        setTimeout(function() {
+            var alertElement = document.getElementById('successAlert');
+            if (alertElement) {
+                // Fade out effect
+                alertElement.style.transition = 'opacity 1s ease-out';
+                alertElement.style.opacity = '0';
+                
+                // Remove from DOM after transition
+                setTimeout(function() {
+                    alertElement.remove();
+                }, 1000);
+            }
+        }, 10000); // 10 seconds
+    </script>
 }
 
 <!-- E-TICKET CONTAINER -->
@@ -290,29 +308,24 @@
     
     <script>
         // Generate QR Code with booking data
-        const bookingData = {
-            id: @booking?.Id,
-            code: '@booking?.Id.ToString().PadLeft(8, '0')',
-            movieTitle: '@movie?.Title',
-            cinema: '@cinema?.Name',
-            room: '@room?.Name',
-            showtime: '@showtime?.StartTime.ToString("yyyy-MM-dd HH:mm")',
-            seats: '@seatList',
-            totalAmount: @booking?.TotalAmount,
-            status: '@booking?.Status',
-            transactionId: '@(booking?.TransactionId ?? "")'
-        };
+        // Generate QR Code with JUST the booking code (simple and consistent)
+        // Complex JSON often breaks QR rendering if too large or has special chars
+        const bookingCode = '@booking?.Id.ToString().PadLeft(8, '0')';
+        const bookingDataStr = JSON.stringify({
+             code: bookingCode,
+             id: @booking?.Id
+        });
 
         // Create QR Code with custom styling
         const qrcodeContainer = document.getElementById('qrcode');
         try {
             new QRCode(qrcodeContainer, {
-                text: JSON.stringify(bookingData),
+                text: bookingDataStr,
                 width: 200,
                 height: 200,
                 colorDark: '#e11d48',
                 colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                correctLevel: QRCode.CorrectLevel.M
             });
         } catch (error) {
             console.error('QR Code generation failed:', error);

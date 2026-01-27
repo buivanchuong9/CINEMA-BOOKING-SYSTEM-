@@ -88,6 +88,10 @@
                             <span>Đã bán</span>
                         </div>
                         <div class="legend-item">
+                            <div class="seat-icon seat-held"></div>
+                            <span>Đang giữ</span>
+                        </div>
+                        <div class="legend-item">
                             <div class="seat-icon seat-vip"></div>
                             <span>VIP</span>
                         </div>
@@ -115,8 +119,8 @@
                         <i class="bi bi-receipt me-2 text-popcorn-gold"></i>
                         Tổng Kết Đặt Vé
                     </h5>
-
-                    <!-- Selected Seats -->
+                    
+                    <!-- ... -->
                     <div class="mb-4">
                         <h6 class="text-muted mb-3">Ghế Đã Chọn</h6>
                         <div id="selectedSeatsList" class="selected-seats-list">
@@ -247,7 +251,7 @@
         }
         window.seatsData = @Html.Raw(JsonSerializer.Serialize(seatsList));
         
-        window.seatStatusData = @Html.Raw(JsonSerializer.Serialize(seatStatus));
+        window.seatStatusData = @Html.Raw(JsonSerializer.Serialize(seatStatus, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         
         @{
             var foodsList = foods.Select(f => new {
@@ -339,14 +343,25 @@
             transform: scale(1.1);
         }
         
-        .seat-sold, .seat-held {
-            background: #dc2626;
+        .seat-sold {
+            background-color: #dc2626 !important; /* Force RED */
+            border-color: #b91c1c !important;
+            color: #ccc;
+            cursor: not-allowed !important;
+            pointer-events: none; /* Prevent clicks */
+            opacity: 0.7;
+        }
+
+        .seat-held {
+            background-color: #f59e0b !important; /* Amber for Holding */
             cursor: not-allowed;
-            opacity: 0.5;
+            opacity: 0.8;
+            pointer-events: none;
         }
         
         .seat-vip {
-            background: #f59e0b;
+            background: #8b5cf6; /* Purple for VIP */
+            color: #fff;
         }
         
         .seat-couple {

@@ -19,6 +19,11 @@ public class User : IdentityUser
     /// Điểm tích lũy (1 điểm = 10,000 VND)
     /// </summary>
     public int Points { get; set; } = 0;
+
+    /// <summary>
+    /// Tổng số vé đã mua (dùng để xét hạng thành viên)
+    /// </summary>
+    public int TotalTicketsPurchased { get; set; } = 0;
     
     /// <summary>
     /// Cấp độ thành viên (Bronze, Silver, Gold, Platinum)

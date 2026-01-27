@@ -75,5 +75,11 @@ public class Voucher
     /// </summary>
     public bool IsActive { get; set; } = true;
     
+    /// <summary>
+    /// ID người sở hữu voucher (nếu là voucher cá nhân)
+    /// </summary>
+    [MaxLength(450)]
+    public string? UserId { get; set; }
+    
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

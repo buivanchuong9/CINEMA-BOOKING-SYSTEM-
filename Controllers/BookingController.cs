@@ -324,6 +324,60 @@ public class BookingController : Controller
         return RedirectToAction("MyBookings");
     }
 
+    // ADMIN/DEV HELPER: Generate seats if missing
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> FixMissingSeats(int showtimeId)
+    {
+        var showtime = await _unitOfWork.Showtimes.GetByIdAsync(showtimeId);
+        if (showtime == null) return NotFound();
+
+        var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+        if (room == null) return NotFound();
+
+        // Check if seats exist
+        var existingSeats = (await _unitOfWork.Seats.GetAllAsync())
+            .Where(s => s.RoomId == room.Id)
+            .Any();
+
+        if (!existingSeats)
+        {
+            var seatTypes = (await _unitOfWork.SeatTypes.GetAllAsync()).ToList();
+            var standardType = seatTypes.FirstOrDefault(st => st.Name == "Standard") ?? seatTypes.First();
+
+            var seats = new List<BE.Core.Entities.CinemaInfrastructure.Seat>();
+            // Default 10x10 if not specified (or use room props if available)
+            int rows = room.TotalRows > 0 ? room.TotalRows : 10;
+            int cols = room.SeatsPerRow > 0 ? room.SeatsPerRow : 10;
+
+            for (int r = 0; r < rows; r++)
+            {
+                char rowLabel = (char)('A' + r);
+                for (int c = 1; c <= cols; c++)
+                {
+                    seats.Add(new BE.Core.Entities.CinemaInfrastructure.Seat
+                    {
+                        RoomId = room.Id,
+                        Row = rowLabel.ToString(),
+                        Number = c,
+                        SeatTypeId = standardType.Id,
+                        Status = BE.Core.Enums.SeatStatus.Available,
+                        CreatedAt = DateTime.Now
+                    });
+                }
+            }
+            await _unitOfWork.Seats.AddRangeAsync(seats);
+            await _unitOfWork.SaveChangesAsync();
+            TempData["Success"] = $"Đã tạo {seats.Count} ghế cho phòng {room.Name}!";
+        }
+        else
+        {
+            TempData["Error"] = "Phòng đã có ghế, không thể tạo lại!";
+        }
+
+        return RedirectToAction("SelectSeats", new { showtimeId = showtimeId });
+    }
+
     // Legacy view support
     public IActionResult SeatSelection()
     {

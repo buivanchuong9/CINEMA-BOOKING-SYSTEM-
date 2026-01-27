@@ -22,7 +22,7 @@ public class ShowtimeRepository : GenericRepository<Showtime>, IShowtimeReposito
         return await _dbSet
             .Include(st => st.Room)
                 .ThenInclude(r => r.Cinema)
-            .Where(st => st.MovieId == movieId && st.StartTime >= DateTime.Now)
+            .Where(st => st.MovieId == movieId && st.StartTime >= DateTime.Now.Date && st.IsActive)
             .OrderBy(st => st.StartTime)
             .AsNoTracking()
             .ToListAsync();

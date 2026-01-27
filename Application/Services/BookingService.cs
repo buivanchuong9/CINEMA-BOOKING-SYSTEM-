@@ -313,24 +313,61 @@ public class BookingService : IBookingService
         
         // CRITICAL: Set seat status to Booked AFTER payment success
         var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
-            .Where(bd => bd.BookingId == bookingId);
+            .Where(bd => bd.BookingId == bookingId)
+            .ToList(); // Materialize list
         
         foreach (var detail in bookingDetails)
         {
             var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
             if (seat != null)
             {
-                seat.Status = SeatStatus.Booked;
-                _unitOfWork.Seats.Update(seat);
-                
                 // Release from Redis
                 if (booking.ShowtimeId.HasValue)
                 {
                     await _redisService.ReleaseSeatAsync(booking.ShowtimeId.Value, seat.Id);
-                    _logger.LogInformation($"[ConfirmPayment] Booked seat {seat.Row}-{seat.Number} and released from Redis");
+                    _logger.LogInformation($"[ConfirmPayment] Released seat {seat.Row}-{seat.Number} from Redis (kept physical status as Available)");
                 }
             }
         }
+        
+        // --- LOYALTY PROGRAM LOGIC ---
+        var user = await _context.Users.FindAsync(booking.UserId);
+        if (user != null)
+        {
+            int ticketCount = bookingDetails.Count;
+            // Add points: 100-300 points per ticket (Random)
+            var rnd = new Random();
+            int pointsEarned = 0;
+            for (int i = 0; i < ticketCount; i++)
+            {
+                pointsEarned += rnd.Next(100, 301);
+            }
+            
+            user.Points += pointsEarned;
+            user.TotalTicketsPurchased += ticketCount;
+            
+            // Tier Upgrade Logic
+            // Bronze -> Silver (>= 2 tickets)
+            // Silver -> Platinum (>= 10 tickets) - Assuming 10 for "Level 3"
+            var currentTier = user.MembershipLevel;
+            var totalTickets = user.TotalTicketsPurchased;
+            
+            if (currentTier == "Bronze" && totalTickets >= 2)
+            {
+                user.MembershipLevel = "Silver";
+                _logger.LogInformation($"[Loyalty] User {user.Id} upgraded to SILVER!");
+            }
+            // Upgrade to Platinum if >= 10 tickets
+            if (totalTickets >= 10 && user.MembershipLevel != "Platinum")
+            {
+                user.MembershipLevel = "Platinum";
+                _logger.LogInformation($"[Loyalty] User {user.Id} upgraded to PLATINUM!");
+            }
+            
+            _logger.LogInformation($"[Loyalty] User {user.Id} earned {pointsEarned} points. Total: {user.Points}. Tickets: {totalTickets}");
+            _context.Users.Update(user);
+        }
+        // -----------------------------
         
         await _unitOfWork.SaveChangesAsync();
 
@@ -441,6 +478,21 @@ public class BookingService : IBookingService
 
         _logger.LogInformation($"[GetSeatStatus] Showtime {showtimeId}, Room {room.Id}, Total seats: {seats.Count}");
 
+        // Get sold seats for this showtime from Bookings table
+        // CRITICAL FIX: Phải check bảng BookingDetails để biết ghế nào đã bán cho suất chiếu này
+        // Get sold seats for this showtime from Bookings table
+        // CRITICAL FIX: Only check Paid bookings. 'Confirmed' does not exist in enum.
+        var bookedSeatIds = await _context.Bookings
+            .Where(b => b.ShowtimeId == showtimeId && b.Status == BookingStatus.Paid)
+            .Join(_context.BookingDetails,
+                booking => booking.Id,
+                detail => detail.BookingId,
+                (booking, detail) => detail.SeatId)
+            .ToListAsync();
+            
+        // Debug
+        _logger.LogInformation($"[GetSeatStatus] Found {bookedSeatIds.Count} sold seats for showtime {showtimeId}");
+
         foreach (var seat in seats)
         {
             var seatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId);
@@ -449,27 +501,21 @@ public class BookingService : IBookingService
             var status = "Available";
             string? heldBy = null;
 
-            // CHECK DATABASE STATUS FIRST - Ưu tiên status từ database
-            if (seat.Status == SeatStatus.Booked)
+            // 1. Check if Sold (in BookingDetails)
+            if (bookedSeatIds.Contains(seat.Id))
             {
                 status = "Sold";
-                _logger.LogInformation($"[GetSeatStatus] Seat {seat.Row}{seat.Number} is BOOKED (Sold)");
             }
-            else if (seat.Status == SeatStatus.Available)
+            // 2. Check if Physical Seat is broken/unavailable (Maintenance)
+            else if (seat.Status != SeatStatus.Available)
             {
-                // Chỉ check Redis khi ghế available trong DB
-                if (await _redisService.IsSeatHeldAsync(showtimeId, seat.Id))
-                {
-                    status = "Held";
-                    heldBy = await _redisService.GetSeatHolderAsync(showtimeId, seat.Id);
-                    _logger.LogInformation($"[GetSeatStatus] Seat {seat.Row}{seat.Number} is HELD by {heldBy}");
-                }
+                status = "Sold"; // Or Maintenance if we had that status
             }
-            else
+            // 3. Check Redis Hold
+            else if (await _redisService.IsSeatHeldAsync(showtimeId, seat.Id))
             {
-                // Các status khác (Reserved, Maintenance...)
-                status = "Sold";
-                _logger.LogInformation($"[GetSeatStatus] Seat {seat.Row}{seat.Number} has status: {seat.Status}");
+                status = "Held";
+                heldBy = await _redisService.GetSeatHolderAsync(showtimeId, seat.Id);
             }
 
             result.Add(new SeatStatusDto

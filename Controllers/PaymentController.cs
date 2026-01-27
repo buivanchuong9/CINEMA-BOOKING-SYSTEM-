@@ -45,17 +45,19 @@ public class PaymentController : Controller
                 return RedirectToAction("Details", "Booking", new { id = booking.Id });
             }
 
-            // Simulate successful payment
-            booking.Status = BookingStatus.Paid;
-            booking.PaymentMethod = PaymentMethod.VNPAY;
-            booking.TransactionId = $"TEST_{DateTime.Now:yyyyMMddHHmmss}";
-            booking.UpdatedAt = DateTime.Now;
+            // Simulate successful payment using Service to ensure consistent logic (Loyalty, Seats, Redis)
+            var success = await _bookingService.ConfirmPaymentAsync(booking.Id, $"TEST_{DateTime.Now:yyyyMMddHHmmss}");
             
-            _unitOfWork.Bookings.Update(booking);
-            await _unitOfWork.SaveChangesAsync();
-            
-            TempData["Success"] = "Thanh toán test thành công! Vé của bạn đã được xác nhận.";
-            return RedirectToAction("Details", "Booking", new { id = booking.Id });
+            if (success)
+            {
+                TempData["Success"] = "Thanh toán test thành công! Vé của bạn đã được xác nhận.";
+                return RedirectToAction("Details", "Booking", new { id = booking.Id });
+            }
+            else
+            {
+                TempData["Error"] = "Lỗi khi xác nhận thanh toán!";
+                return RedirectToAction("Index", "Home");
+            }
         }
         catch (Exception ex)
         {
