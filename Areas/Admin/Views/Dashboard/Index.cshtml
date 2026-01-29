@@ -1,9 +1,6 @@
 @using System.Text.Json
 @{
     ViewData["Title"] = "Admin Dashboard - CineMax";
-    var bookingByStatus = ViewBag.BookingByStatus as List<dynamic> ?? new List<dynamic>();
-    var topMovies = ViewBag.TopMovies as List<dynamic> ?? new List<dynamic>();
-    var revenueChart = ViewBag.RevenueChart as List<dynamic> ?? new List<dynamic>();
 }
 
 <!-- Admin Dashboard -->
@@ -86,7 +83,7 @@
                     <i class="bi bi-graph-up me-2 text-cinema-red"></i>
                     Doanh Thu 7 Ngày Qua
                 </h5>
-                <canvas id="revenueChart" style="width: 100%; height: 350px;"></canvas>
+                <div id="revenueChart" style="width: 100%; height: 350px;"></div>
             </div>
         </div>
 
@@ -97,7 +94,7 @@
                     <i class="bi bi-pie-chart me-2 text-popcorn-gold"></i>
                     Trạng Thái Đặt Vé
                 </h5>
-                <canvas id="statusChart" style="width: 100%; height: 350px;"></canvas>
+                <div id="statusChart" style="width: 100%; height: 320px;"></div>
             </div>
         </div>
     </div>
@@ -107,10 +104,10 @@
         <div class="col-12">
             <div class="glass-card p-4 chart-card">
                 <h5 class="fw-bold mb-4">
-                    <i class="bi bi-star me-2 text-cinema-red"></i>
-                    Top 5 Phim Hot Nhất
+                    <i class="bi bi-calendar-event me-2 text-cinema-red"></i>
+                    Lịch Chiếu Top 5 Phim Hot
                 </h5>
-                <canvas id="topMoviesChart" style="width: 100%; height: 350px;"></canvas>
+                <div id="ganttChart" style="width: 100%; height: 350px;"></div>
             </div>
         </div>
     </div>
@@ -254,6 +251,12 @@
     }
 </style>
 
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-3d.js"></script>
+<script src="https://code.highcharts.com/modules/gantt.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <script>
     // Premium Chart Library for CineMax Dashboard
@@ -548,78 +551,417 @@
         }
     }
 
-    // Initialize charts
-    window.addEventListener('load', function() {
+    // Initialize charts with API data
+    window.addEventListener('load', async function() {
         console.log('🎬 CineMax Dashboard - Khởi tạo biểu đồ...');
         
-        var revenueData = @Html.Raw(JsonSerializer.Serialize(revenueChart));
-        var statusData = @Html.Raw(JsonSerializer.Serialize(bookingByStatus));
-        var moviesData = @Html.Raw(JsonSerializer.Serialize(topMovies));
-        
-        console.log('📊 Dữ liệu doanh thu:', revenueData);
-        console.log('📊 Dữ liệu trạng thái:', statusData);
-        console.log('📊 Dữ liệu phim:', moviesData);
-        
-        // Fallback data
-        if (!revenueData || revenueData.length === 0) {
-            const today = new Date();
-            revenueData = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                revenueData.push({
-                    Date: `${date.getDate()}/${date.getMonth() + 1}`,
-                    Revenue: Math.floor(Math.random() * 5000000) + 2000000
-                });
-            }
-        }
-        
-        if (!statusData || statusData.length === 0) {
-            statusData = [
-                { Status: 'Paid', Count: 15 },
-                { Status: 'Pending', Count: 3 },
-                { Status: 'Cancelled', Count: 2 }
-            ];
-        }
-        
-        if (!moviesData || moviesData.length === 0) {
-            moviesData = [
-                { Title: 'Phim 1', Count: 25 },
-                { Title: 'Phim 2', Count: 18 },
-                { Title: 'Phim 3', Count: 12 },
-                { Title: 'Phim 4', Count: 8 },
-                { Title: 'Phim 5', Count: 5 }
-            ];
-        }
-        
         try {
-            // Revenue Chart
-            const revenueChart = new CinemaChart('revenueChart');
-            const formattedRevenue = revenueData.map(item => ({
-                label: item.Date || item.date || '',
-                value: parseFloat(item.Revenue || item.revenue || 0)
-            }));
-            revenueChart.drawColumnChart(formattedRevenue);
+            // Fetch all dashboard data from API
+            const response = await fetch('/api/DashboardApi/all');
+            if (!response.ok) {
+                throw new Error('Failed to fetch dashboard data');
+            }
+            
+            const dashboardData = await response.json();
+            console.log('📊 Dữ liệu từ API:', dashboardData);
+            
+            const revenueData = dashboardData.revenue || [];
+            const statusData = dashboardData.bookingStatus || [];
+            const moviesData = dashboardData.topMovies || [];
+            const movieSchedules = dashboardData.movieSchedules || [];
+            
+            // Revenue Chart - Highcharts Combo (Column + Line + Spline)
+            if (revenueData.length > 0) {
+                const categories = revenueData.map(item => item.date || item.Date || '');
+                const revenues = revenueData.map(item => parseFloat(item.revenue || item.Revenue || 0));
+                
+                // Calculate average for line
+                const average = revenues.reduce((a, b) => a + b, 0) / revenues.length;
+                const averageLine = revenues.map(() => average);
+                
+                Highcharts.chart('revenueChart', {
+                    chart: {
+                        backgroundColor: 'transparent',
+                        style: {
+                            fontFamily: 'Inter, -apple-system, sans-serif'
+                        }
+                    },
+                    title: {
+                        text: undefined
+                    },
+                    xAxis: {
+                        categories: categories,
+                        crosshair: true,
+                        labels: {
+                            style: {
+                                color: '#cbd5e1',
+                                fontSize: '12px'
+                            }
+                        },
+                        gridLineColor: 'rgba(255, 255, 255, 0.05)',
+                        lineColor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Doanh Thu (VNĐ)',
+                            style: {
+                                color: '#cbd5e1',
+                                fontSize: '13px'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                color: '#cbd5e1',
+                                fontSize: '11px'
+                            },
+                            formatter: function() {
+                                if (this.value >= 1000000) {
+                                    return (this.value / 1000000).toFixed(1) + 'M';
+                                } else if (this.value >= 1000) {
+                                    return (this.value / 1000).toFixed(0) + 'K';
+                                }
+                                return this.value;
+                            }
+                        },
+                        gridLineColor: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: 8,
+                        style: {
+                            color: '#fff',
+                            fontSize: '13px'
+                        },
+                        shared: true,
+                        formatter: function() {
+                            let tooltip = '<b>' + this.x + '</b><br/>';
+                            this.points.forEach(point => {
+                                const value = point.y.toLocaleString('vi-VN');
+                                tooltip += '<span style="color:' + point.color + '">●</span> ' + 
+                                          point.series.name + ': <b>' + value + ' VNĐ</b><br/>';
+                            });
+                            return tooltip;
+                        }
+                    },
+                    legend: {
+                        align: 'center',
+                        verticalAlign: 'bottom',
+                        itemStyle: {
+                            color: '#cbd5e1',
+                            fontSize: '12px',
+                            fontWeight: '500'
+                        },
+                        itemHoverStyle: {
+                            color: '#fff'
+                        }
+                    },
+                    plotOptions: {
+                        column: {
+                            borderRadius: 6,
+                            borderWidth: 0,
+                            dataLabels: {
+                                enabled: false
+                            }
+                        },
+                        line: {
+                            marker: {
+                                enabled: true,
+                                radius: 4
+                            }
+                        },
+                        spline: {
+                            marker: {
+                                enabled: false
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Doanh Thu',
+                        type: 'column',
+                        data: revenues,
+                        color: {
+                            linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
+                            stops: [
+                                [0, '#ef4444'],
+                                [1, '#dc2626']
+                            ]
+                        }
+                    }, {
+                        name: 'Trung Bình',
+                        type: 'line',
+                        data: averageLine,
+                        color: '#fbbf24',
+                        dashStyle: 'ShortDash',
+                        marker: {
+                            enabled: false
+                        }
+                    }, {
+                        name: 'Xu Hướng',
+                        type: 'spline',
+                        data: revenues,
+                        color: '#3b82f6',
+                        lineWidth: 2
+                    }],
+                    credits: { enabled: false },
+                    exporting: { enabled: false }
+                });
+                console.log('✅ Biểu đồ Combo đã được khởi tạo');
+            }
 
-            // Status Chart
-            const statusChart = new CinemaChart('statusChart');
-            const formattedStatus = statusData.map(item => ({
-                label: item.Status || item.status || '',
-                value: parseInt(item.Count || item.count || 0)
-            }));
-            statusChart.drawPieChart(formattedStatus);
+            // Status Chart - 3D Donut Chart
+            if (statusData.length > 0) {
+                const statusColors = {
+                    'Paid': '#10b981',
+                    'Pending': '#f59e0b',
+                    'Cancelled': '#ef4444'
+                };
+                
+                const statusVietnamese = {
+                    'Paid': 'Đã Thanh Toán',
+                    'Pending': 'Chờ Xử Lý',
+                    'Cancelled': 'Đã Hủy'
+                };
+                
+                const chartData = statusData.map(item => {
+                    const statusKey = item.status || item.Status || '';
+                    return {
+                        name: statusVietnamese[statusKey] || statusKey,
+                        y: parseInt(item.count || item.Count || 0),
+                        color: statusColors[statusKey] || '#3b82f6'
+                    };
+                });
+                
+                Highcharts.chart('statusChart', {
+                    chart: {
+                        type: 'pie',
+                        backgroundColor: 'transparent',
+                        options3d: {
+                            enabled: true,
+                            alpha: 55,
+                            beta: 0
+                        },
+                        style: {
+                            fontFamily: 'Inter, -apple-system, sans-serif'
+                        }
+                    },
+                    title: {
+                        text: undefined
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: 8,
+                        style: {
+                            color: '#fff',
+                            fontSize: '13px'
+                        },
+                        pointFormat: '<b>{point.percentage:.1f}%</b><br/>Số lượng: <b>{point.y}</b>'
+                    },
+                    accessibility: {
+                        point: {
+                            valueSuffix: '%'
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            innerSize: '50%',
+                            depth: 45,
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b><br/>{point.percentage:.1f}%',
+                                style: {
+                                    color: '#fff',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    textOutline: '2px rgba(0, 0, 0, 0.9)'
+                                },
+                                distance: 15,
+                                connectorWidth: 1,
+                                connectorColor: 'rgba(255, 255, 255, 0.3)'
+                            },
+                            showInLegend: true,
+                            borderWidth: 0,
+                            shadow: {
+                                color: 'rgba(0, 0, 0, 0.5)',
+                                offsetX: 0,
+                                offsetY: 8,
+                                opacity: 0.5,
+                                width: 10
+                            }
+                        }
+                    },
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom',
+                        itemStyle: {
+                            color: '#e2e8f0',
+                            fontSize: '13px',
+                            fontWeight: '500'
+                        },
+                        itemHoverStyle: {
+                            color: '#fff'
+                        },
+                        itemMarginBottom: 5,
+                        symbolRadius: 6,
+                        symbolHeight: 10,
+                        symbolWidth: 10
+                    },
+                    responsive: {
+                        rules: [{
+                            condition: {
+                                maxWidth: 500
+                            },
+                            chartOptions: {
+                                legend: {
+                                    layout: 'horizontal',
+                                    align: 'center',
+                                    verticalAlign: 'bottom'
+                                },
+                                plotOptions: {
+                                    pie: {
+                                        dataLabels: {
+                                            distance: 10,
+                                            fontSize: '11px'
+                                        }
+                                    }
+                                }
+                            }
+                        }]
+                    },
+                    series: [{
+                        name: 'Trạng thái',
+                        data: chartData
+                    }],
+                    credits: { enabled: false },
+                    exporting: { enabled: false }
+                });
+                console.log('✅ Biểu đồ 3D Donut đã được khởi tạo');
+            }
 
-            // Movies Chart
-            const moviesChart = new CinemaChart('topMoviesChart');
-            const formattedMovies = moviesData.map(item => ({
-                label: item.Title || item.title || '',
-                value: parseInt(item.Count || item.count || 0)
-            }));
-            moviesChart.drawHorizontalBarChart(formattedMovies);
+            // Gantt Chart - Movie Schedules
+            if (movieSchedules.length > 0) {
+                const categories = movieSchedules.map(m => m.name);
+                const seriesData = [];
+                
+                movieSchedules.forEach((movie, index) => {
+                    if (movie.data && movie.data.length > 0) {
+                        movie.data.forEach(showtime => {
+                            seriesData.push({
+                                start: showtime.start,
+                                end: showtime.end,
+                                y: index,
+                                name: movie.name
+                            });
+                        });
+                    }
+                });
+                
+                console.log('📅 Gantt data:', { categories, seriesData });
+                
+                if (seriesData.length > 0) {
+                    Highcharts.ganttChart('ganttChart', {
+                        chart: {
+                            backgroundColor: 'transparent',
+                            style: {
+                                fontFamily: 'Inter, -apple-system, sans-serif'
+                            }
+                        },
+                        title: {
+                            text: undefined
+                        },
+                        xAxis: {
+                            currentDateIndicator: {
+                                color: '#ef4444',
+                                width: 2,
+                                label: {
+                                    format: '%H:%M',
+                                    style: {
+                                        color: '#ef4444',
+                                        fontWeight: 'bold'
+                                    }
+                                }
+                            },
+                            labels: {
+                                format: '{value:%H:%M}',
+                                style: { 
+                                    color: '#cbd5e1',
+                                    fontSize: '11px'
+                                }
+                            },
+                            gridLineColor: 'rgba(255,255,255,0.05)'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            categories: categories,
+                            gridLineWidth: 1,
+                            gridLineColor: 'rgba(255,255,255,0.1)',
+                            labels: {
+                                style: {
+                                    color: '#fff',
+                                    fontSize: '13px',
+                                    fontWeight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            style: {
+                                color: '#fff'
+                            },
+                            pointFormat: '<b>{point.name}</b><br/>Bắt đầu: {point.start:%H:%M %d/%m}<br/>Kết thúc: {point.end:%H:%M %d/%m}'
+                        },
+                        plotOptions: {
+                            series: {
+                                borderRadius: 8,
+                                borderWidth: 0,
+                                dataLabels: {
+                                    enabled: false
+                                }
+                            }
+                        },
+                        series: [{
+                            name: 'Lịch Chiếu',
+                            data: seriesData,
+                            colorByPoint: false,
+                            color: {
+                                linearGradient: { x1: 0, x2: 1, y1: 0, y2: 0 },
+                                stops: [
+                                    [0, '#fcd34d'],
+                                    [0.5, '#fbbf24'],
+                                    [1, '#d97706']
+                                ]
+                            }
+                        }],
+                        credits: { enabled: false },
+                        exporting: { enabled: false }
+                    });
+                    console.log('✅ Biểu đồ Gantt đã được khởi tạo');
+                } else {
+                    document.getElementById('ganttChart').innerHTML = 
+                        '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 14px;">' +
+                        '<i class="bi bi-calendar-x me-2"></i>Chưa có lịch chiếu trong 7 ngày tới' +
+                        '</div>';
+                }
+            } else {
+                document.getElementById('ganttChart').innerHTML = 
+                    '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 14px;">' +
+                    '<i class="bi bi-film me-2"></i>Chưa có dữ liệu phim' +
+                    '</div>';
+            }
             
             console.log('✅ Tất cả biểu đồ đã được khởi tạo!');
         } catch (error) {
-            console.error('❌ Lỗi khi khởi tạo biểu đồ:', error);
+            console.error('❌ Lỗi khi tải dữ liệu dashboard:', error);
+            
+            // Show error message
+            const errorHtml = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444; font-size: 14px;">' +
+                '<i class="bi bi-exclamation-triangle me-2"></i>Không thể tải dữ liệu. Vui lòng thử lại.' +
+                '</div>';
+            
+            document.getElementById('ganttChart').innerHTML = errorHtml;
         }
 
         // Redraw on resize
@@ -629,4 +971,5 @@
             resizeTimeout = setTimeout(() => location.reload(), 500);
         });
     });
+
 </script>
