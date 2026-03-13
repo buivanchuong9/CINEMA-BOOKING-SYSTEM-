@@ -10,7 +10,7 @@ public class LoginDto
     [Required(ErrorMessage = "Vui lòng nhập email")]
     [EmailAddress(ErrorMessage = "Email không hợp lệ")]
     [Display(Name = "Email")]
-    public string Email { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty; // rỗng kh bị null
 
     [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
     [DataType(DataType.Password)]
@@ -18,5 +18,5 @@ public class LoginDto
     public string Password { get; set; } = string.Empty;
 
     [Display(Name = "Ghi nhớ đăng nhập")]
-    public bool RememberMe { get; set; }
+    public bool RememberMe { get; set; } // checkbox
 }

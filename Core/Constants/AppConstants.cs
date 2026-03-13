@@ -3,7 +3,7 @@ namespace BE.Core.Constants;
 /// <summary>
 /// Các hằng số cấu hình hệ thống
 /// </summary>
-public static class AppConstants
+public static class AppConstants 
 {
     /// <summary>
     /// Thời gian giữ ghế (phút)

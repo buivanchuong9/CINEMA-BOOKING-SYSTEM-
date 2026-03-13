@@ -12,34 +12,34 @@ namespace BE.Core.Interfaces;
 public interface IUnitOfWork : IDisposable
 {
     // Cinema Infrastructure Repositories
-    IRepository<Cinema> Cinemas { get; }
-    IRepository<Room> Rooms { get; }
-    IRepository<SeatType> SeatTypes { get; }
-    IRepository<Seat> Seats { get; }
+    IRepository<Cinema> Cinemas { get; } // Lấy danh sách cinemas
+    IRepository<Room> Rooms { get; } // Lấy danh sách rooms
+    IRepository<SeatType> SeatTypes { get; } // Lấy danh sách seat types
+    IRepository<Seat> Seats { get; } // Lấy danh sách seats
     
     // Movies Repositories
-    IRepository<Movie> Movies { get; }
-    IRepository<Genre> Genres { get; }
-    IRepository<MovieGenre> MovieGenres { get; }
-    IShowtimeRepository Showtimes { get; }
+    IRepository<Movie> Movies { get; } // Lấy danh sách movies
+    IRepository<Genre> Genres { get; } // Lấy danh sách genres
+    IRepository<MovieGenre> MovieGenres { get; } // Lấy danh sách movie genres
+    IShowtimeRepository Showtimes { get; } // Lấy danh sách showtimes
     
     // Booking Repositories
-    IRepository<Booking> Bookings { get; }
-    IRepository<BookingDetail> BookingDetails { get; }
-    IRepository<Ticket> Tickets { get; }
+    IRepository<Booking> Bookings { get; } // Lấy danh sách bookings
+    IRepository<BookingDetail> BookingDetails { get; } // Lấy danh sách booking details
+    IRepository<Ticket> Tickets { get; } // Lấy danh sách tickets
     
     // Concessions Repositories
-    IRepository<Food> Foods { get; }
-    IRepository<BookingFood> BookingFoods { get; }
+    IRepository<Food> Foods { get; } // Lấy danh sách foods
+    IRepository<BookingFood> BookingFoods { get; } // Lấy danh sách booking foods
     
     // Business Repositories
-    IRepository<User> Users { get; }
-    IRepository<Voucher> Vouchers { get; }
-    IRepository<Transaction> Transactions { get; }
+    IRepository<User> Users { get; } // Lấy danh sách users
+    IRepository<Voucher> Vouchers { get; } // Lấy danh sách vouchers
+    IRepository<Transaction> Transactions { get; } // Lấy danh sách transactions
     
     // Transaction Management
-    Task<int> SaveChangesAsync();
-    Task BeginTransactionAsync();
-    Task CommitTransactionAsync();
-    Task RollbackTransactionAsync();
+    Task<int> SaveChangesAsync(); // Lưu thay đổi
+    Task BeginTransactionAsync(); // Bắt đầu transaction
+    Task CommitTransactionAsync(); // Commit transaction
+    Task RollbackTransactionAsync(); // Rollback transaction
 }

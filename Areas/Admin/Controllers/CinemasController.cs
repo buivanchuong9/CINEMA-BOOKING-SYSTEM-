@@ -31,16 +31,16 @@ public class CinemasController : Controller
 
     // POST: /Admin/Cinemas/Create
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateAntiForgeryToken] // Chống hack CSRF (giả mạo người dùng gửi form)
     public async Task<IActionResult> Create(Cinema cinema)
     {
         try
         {
             // Remove optional fields from ModelState
-            ModelState.Remove("MapEmbedUrl");
-            ModelState.Remove("Phone");
-            ModelState.Remove("CreatedAt");
-            ModelState.Remove("IsActive");
+            ModelState.Remove("MapEmbedUrl"); // gg map
+            ModelState.Remove("Phone"); // số điện thoại
+            ModelState.Remove("CreatedAt"); // thời gian tạo
+            ModelState.Remove("IsActive"); // trạng thái hoạt động
 
             if (!ModelState.IsValid)
             {
@@ -50,10 +50,10 @@ public class CinemasController : Controller
             }
 
             cinema.CreatedAt = DateTime.Now;
-            cinema.IsActive = true;
+            cinema.IsActive = true; // mặc định rạp hoạt động
             
-            await _unitOfWork.Cinemas.AddAsync(cinema);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.Cinemas.AddAsync(cinema); // thêm rạp vào database
+            await _unitOfWork.SaveChangesAsync(); // lưu thay đổi
 
             TempData["Success"] = $"Đã thêm rạp '{cinema.Name}' thành công!";
             return RedirectToAction(nameof(Index));

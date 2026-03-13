@@ -252,11 +252,11 @@
 </style>
 
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/highcharts-3d.js"></script>
-<script src="https://code.highcharts.com/modules/gantt.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts-3d.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/gantt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/exporting.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/accessibility.js"></script>
 
 <script>
     // Premium Chart Library for CineMax Dashboard
@@ -571,7 +571,10 @@
             const movieSchedules = dashboardData.movieSchedules || [];
             
             // Revenue Chart - Highcharts Combo (Column + Line + Spline)
-            if (revenueData.length > 0) {
+            if (revenueData.length === 0) {
+                document.getElementById('revenueChart').innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;"><i class="bi bi-graph-up me-2"></i>Chưa có dữ liệu doanh thu</div>';
+            } else if (revenueData.length > 0) {
                 const categories = revenueData.map(item => item.date || item.Date || '');
                 const revenues = revenueData.map(item => parseFloat(item.revenue || item.Revenue || 0));
                 
@@ -710,7 +713,10 @@
             }
 
             // Status Chart - 3D Donut Chart
-            if (statusData.length > 0) {
+            if (statusData.length === 0) {
+                document.getElementById('statusChart').innerHTML =
+                    '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;"><i class="bi bi-pie-chart me-2"></i>Chưa có dữ liệu đặt vé</div>';
+            } else if (statusData.length > 0) {
                 const statusColors = {
                     'Paid': '#10b981',
                     'Pending': '#f59e0b',
@@ -956,12 +962,15 @@
         } catch (error) {
             console.error('❌ Lỗi khi tải dữ liệu dashboard:', error);
             
-            // Show error message
+            // Show error message for all 3 charts
             const errorHtml = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ef4444; font-size: 14px;">' +
                 '<i class="bi bi-exclamation-triangle me-2"></i>Không thể tải dữ liệu. Vui lòng thử lại.' +
                 '</div>';
             
-            document.getElementById('ganttChart').innerHTML = errorHtml;
+            ['revenueChart', 'statusChart', 'ganttChart'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = errorHtml;
+            });
         }
 
         // Redraw on resize

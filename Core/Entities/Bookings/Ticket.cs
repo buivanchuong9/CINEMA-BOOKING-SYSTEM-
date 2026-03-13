@@ -44,6 +44,6 @@ public class Ticket
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
     // Navigation Properties
-    [ForeignKey(nameof(BookingDetailId))]
+    [ForeignKey(nameof(BookingDetailId))] // khóa ngoại lấy tên biến dưới dạng string
     public virtual BookingDetail BookingDetail { get; set; } = null!;
 }

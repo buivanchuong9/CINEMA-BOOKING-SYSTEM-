@@ -11,18 +11,18 @@ using Microsoft.EntityFrameworkCore;
 namespace BE.Application.Services;
 
 /// <summary>
-/// Booking Service - Logic nghiệp vụ đặt vé đơn giản
+/// Booking Service - Logic nghiệp vụ đặt vé
 /// </summary>
 public class BookingService : IBookingService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IRedisService _redisService;
-    private readonly IHubContext<SeatHub> _hubContext;
+    private readonly IRedisService _redisService; // redis để giữ ghế trong 15p
+    private readonly IHubContext<SeatHub> _hubContext; // signalr để thông báo cho client khi có ghế giữ
     private readonly ILogger<BookingService> _logger;
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context; // query trực tiếp vào database
 
-    public BookingService(
-        IUnitOfWork unitOfWork,
+    public BookingService( // khởi tạo Constructor
+        IUnitOfWork unitOfWork, 
         IRedisService redisService,
         IHubContext<SeatHub> hubContext,
         ILogger<BookingService> logger,
@@ -44,8 +44,8 @@ public class BookingService : IBookingService
             // Validate showtime exists - QUERY TRỰC TIẾP từ DbContext
             _logger.LogInformation($"[SelectSeats] Querying showtime ID: {showtimeId}");
             var showtime = await _context.Showtimes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == showtimeId);
+                .AsNoTracking() // không trỉnh sửa để tăng hiệu suất đọc
+                .FirstOrDefaultAsync(s => s.Id == showtimeId); // tìm showtime theo id     
             
             if (showtime == null)
             {
@@ -73,9 +73,9 @@ public class BookingService : IBookingService
             _logger.LogInformation($"[SelectSeats] Found showtime: Movie={showtime.MovieId}, Room={showtime.RoomId}, Active={showtime.IsActive}");
 
             // Validate seats exist and are available
-            foreach (var seatId in seatIds)
+            foreach (var seatId in seatIds) // duyệt qua từng ghế
             {
-                var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
+                var seat = await _unitOfWork.Seats.GetByIdAsync(seatId); // Lấy thông tin ghế từ Database.
                 if (seat == null || seat.Status != SeatStatus.Available)
                 {
                     return new BookingSeatResult
@@ -85,7 +85,7 @@ public class BookingService : IBookingService
                     };
                 }
 
-                // Check if already held in Redis
+                // Kiểm tra Tranh chấp bằng Redis
                 var isHeld = await _redisService.IsSeatHeldAsync(showtimeId, seatId);
                 if (isHeld)
                 {
@@ -97,7 +97,7 @@ public class BookingService : IBookingService
                 }
             }
 
-            // Hold seats in Redis (10 minutes)
+            // Giữ chỗ bằng Redis (10 phút)
             var holdSuccess = await _redisService.HoldMultipleSeatsAsync(showtimeId, seatIds, userId);
             if (!holdSuccess)
             {
@@ -108,11 +108,11 @@ public class BookingService : IBookingService
                 };
             }
 
-            // Notify other clients via SignalR
+            // Thông báo Real-time (SignalR)
             foreach (var seatId in seatIds)
             {
-                await _hubContext.Clients.Group($"Showtime_{showtimeId}")
-                    .SendAsync("SeatSelected", new { showtimeId, seatId, userId });
+                await _hubContext.Clients.Group($"Showtime_{showtimeId}") // Dùng để bắn message realtime từ backend đến client
+                    .SendAsync("SeatSelected", new { showtimeId, seatId, userId }); // Gửi thông tin ghế đã chọn
             }
 
             return new BookingSeatResult
@@ -120,7 +120,7 @@ public class BookingService : IBookingService
                 Success = true,
                 Message = "Đã giữ ghế thành công!",
                 SelectedSeatIds = seatIds,
-                HoldExpiryTime = DateTime.Now.AddMinutes(10)
+                HoldExpiryTime = DateTime.Now.AddMinutes(10) 
             };
         }
         catch (Exception ex)
@@ -141,7 +141,7 @@ public class BookingService : IBookingService
             _logger.LogInformation($"[CreateBooking] START - ShowtimeId={dto.ShowtimeId}, UserId={dto.UserId}, Seats={string.Join(",", dto.SeatIds)}");
             
             // Validate showtime exists
-            var showtime = await _unitOfWork.Showtimes.GetByIdAsync(dto.ShowtimeId);
+            var showtime = await _unitOfWork.Showtimes.GetByIdAsync(dto.ShowtimeId); // truyền dữ liệu showtime vào showtime
             if (showtime == null)
             {
                 _logger.LogWarning($"[CreateBooking] Showtime {dto.ShowtimeId} NOT FOUND!");
@@ -152,9 +152,9 @@ public class BookingService : IBookingService
                 };
             }
 
-            // MVC PATTERN: Validate và Book ghế TRỰC TIẾP trong transaction
-            // CRITICAL: Phải check cả DB status VÀ Redis hold status
-            foreach (var seatId in dto.SeatIds)
+            // Validate và Book ghế TRỰC TIẾP trong transaction
+            // Phải check cả DB status VÀ Redis hold status
+            foreach (var seatId in dto.SeatIds) // lặp duyệt qua từng cái ghế mà người dùng chọn
             {
                 var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
                 if (seat == null)
@@ -168,27 +168,27 @@ public class BookingService : IBookingService
                 }
 
                 // CHECK 1: Database status
-                if (seat.Status != SeatStatus.Available)
+                if (seat.Status != SeatStatus.Available) // Kiểm tra ghế có trống không
                 {
                     _logger.LogWarning($"[CreateBooking] Seat {seatId} NOT AVAILABLE! Current status: {seat.Status}");
                     return new CreateBookingResult
                     {
                         Success = false,
-                        Message = $"Ghế {seat.Row}-{seat.Number} đã được đặt. Vui lòng chọn ghế khác!"
+                        Message = $"Ghế {seat.Row}-{seat.Number} đã được đặt. Vui lòng chọn ghế khác!" 
                     };
                 }
 
 
-                // CHECK 2: Redis hold status - CRITICAL FIX
+                // CHECK 2: Trạng thái giữ chỗ Redis
                 var isHeldInRedis = await _redisService.IsSeatHeldAsync(dto.ShowtimeId, seatId);
                 _logger.LogInformation($"[CreateBooking] Seat {seatId} - IsHeldInRedis: {isHeldInRedis}");
                 
-                if (isHeldInRedis)
+                if (isHeldInRedis) // Kiểm tra ghế có đang được giữ không
                 {
                     var heldBy = await _redisService.GetSeatHolderAsync(dto.ShowtimeId, seatId);
                     _logger.LogInformation($"[CreateBooking] Seat {seatId} - HeldBy: '{heldBy}', CurrentUser: '{dto.UserId}'");
                     
-                    // Nếu ghế đang được hold bởi USER KHÁC → Reject
+                    // Nếu ghế đang được giữ bởi USER KHÁC → từ chối đặt
                     if (!string.IsNullOrEmpty(heldBy) && heldBy != dto.UserId)
                     {
                         _logger.LogWarning($"[CreateBooking] Seat {seatId} is HELD by another user: {heldBy}");
@@ -203,10 +203,10 @@ public class BookingService : IBookingService
                 }
             }
 
-            // Calculate total price
+            // Tính tổng giá
             var totalAmount = await CalculateTotalPriceAsync(dto.ShowtimeId, dto.SeatIds, dto.VoucherId, dto.Foods);
 
-            // Create Booking
+            // Tạo Booking
             var booking = new Booking
             {
                 UserId = dto.UserId,
@@ -220,12 +220,12 @@ public class BookingService : IBookingService
                 CreatedAt = DateTime.Now
             };
 
-            await _unitOfWork.Bookings.AddAsync(booking);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.Bookings.AddAsync(booking); // Thêm hóa đơn vào hàng chờ lưu của Database
+            await _unitOfWork.SaveChangesAsync(); // Lưu vào Database
             
             _logger.LogInformation($"[CreateBooking] Created Booking ID={booking.Id}");
 
-            // Create BookingDetails (seats) - KHÔNG UPDATE STATUS, CHỈ HOLD TRONG REDIS
+            // Tạo BookingDetails (seats) - KHÔNG UPDATE STATUS, CHỈ HOLD TRONG REDIS
             foreach (var seatId in dto.SeatIds)
             {
                 var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
@@ -242,14 +242,14 @@ public class BookingService : IBookingService
 
                 await _unitOfWork.BookingDetails.AddAsync(bookingDetail);
                 
-                // HOLD GHẾ TRONG REDIS (15 phút) - Chờ thanh toán
+                // GIỮ GHẾ TRONG REDIS (15 phút) - Chờ thanh toán
                 // Không update DB status ngay để tránh lock vĩnh viễn nếu user bỏ dở
                 await _redisService.HoldSeatAsync(dto.ShowtimeId, seatId, dto.UserId, TimeSpan.FromMinutes(15));
                 
                 _logger.LogInformation($"[CreateBooking] Held seat {seat.Row}-{seat.Number} in Redis for 15 minutes");
             }
 
-            // Add Foods if any
+            // Thêm món ăn nếu có
             if (dto.Foods != null && dto.Foods.Any())
             {
                 foreach (var foodItem in dto.Foods)
@@ -272,7 +272,7 @@ public class BookingService : IBookingService
 
             await _unitOfWork.SaveChangesAsync();
             
-            // Ghế vẫn được HOLD trong Redis (15 phút)
+            // Ghế vẫn được GIỮ trong Redis (15 phút)
             // Sẽ được release khi:
             // 1. Payment SUCCESS → ConfirmPaymentAsync() sẽ set Status = Booked và release Redis
             // 2. Payment FAIL → PaymentController sẽ cancel booking và release Redis
@@ -304,14 +304,14 @@ public class BookingService : IBookingService
         var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
         if (booking == null) return false;
 
-        booking.Status = BookingStatus.Paid;
-        booking.TransactionId = transactionId;
-        booking.PaymentMethod = PaymentMethod.VNPAY;
-        booking.UpdatedAt = DateTime.Now;
+        booking.Status = BookingStatus.Paid; // Đặt vé thành công
+        booking.TransactionId = transactionId; // ID giao dịch
+        booking.PaymentMethod = PaymentMethod.VNPAY; // Phương thức thanh toán
+        booking.UpdatedAt = DateTime.Now; // Thời gian cập nhật
 
         _unitOfWork.Bookings.Update(booking);
         
-        // CRITICAL: Set seat status to Booked AFTER payment success
+        // QUAN TRỌNG: Đặt trạng thái chỗ ngồi thành Đã đặt SAU khi thanh toán thành công
         var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
             .Where(bd => bd.BookingId == bookingId)
             .ToList(); // Materialize list
@@ -330,7 +330,7 @@ public class BookingService : IBookingService
             }
         }
         
-        // --- LOYALTY PROGRAM LOGIC ---
+        // QUAN TRỌNG: Tăng điểm và upgrade membership
         var user = await _context.Users.FindAsync(booking.UserId);
         if (user != null)
         {
@@ -346,9 +346,9 @@ public class BookingService : IBookingService
             user.Points += pointsEarned;
             user.TotalTicketsPurchased += ticketCount;
             
-            // Tier Upgrade Logic
-            // Bronze -> Silver (>= 2 tickets)
-            // Silver -> Platinum (>= 10 tickets) - Assuming 10 for "Level 3"
+            // QUAN TRỌNG: Tăng hạng thành viên
+            // Bronze -> Silver (>= 2 vé)
+            // Silver -> Platinum (>= 10 vé) - Giả sử 10 cho "Level 3"
             var currentTier = user.MembershipLevel;
             var totalTickets = user.TotalTicketsPurchased;
             
@@ -409,6 +409,7 @@ public class BookingService : IBookingService
         return true;
     }
 
+    // Tính tổng tiền vé
     public async Task<decimal> CalculateTotalPriceAsync(int showtimeId, List<int> seatIds, int? voucherId = null, List<FoodItemDto>? foods = null)
     {
         decimal total = 0;

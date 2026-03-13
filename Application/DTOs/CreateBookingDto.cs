@@ -2,7 +2,7 @@ namespace BE.Application.DTOs;
 
 public class CreateBookingDto
 {
-    public int ShowtimeId { get; set; }
+    public int ShowtimeId { get; set; } // suất chiếu
     public List<int> SeatIds { get; set; } = new();
     public string UserId { get; set; } = string.Empty;
     public int? VoucherId { get; set; }
@@ -13,5 +13,5 @@ public class CreateBookingDto
 public class FoodItemDto
 {
     public int FoodId { get; set; }
-    public int Quantity { get; set; }
+    public int Quantity { get; set; } // số lượng
 }

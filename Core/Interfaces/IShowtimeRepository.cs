@@ -7,6 +7,6 @@ namespace BE.Core.Interfaces;
 /// </summary>
 public interface IShowtimeRepository : IRepository<Showtime>
 {
-    Task<IEnumerable<Showtime>> GetShowtimesWithDetailsAsync(int movieId);
-    Task<Showtime?> GetShowtimeWithDetailsAsync(int showtimeId);
+    Task<IEnumerable<Showtime>> GetShowtimesWithDetailsAsync(int movieId); // Lấy danh sách showtimes với thông tin chi tiết
+    Task<Showtime?> GetShowtimeWithDetailsAsync(int showtimeId); // Lấy thông tin chi tiết của showtime
 }

@@ -10,13 +10,27 @@
   <component name="ChangeListManager">
     <list default="true" id="eeef43fb-7576-458d-af98-25d9d14e3419" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/DashboardController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/DashboardController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/DTOs/BookingResultDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/BookingResultDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/DTOs/CreateBookingDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/CreateBookingDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/DTOs/LoginDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/LoginDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/DTOs/RegisterDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/RegisterDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/DTOs/SeatStatusDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/SeatStatusDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Application/Services/BookingService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/Services/BookingService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/CinemasController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/CinemasController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Controllers/Api/DashboardApiController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/Api/DashboardApiController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Constants/AppConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Constants/AppConstants.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Constants/RedisKeys.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Constants/RedisKeys.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Entities/Bookings/Booking.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Entities/Bookings/Booking.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Entities/Bookings/Ticket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Entities/Bookings/Ticket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IRepository.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IShowtimeRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IShowtimeRepository.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IUnitOfWork.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IUnitOfWork.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Infrastructure/Caching/RedisService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Infrastructure/Caching/RedisService.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.csproj.CoreCompileInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.csproj.CoreCompileInputs.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.sourcelink.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.sourcelink.json" afterDir="false" />
@@ -101,7 +115,12 @@
       <workItem from="1769227463917" duration="532000" />
       <workItem from="1769532110068" duration="4808000" />
       <workItem from="1769671713547" duration="509000" />
-      <workItem from="1769674293290" duration="2761000" />
+      <workItem from="1769674293290" duration="3329000" />
+      <workItem from="1769753137141" duration="1488000" />
+      <workItem from="1769757282068" duration="4391000" />
+      <workItem from="1772173460850" duration="729000" />
+      <workItem from="1773200981522" duration="82000" />
+      <workItem from="1773211111608" duration="1323000" />
     </task>
     <servers />
   </component>

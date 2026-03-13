@@ -26,16 +26,16 @@ public class DashboardApiController : ControllerBase
         {
             var allBookings = (await _unitOfWork.Bookings.GetAllAsync()).ToList();
             
-            var last7Days = Enumerable.Range(0, 7)
-                .Select(i => DateTime.Today.AddDays(-6 + i))
+            var last7Days = Enumerable.Range(0, 7) // 7 ngày gần nhất
+                .Select(i => DateTime.Today.AddDays(-6 + i)) // ngày hôm nay - 6 ngày
                 .Select(date => new
                 {
                     Date = date.ToString("dd/MM"),
-                    Revenue = (decimal)allBookings
-                        .Where(b => b.BookingDate.Date == date && b.Status == Core.Enums.BookingStatus.Paid)
-                        .Sum(b => b.TotalAmount)
+                    Revenue = (decimal)allBookings // lấy tất cả bookings
+                        .Where(b => b.BookingDate.Date == date && b.Status == Core.Enums.BookingStatus.Paid) // lọc bookings đã thanh toán
+                        .Sum(b => b.TotalAmount) // tính tổng tiền
                 })
-                .ToList();
+                .ToList(); 
             
             // Nếu không có dữ liệu 7 ngày gần nhất, lấy từ tất cả bookings
             if (last7Days.All(d => d.Revenue == 0) && allBookings.Any())
@@ -79,10 +79,10 @@ public class DashboardApiController : ControllerBase
             
             if (!allBookings.Any())
             {
-                return Ok(new List<object>());
+                return Ok(new List<object>()); // trả về danh sách rỗng nếu không có bookings
             }
             
-            var bookingByStatus = allBookings.GroupBy(b => b.Status)
+            var bookingByStatus = allBookings.GroupBy(b => b.Status) 
                 .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
                 .ToList();
             
@@ -253,27 +253,27 @@ public class DashboardApiController : ControllerBase
                     .Where(b => b.Status == Core.Enums.BookingStatus.Paid)
                     .GroupBy(b => b.BookingDate.Date)
                     .OrderByDescending(g => g.Key)
-                    .Take(7)
-                    .OrderBy(g => g.Key)
+                    .Take(7) // lấy 7 ngày gần nhất 
+                    .OrderBy(g => g.Key) // sắp xếp theo ngày
                     .Select(g => new
                     {
                         Date = g.Key.ToString("dd/MM"),
-                        Revenue = (decimal)g.Sum(b => b.TotalAmount)
+                        Revenue = (decimal)g.Sum(b => b.TotalAmount) // tính tổng tiền
                     })
                     .ToList();
                 
-                if (bookingsByDate.Any())
+                if (bookingsByDate.Any()) // nếu có dữ liệu
                 {
-                    last7Days = bookingsByDate;
+                    last7Days = bookingsByDate; // gán dữ liệu cho last7Days
                 }
             }
 
             // Booking status
-            var bookingByStatus = !allBookings.Any() 
-                ? new List<object>()
-                : allBookings.GroupBy(b => b.Status)
-                    .Select(g => new { Status = g.Key.ToString(), Count = g.Count() } as object)
-                    .ToList();
+            var bookingByStatus = !allBookings.Any() // nếu không có bookings
+                ? new List<object>() // trả về danh sách rỗng
+                : allBookings.GroupBy(b => b.Status) // nhóm theo trạng thái
+                    .Select(g => new { Status = g.Key.ToString(), Count = g.Count() } as object) // chọn trạng thái và số lượng
+                    .ToList(); // chuyển sang danh sách
 
             // Top movies
             var movieBookingCounts = allMovies
@@ -292,19 +292,19 @@ public class DashboardApiController : ControllerBase
 
             if (!movieBookingCounts.Any() && allMovies.Any())
             {
-                movieBookingCounts = allMovies
-                    .OrderByDescending(m => m.CreatedAt)
-                    .Take(5)
-                    .Select((m, index) => new
+                movieBookingCounts = allMovies // nếu không có bookings
+                    .OrderByDescending(m => m.CreatedAt) // sắp xếp theo ngày tạo
+                    .Take(5) // lấy 5 phim
+                    .Select((m, index) => new // chọn phim và số lượng
                     {
                         Movie = m,
-                        Count = 5 - index
+                        Count = 5 - index // số lượng
                     })
                     .ToList();
             }
 
-            var topMoviesList = movieBookingCounts.Select(x => x.Movie).ToList();
-            var topMovies = movieBookingCounts.Select(x => new { Title = x.Movie.Title, Count = x.Count }).ToList();
+            var topMoviesList = movieBookingCounts.Select(x => x.Movie).ToList(); // danh sách phim
+            var topMovies = movieBookingCounts.Select(x => new { Title = x.Movie.Title, Count = x.Count }).ToList(); // danh sách phim và số lượng
 
             // Movie schedules for Gantt
             var today = DateTime.Today;

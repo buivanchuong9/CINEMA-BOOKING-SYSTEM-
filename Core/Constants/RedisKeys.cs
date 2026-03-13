@@ -11,7 +11,7 @@ public static class RedisKeys
     /// TTL: 10 phút
     /// </summary>
     public static string SeatLock(int showtimeId, int seatId) 
-        => $"Seat:{showtimeId}:{seatId}";
+        => $"Seat:{showtimeId}:{seatId}"; // tạo key để lưu thông tin giữ ghế
     
     /// <summary>
     /// Pattern: "Booking:{BookingId}"

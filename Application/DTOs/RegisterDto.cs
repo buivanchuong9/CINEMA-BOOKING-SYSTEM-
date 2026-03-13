@@ -22,7 +22,7 @@ public class RegisterDto
     public string PhoneNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
-    [StringLength(100, ErrorMessage = "Mật khẩu phải có ít nhất {2} ký tự", MinimumLength = 6)]
+    [StringLength(100, ErrorMessage = "Mật khẩu phải có ít nhất {2} ký tự", MinimumLength = 6)] // {2}: Độ dài tối thiểu (6)
     [DataType(DataType.Password)]
     [Display(Name = "Mật khẩu")]
     public string Password { get; set; } = string.Empty;

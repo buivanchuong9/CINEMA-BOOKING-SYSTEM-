@@ -34,7 +34,7 @@ public class Booking
     /// Tổng tiền (bao gồm vé + đồ ăn - voucher)
     /// </summary>
     [Required]
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")] // định nghĩa kiểu dữ liệu là decimal với 18 số tổng và 2 số thập phân
     public decimal TotalAmount { get; set; }
     
     /// <summary>
@@ -46,7 +46,7 @@ public class Booking
     /// <summary>
     /// Phương thức thanh toán
     /// </summary>
-    public PaymentMethod? PaymentMethod { get; set; }
+    public PaymentMethod? PaymentMethod { get; set; } // phương thức thanh toán
     
     /// <summary>
     /// Mã giao dịch từ payment gateway (VNPAY, MoMo...)
@@ -62,7 +62,7 @@ public class Booking
     /// <summary>
     /// Số tiền giảm giá từ voucher
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")] // định nghĩa kiểu dữ liệu là decimal với 18 số tổng và 2 số thập phân
     public decimal DiscountAmount { get; set; } = 0;
     
     /// <summary>
