@@ -41,7 +41,7 @@ public class BookingService : IBookingService
         {
             _logger.LogInformation($"[SelectSeats] Called with showtimeId={showtimeId}, userId={userId}, seats={string.Join(",", seatIds)}");
             
-            // Validate showtime exists - QUERY TRỰC TIẾP từ DbContext
+            // Kiểm tra xem giờ chiếu có tồn tại không
             _logger.LogInformation($"[SelectSeats] Querying showtime ID: {showtimeId}");
             var showtime = await _context.Showtimes
                 .AsNoTracking() // không trỉnh sửa để tăng hiệu suất đọc
@@ -72,7 +72,7 @@ public class BookingService : IBookingService
             
             _logger.LogInformation($"[SelectSeats] Found showtime: Movie={showtime.MovieId}, Room={showtime.RoomId}, Active={showtime.IsActive}");
 
-            // Validate seats exist and are available
+            // Kiểm tra ghế có tồn tại và có sẵn không
             foreach (var seatId in seatIds) // duyệt qua từng ghế
             {
                 var seat = await _unitOfWork.Seats.GetByIdAsync(seatId); // Lấy thông tin ghế từ Database.
@@ -98,7 +98,7 @@ public class BookingService : IBookingService
             }
 
             // Giữ chỗ bằng Redis (10 phút)
-            var holdSuccess = await _redisService.HoldMultipleSeatsAsync(showtimeId, seatIds, userId);
+            var holdSuccess = await _redisService.HoldMultipleSeatsAsync(showtimeId, seatIds, userId); // giữ nhiều ghế
             if (!holdSuccess)
             {
                 return new BookingSeatResult
@@ -134,13 +134,13 @@ public class BookingService : IBookingService
         }
     }
 
-    public async Task<CreateBookingResult> CreateBookingAsync(CreateBookingDto dto)
+    public async Task<CreateBookingResult> CreateBookingAsync(CreateBookingDto dto) // tạo booking 
     {
         try
         {
             _logger.LogInformation($"[CreateBooking] START - ShowtimeId={dto.ShowtimeId}, UserId={dto.UserId}, Seats={string.Join(",", dto.SeatIds)}");
             
-            // Validate showtime exists
+            // Kiểm tra xem giờ chiếu có tồn tại hay không
             var showtime = await _unitOfWork.Showtimes.GetByIdAsync(dto.ShowtimeId); // truyền dữ liệu showtime vào showtime
             if (showtime == null)
             {
@@ -152,7 +152,7 @@ public class BookingService : IBookingService
                 };
             }
 
-            // Validate và Book ghế TRỰC TIẾP trong transaction
+            // Kiểm tra và đặt ghế TRỰC TIẾP trong transaction
             // Phải check cả DB status VÀ Redis hold status
             foreach (var seatId in dto.SeatIds) // lặp duyệt qua từng cái ghế mà người dùng chọn
             {
@@ -167,7 +167,7 @@ public class BookingService : IBookingService
                     };
                 }
 
-                // CHECK 1: Database status
+                // CHECK 1: Database status 
                 if (seat.Status != SeatStatus.Available) // Kiểm tra ghế có trống không
                 {
                     _logger.LogWarning($"[CreateBooking] Seat {seatId} NOT AVAILABLE! Current status: {seat.Status}");
@@ -189,7 +189,7 @@ public class BookingService : IBookingService
                     _logger.LogInformation($"[CreateBooking] Seat {seatId} - HeldBy: '{heldBy}', CurrentUser: '{dto.UserId}'");
                     
                     // Nếu ghế đang được giữ bởi USER KHÁC → từ chối đặt
-                    if (!string.IsNullOrEmpty(heldBy) && heldBy != dto.UserId)
+                    if (!string.IsNullOrEmpty(heldBy) && heldBy != dto.UserId) // nếu ghế đang được giữ bởi người khác thì từ chối đặt
                     {
                         _logger.LogWarning($"[CreateBooking] Seat {seatId} is HELD by another user: {heldBy}");
                         return new CreateBookingResult
@@ -209,15 +209,15 @@ public class BookingService : IBookingService
             // Tạo Booking
             var booking = new Booking
             {
-                UserId = dto.UserId,
+                UserId = dto.UserId, 
                 ShowtimeId = dto.ShowtimeId,
                 BookingDate = DateTime.Now,
-                TotalAmount = totalAmount,
+                TotalAmount = totalAmount, // tổng tiền 
                 Status = BookingStatus.Pending, // Sẽ chuyển Paid sau khi thanh toán
                 PaymentMethod = PaymentMethod.VNPAY,
                 VoucherId = dto.VoucherId,
                 Notes = dto.Notes,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now // thời gian tạo 
             };
 
             await _unitOfWork.Bookings.AddAsync(booking); // Thêm hóa đơn vào hàng chờ lưu của Database
@@ -274,9 +274,9 @@ public class BookingService : IBookingService
             
             // Ghế vẫn được GIỮ trong Redis (15 phút)
             // Sẽ được release khi:
-            // 1. Payment SUCCESS → ConfirmPaymentAsync() sẽ set Status = Booked và release Redis
-            // 2. Payment FAIL → PaymentController sẽ cancel booking và release Redis
-            // 3. Timeout 15 phút → Redis tự động expire
+            // 1. Payment SUCCESS -> ConfirmPaymentAsync() sẽ set Status = Booked và release Redis
+            // 2. Payment FAIL -> PaymentController sẽ cancel booking và release Redis
+            // 3. Timeout 15 phút -> Redis tự động expire
             
             _logger.LogInformation($"[CreateBooking] SUCCESS - Booking ID={booking.Id}, Total={totalAmount}");
 
@@ -496,42 +496,42 @@ public class BookingService : IBookingService
 
         foreach (var seat in seats)
         {
-            var seatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId);
-            var price = showtime.BasePrice * (seatType?.SurchargeRatio ?? 1);
+            var seatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId); // lấy loại ghế
+            var price = showtime.BasePrice * (seatType?.SurchargeRatio ?? 1); // tính giá ghế (giá = cơ bản * số ghế); mặc định  = 1
 
             var status = "Available";
             string? heldBy = null;
 
-            // 1. Check if Sold (in BookingDetails)
+            // 1. Kiểm tra xem đã bán hết chưa (trong Chi tiết đặt phòng)
             if (bookedSeatIds.Contains(seat.Id))
             {
-                status = "Sold";
+                status = "Sold"; // đã bán
             }
-            // 2. Check if Physical Seat is broken/unavailable (Maintenance)
+            // 2. Kiểm tra ghế bị hỏng/không khả dụng (Bảo trì)
             else if (seat.Status != SeatStatus.Available)
             {
-                status = "Sold"; // Or Maintenance if we had that status
+                status = "Sold"; // Hoặc bảo trì nếu có trạng thái đó
             }
-            // 3. Check Redis Hold
+            // 3. Kiểm tra ghế đang được giữ
             else if (await _redisService.IsSeatHeldAsync(showtimeId, seat.Id))
             {
-                status = "Held";
+                status = "Held"; // đang giữ
                 heldBy = await _redisService.GetSeatHolderAsync(showtimeId, seat.Id);
             }
 
-            result.Add(new SeatStatusDto
+            result.Add(new SeatStatusDto // thêm vào danh sách ghế màu cho FE
             {
                 SeatId = seat.Id,
                 Row = seat.Row,
                 Number = seat.Number,
-                SeatType = seatType?.Name ?? "Standard",
+                SeatType = seatType?.Name ?? "Standard", // loại ghế
                 Status = status,
-                Price = price,
-                HeldByUser = heldBy
+                Price = price,  
+                HeldByUser = heldBy // người giữ ghế
             });
         }
 
-        return result;
+        return result; // trả về danh sách ghế màu cho FE
     }
 
     public async Task<Booking?> GetBookingByIdAsync(int bookingId, string userId)

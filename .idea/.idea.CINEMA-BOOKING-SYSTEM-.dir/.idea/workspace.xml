@@ -10,23 +10,10 @@
   <component name="ChangeListManager">
     <list default="true" id="eeef43fb-7576-458d-af98-25d9d14e3419" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.CINEMA-BOOKING-SYSTEM-.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/DTOs/BookingResultDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/BookingResultDto.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/DTOs/CreateBookingDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/CreateBookingDto.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/DTOs/LoginDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/LoginDto.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/DTOs/RegisterDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/RegisterDto.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application/DTOs/SeatStatusDto.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/DTOs/SeatStatusDto.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ARCHITECTURE_DOC.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Application/Services/BookingService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Application/Services/BookingService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Controllers/CinemasController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Controllers/CinemasController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/Areas/Admin/Views/Dashboard/Index.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Controllers/Api/DashboardApiController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Controllers/Api/DashboardApiController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Constants/AppConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Constants/AppConstants.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Constants/RedisKeys.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Constants/RedisKeys.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Entities/Bookings/Booking.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Entities/Bookings/Booking.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Entities/Bookings/Ticket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Entities/Bookings/Ticket.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IRepository.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IShowtimeRepository.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IShowtimeRepository.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Core/Interfaces/IUnitOfWork.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Interfaces/IUnitOfWork.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Infrastructure/Caching/RedisService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Infrastructure/Caching/RedisService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core/Entities/Bookings/BookingDetail.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Core/Entities/Bookings/BookingDetail.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Models/ErrorViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Models/ErrorViewModel.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net8.0/BE.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" afterDir="false" />
@@ -60,6 +47,9 @@
     &quot;accountId&quot;: &quot;aa7dce91-ff82-4bfe-afdc-ae4a1d9e095f&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/eaf74182ad7c943aaf043fd9e7bbb1d564713c6bd276e62966aaa618e9/LoggerExtensions.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
@@ -121,6 +111,13 @@
       <workItem from="1772173460850" duration="729000" />
       <workItem from="1773200981522" duration="82000" />
       <workItem from="1773211111608" duration="1323000" />
+      <workItem from="1773405246506" duration="56000" />
+      <workItem from="1773667836470" duration="386000" />
+      <workItem from="1773907063252" duration="1004000" />
+      <workItem from="1773932147571" duration="142000" />
+      <workItem from="1773934745626" duration="206000" />
+      <workItem from="1773941031881" duration="265000" />
+      <workItem from="1773969791247" duration="108000" />
     </task>
     <servers />
   </component>
