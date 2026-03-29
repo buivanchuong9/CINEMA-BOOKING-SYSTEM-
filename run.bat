@@ -34,14 +34,6 @@ if "%NO_DOTNET%"=="1" start "" https://dotnet.microsoft.com/en-us/download/dotne
 if "%NO_DOTNET%"=="1" pause
 if "%NO_DOTNET%"=="1" exit /b 1
 
-set "WRONG_DOTNET=0"
-dotnet --version | findstr "8." >nul 2>&1
-if errorlevel 1 set "WRONG_DOTNET=1"
-
-if "%WRONG_DOTNET%"=="1" echo [LOI] Can phai cai dat .NET 8 SDK!
-if "%WRONG_DOTNET%"=="1" start "" https://dotnet.microsoft.com/en-us/download/dotnet/8.0
-if "%WRONG_DOTNET%"=="1" pause
-if "%WRONG_DOTNET%"=="1" exit /b 1
 
 echo =^> .NET 8 OK!
 echo.
