@@ -25,6 +25,9 @@ echo.
 
 :: 1. Kiem tra .NET 8
 echo [1/5] Kiem tra .NET 8 SDK...
+:: Cap nhat PATH de nhan dien duoc .NET (du chua reset may)
+set "PATH=%PATH%;C:\Program Files\dotnet;C:\Program Files (x86)\dotnet;%USERPROFILE%\.dotnet\tools"
+
 set "NO_DOTNET=0"
 dotnet --version >nul 2>&1
 if errorlevel 1 set "NO_DOTNET=1"
