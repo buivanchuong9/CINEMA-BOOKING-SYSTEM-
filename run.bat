@@ -86,14 +86,15 @@ echo.
 echo [4/5] Khoi phuc NuGet va Khoi tao Database...
 set "ConnectionStrings__DefaultConnection=Server=%DB_SERVER%;Database=CinemaBooking_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
 
+set "RESTORE_FAILED=0"
 dotnet restore
-if errorlevel 1 (
-    echo [LOI] Phuc hoi thu vien (NuGet Restore) that bai!
-    echo Nguyen nhan: Do ban giai nen Code qua nhieu lop thu muc (qua 260 ky tu).
-    echo Vui long Copy thu muc code ra thang o D:\ hoac C:\ (VD: D:\Auto\BeCinema) roi chay lai!
-    pause
-    exit /b 1
-)
+if errorlevel 1 set "RESTORE_FAILED=1"
+
+if "%RESTORE_FAILED%"=="1" echo [LOI] Phuc hoi thu vien (NuGet Restore) that bai!
+if "%RESTORE_FAILED%"=="1" echo Nguyen nhan: Do ban giai nen Code qua nhieu lop thu muc (qua 260 ky tu).
+if "%RESTORE_FAILED%"=="1" echo Vui long Copy thu muc code ra thang o D:\ hoac C:\ (VD: D:\Auto\BeCinema) roi chay lai!
+if "%RESTORE_FAILED%"=="1" pause
+if "%RESTORE_FAILED%"=="1" exit /b 1
 
 dotnet tool install --global dotnet-ef >nul 2>&1
 echo Dang chay Entity Framework Migrations...
