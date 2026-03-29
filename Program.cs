@@ -13,26 +13,26 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // ===== 2. IDENTITY CONFIGURATION =====
-builder.Services.AddIdentity<User, IdentityRole>(options =>
+builder.Services.AddIdentity<User, IdentityRole>(options => // 
 {
-    // Password settings
+    // Cài đặt mật khẩu
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
     
-    // Lockout settings
+    // Cài đặt khóa tài khoản
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     
-    // User settings
+    // Cài đặt người dùng
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// ===== 3. REDIS CONFIGURATION =====
+// ===== 3. CẤU HÌNH REDIS =====
 var redisConnection = builder.Configuration.GetConnectionString("Redis") 
                       ?? "localhost:6379";
 
@@ -42,7 +42,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "CineMax_";
 });
 
-// ===== 4. SIGNALR CONFIGURATION =====
+// ===== 4. CẤU HÌNH SIGNALR =====
 builder.Services.AddSignalR();
 
 // ===== 5. DEPENDENCY INJECTION - REPOSITORIES & SERVICES =====
@@ -50,7 +50,7 @@ builder.Services.AddScoped<BE.Core.Interfaces.IUnitOfWork, BE.Infrastructure.Rep
 builder.Services.AddScoped<BE.Core.Interfaces.Services.IRedisService, BE.Infrastructure.Caching.RedisService>();
 builder.Services.AddScoped<BE.Core.Interfaces.Services.IBookingService, BE.Application.Services.BookingService>();
 
-// VNPay Payment Gateway
+// Cổng thanh toán VNPay
 builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
 {
     var config = new BE.Infrastructure.Payment.VNPayConfig
@@ -67,13 +67,13 @@ builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
 // ===== 6. RAZOR PAGES =====
 builder.Services.AddRazorPages();
 
-// Configure Antiforgery for JSON requests
+// Cấu hình Antiforgery cho JSON requests
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
 });
 
-// ===== 7. SESSION CONFIGURATION (for cart, temp data) =====
+// ===== 7. CẤU HÌNH SESSION (for cart, temp data) =====
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);

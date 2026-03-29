@@ -11,13 +11,13 @@ namespace BE.Infrastructure.Caching;
 public class RedisService : IRedisService
 {
     private readonly IDistributedCache _cache;
-    private readonly ILogger<RedisService> _logger;
-    private const int DEFAULT_SEAT_HOLD_MINUTES = 10;
+    private readonly ILogger<RedisService> _logger; // Log dành riêng cho RedisService
+    private const int DEFAULT_SEAT_HOLD_MINUTES = 10; // thời gian giữ ghế mặc định là 10 phút
 
-    public RedisService(IDistributedCache cache, ILogger<RedisService> logger)
+    public RedisService(IDistributedCache cache, ILogger<RedisService> logger) // Constructor tiêm dependency từ Program.cs
     {
-        _cache = cache;
-        _logger = logger;
+        _cache = cache; // tiêm IDistributedCache
+        _logger = logger; // tiêm ILogger
     }
 
     #region Seat Holding
@@ -31,7 +31,7 @@ public class RedisService : IRedisService
             
             // 2. CHECK: Đọc từ Redis xem Key này đã tồn tại chưa? (Có ai giữ chưa?)
             var existingHolder = await _cache.GetStringAsync(key);
-            if (!string.IsNullOrEmpty(existingHolder))
+            if (!string.IsNullOrEmpty(existingHolder)) // nếu key tồn tại => đã có người giữ
             {
                 // Nếu Redis trả về dữ liệu => Đã có người giữ => Từ chối
                 _logger.LogWarning($"Seat {seatId} at showtime {showtimeId} is already held by {existingHolder}");
@@ -42,11 +42,11 @@ public class RedisService : IRedisService
             // Nếu ttl null thì dùng mặc định 10 phút. Sau thời gian này Redis TỰ ĐỘNG XÓA key.
             var options = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = ttl ?? TimeSpan.FromMinutes(DEFAULT_SEAT_HOLD_MINUTES)
+                AbsoluteExpirationRelativeToNow = ttl ?? TimeSpan.FromMinutes(DEFAULT_SEAT_HOLD_MINUTES) // nếu ttl null thì dùng mặc định 10 phút
             };
 
             // 4. WRITE: Ghi vào Redis. Key="Seat:...", Value="UserId"
-            await _cache.SetStringAsync(key, userId, options);
+            await _cache.SetStringAsync(key, userId, options);  // ghi vào Redis
             _logger.LogInformation($"Seat {seatId} held by user {userId} for showtime {showtimeId}");
             return true;
         }
@@ -57,7 +57,7 @@ public class RedisService : IRedisService
         }
     }
 
-    public async Task<bool> ReleaseSeatAsync(int showtimeId, int seatId)
+    public async Task<bool> ReleaseSeatAsync(int showtimeId, int seatId) // nhả ghế
     {
         try
         {
@@ -68,24 +68,24 @@ public class RedisService : IRedisService
             _logger.LogInformation($"Seat {seatId} released for showtime {showtimeId}");
             return true;
         }
-        catch (Exception ex)
+        catch (Exception ex) // nếu có lỗi thì log ra
         {
             _logger.LogError(ex, $"Error releasing seat {seatId} for showtime {showtimeId}");
             return false;
         }
     }
 
-    public async Task<bool> IsSeatHeldAsync(int showtimeId, int seatId)
+    public async Task<bool> IsSeatHeldAsync(int showtimeId, int seatId) // kiểm tra ghế đã được giữ chưa
     {
         var key = BuildSeatKey(showtimeId, seatId);
-        var holder = await _cache.GetStringAsync(key);
-        return !string.IsNullOrEmpty(holder);
+        var holder = await _cache.GetStringAsync(key); // đọc từ Redis xem key có tồn tại không
+        return !string.IsNullOrEmpty(holder); // nếu key tồn tại => đã có người giữ
     }
 
-    public async Task<string?> GetSeatHolderAsync(int showtimeId, int seatId)
+    public async Task<string?> GetSeatHolderAsync(int showtimeId, int seatId) // lấy người giữ ghế
     {
-        var key = BuildSeatKey(showtimeId, seatId);
-        return await _cache.GetStringAsync(key);
+        var key = BuildSeatKey(showtimeId, seatId); 
+        return await _cache.GetStringAsync(key); // đọc từ Redis xem key có tồn tại không
     }
 
     // Hàm quan trọng: Giữ nhiều ghế cùng lúc (Atomic Simulation)
@@ -122,13 +122,13 @@ public class RedisService : IRedisService
         }
     }
 
-    public async Task<bool> ReleaseMultipleSeatsAsync(int showtimeId, List<int> seatIds)
+    public async Task<bool> ReleaseMultipleSeatsAsync(int showtimeId, List<int> seatIds) // nhả nhiều ghế cùng lúc
     {
         try
         {
-            foreach (var seatId in seatIds)
+            foreach (var seatId in seatIds) // duyệt từng ghế để nhả
             {
-                await ReleaseSeatAsync(showtimeId, seatId);
+                await ReleaseSeatAsync(showtimeId, seatId); // gọi hàm nhả ghế
             }
             return true;
         }
@@ -141,12 +141,12 @@ public class RedisService : IRedisService
 
     public async Task<List<int>> GetHeldSeatsAsync(int showtimeId)
     {
-        // Note: This is a simplified implementation
-        // In production, you'd use Redis SCAN or maintain a separate set
+        // Lưu ý: Đây là một cách triển khai đơn giản hóa.
+        // Trong môi trường production, bạn nên sử dụng Redis SCAN hoặc duy trì một Set riêng
         var heldSeats = new List<int>();
         
-        // This is a placeholder - actual implementation would require
-        // maintaining a Redis Set of held seats per showtime
+        // Đây là một cách triển khai tạm thời - việc triển khai thực tế sẽ yêu cầu
+        // duy trì một Redis Set chứa các ghế đã được giữ cho mỗi suất chiếu
         _logger.LogWarning("GetHeldSeatsAsync is not fully implemented - requires Redis Set structure");
         
         return heldSeats;
@@ -270,8 +270,8 @@ public class RedisService : IRedisService
     }
 
     #endregion
-
-    #region Helper Methods
+    // các hàm trợ giúp
+    #region Helper Methods 
 
     private string BuildSeatKey(int showtimeId, int seatId)
     {

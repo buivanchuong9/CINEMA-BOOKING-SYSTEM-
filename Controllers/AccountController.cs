@@ -12,8 +12,8 @@ public class AccountController : Controller
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly BE.Core.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly RoleManager<IdentityRole> _roleManager; // quản lý phân quyền
+    private readonly BE.Core.Interfaces.IUnitOfWork _unitOfWork; // quản lý repository
 
     public AccountController(
         UserManager<User> userManager,
@@ -29,9 +29,9 @@ public class AccountController : Controller
 
     // GET: /Account/Register
     [HttpGet]
-    public IActionResult Register()
+    public IActionResult Register() // hiển thị form đăng ký
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated == true) // kiểm tra đã đăng nhập chưa
         {
             return RedirectToAction("Index", "Home");
         }
@@ -41,9 +41,9 @@ public class AccountController : Controller
     // POST: /Account/Register
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterDto model)
+    public async Task<IActionResult> Register(RegisterDto model) // xử lý đăng ký
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid) // kiểm tra model có hợp lệ không
         {
             return View(model);
         }
@@ -54,14 +54,14 @@ public class AccountController : Controller
             Email = model.Email,
             FullName = model.FullName,
             PhoneNumber = model.PhoneNumber,
-            MembershipLevel = "Bronze",
+            MembershipLevel = "Bronze", // cấp bậc thành viên
             Points = 0,
             CreatedAt = DateTime.Now
         };
 
-        var result = await _userManager.CreateAsync(user, model.Password);
+        var result = await _userManager.CreateAsync(user, model.Password); // tạo user mới
 
-        if (result.Succeeded)
+        if (result.Succeeded) // nếu tạo user thành công
         {
             // Gán role Customer cho user mới
             await _userManager.AddToRoleAsync(user, "Customer");
@@ -75,7 +75,7 @@ public class AccountController : Controller
 
         foreach (var error in result.Errors)
         {
-            ModelState.AddModelError(string.Empty, error.Description);
+            ModelState.AddModelError(string.Empty, error.Description); // hiển thị lỗi
         }
 
         return View(model);
@@ -83,9 +83,9 @@ public class AccountController : Controller
 
     // GET: /Account/Login
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(string? returnUrl = null) // hiển thị form đăng nhập
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated == true) // kiểm tra đã đăng nhập chưa
         {
             return RedirectToAction("Index", "Home");
         }
@@ -97,56 +97,56 @@ public class AccountController : Controller
     // POST: /Account/Login
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginDto model, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginDto model, string? returnUrl = null) // xử lý đăng nhập 
     {
         ViewData["ReturnUrl"] = returnUrl;
 
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid) // kiểm tra model có hợp lệ không
         {
             return View(model);
         }
 
-        var result = await _signInManager.PasswordSignInAsync(
-            model.Email,
+        var result = await _signInManager.PasswordSignInAsync( // đăng nhập
+            model.Email, 
             model.Password,
             model.RememberMe,
-            lockoutOnFailure: false
+            lockoutOnFailure: false // không khóa tài khoản khi đăng nhập thất bại
         );
 
-        if (result.Succeeded)
+        if (result.Succeeded) // nếu đăng nhập thành công
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
+            var user = await _userManager.FindByEmailAsync(model.Email); // lấy user
+            if (user != null) // nếu user tồn tại
             {
-                // Update last login time
+                // Cập nhật lần đăng nhập gần đây nhất
                 user.LastLoginAt = DateTime.Now;
                 await _userManager.UpdateAsync(user);
 
-                // Check if user is admin
+                // Kiểm tra xem user có phải là admin không
                 var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
 
                 TempData["Success"] = $"Chào mừng {user.FullName}!";
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) // kiểm tra returnUrl có hợp lệ không
                 {
-                    return Redirect(returnUrl);
+                    return Redirect(returnUrl); // chuyển hướng đến returnUrl
                 }
 
-                // Redirect based on role
-                if (isAdmin)
+                // Chuyển hướng dựa trên vai trò
+                if (isAdmin) // nếu là admin
                 {
-                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" }); // chuyển hướng đến trang admin
                 }
 
                 return RedirectToAction("Index", "Home");
             }
         }
 
-        if (result.IsLockedOut)
+        if (result.IsLockedOut) // nếu tài khoản bị khóa
         {
             ModelState.AddModelError(string.Empty, "Tài khoản đã bị khóa. Vui lòng thử lại sau.");
         }
-        else
+        else // nếu tài khoản không tồn tại
         {
             ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
         }
@@ -166,11 +166,11 @@ public class AccountController : Controller
 
     // GET: /Account/Profile
     [HttpGet]
-    public async Task<IActionResult> Profile()
+    public async Task<IActionResult> Profile() // hiển thị thông tin cá nhân
     {
-        if (!User.Identity?.IsAuthenticated ?? true)
+        if (!User.Identity?.IsAuthenticated ?? true) // kiểm tra đã đăng nhập chưa
         {
-            return RedirectToAction("Login");
+            return RedirectToAction("Login"); // chuyển hướng đến trang đăng nhập
         }
 
         var user = await _userManager.GetUserAsync(User);
@@ -181,8 +181,9 @@ public class AccountController : Controller
 
         // Load active vouchers
         ViewBag.Vouchers = (await _unitOfWork.Vouchers.GetAllAsync())
+            // lọc voucher của user, còn hạn sử dụng và chưa hết lượt sử dụng
             .Where(v => v.UserId == user.Id && v.IsActive && v.ExpiryDate > DateTime.Now && v.UsedCount < (v.UsageLimit ?? 1))
-            .OrderByDescending(v => v.CreatedAt)
+            .OrderByDescending(v => v.CreatedAt) // sắp xếp giảm dần theo ngày tạo
             .ToList();
 
         return View(user);
@@ -191,35 +192,35 @@ public class AccountController : Controller
     // POST: /Account/RedeemVoucher
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RedeemVoucher()
+    public async Task<IActionResult> RedeemVoucher() // đổi voucher
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return RedirectToAction("Login");
+        if (user == null) return RedirectToAction("Login"); // nếu user không tồn tại thì chuyển hướng đến trang đăng nhập
 
-        const int VOUCHER_COST = 1000;
+        const int VOUCHER_COST = 1000; // số điểm cần để đổi voucher
 
-        if (user.Points < VOUCHER_COST)
+        if (user.Points < VOUCHER_COST) // nếu user không đủ điểm
         {
             TempData["Error"] = $"Bạn cần tích lũy đủ {VOUCHER_COST} điểm để đổi voucher!";
             return RedirectToAction("Profile");
         }
 
         // Deduct points
-        user.Points -= VOUCHER_COST;
-        await _userManager.UpdateAsync(user);
+        user.Points -= VOUCHER_COST; // trừ điểm
+        await _userManager.UpdateAsync(user); // cập nhật user
 
         // Randomize discount 30-70%
-        var rnd = new Random();
+        var rnd = new Random(); 
         int discount = rnd.Next(30, 71); // 30 to 70
 
         // Create Voucher
         var voucher = new Voucher
         {
-            Code = $"REWARD-{DateTime.Now.Ticks.ToString().Substring(10)}-{discount}",
-            Name = $"Voucher Ưu Đãi {discount}%",
-            Description = "Voucher đổi từ điểm tích lũy",
-            UserId = user.Id,
-            DiscountPercent = discount,
+            Code = $"REWARD-{DateTime.Now.Ticks.ToString().Substring(10)}-{discount}", // tạo mã voucher
+            Name = $"Voucher Ưu Đãi {discount}%", // tên voucher
+            Description = "Voucher đổi từ điểm tích lũy", // mô tả voucher
+            UserId = user.Id, // user sở hữu voucher
+            DiscountPercent = discount, // phần trăm giảm giá
             MaxAmount = 100000, // Max 100k
             MinOrderAmount = 0,
             StartDate = DateTime.Now,

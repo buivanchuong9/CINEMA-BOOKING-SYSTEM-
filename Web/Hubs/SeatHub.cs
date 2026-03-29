@@ -8,41 +8,41 @@ namespace BE.Web.Hubs;
 /// </summary>
 public class SeatHub : Hub
 {
-    private readonly ILogger<SeatHub> _logger;
+    private readonly ILogger<SeatHub> _logger; // để ghi log khi có lỗi hoặc thông tin cần theo dõi 
 
-    public SeatHub(ILogger<SeatHub> logger)
+    public SeatHub(ILogger<SeatHub> logger) // DI
     {
-        _logger = logger;
+        _logger = logger; // gán giá trị cho _logger
     }
 
     /// <summary>
     /// Client join vào group của showtime cụ thể
     /// Để nhận real-time updates cho showtime đó
     /// </summary>
-    public async Task JoinShowtimeGroup(int showtimeId)
+    public async Task JoinShowtimeGroup(int showtimeId) // nhận id của showtime từ client
     {
-        var groupName = GetShowtimeGroupName(showtimeId);
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        var groupName = GetShowtimeGroupName(showtimeId); 
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName); // thêm client vào group để nhận real-time updates 
         _logger.LogInformation($"Client {Context.ConnectionId} joined showtime {showtimeId} group");
     }
 
     /// <summary>
     /// Client leave group khi rời khỏi trang seat selection
     /// </summary>
-    public async Task LeaveShowtimeGroup(int showtimeId)
+    public async Task LeaveShowtimeGroup(int showtimeId) // rời khỏi group của showtime
     {
         var groupName = GetShowtimeGroupName(showtimeId);
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-        _logger.LogInformation($"Client {Context.ConnectionId} left showtime {showtimeId} group");
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName); // xóa client khỏi group 
+        _logger.LogInformation($"Client {Context.ConnectionId} left showtime {showtimeId} group"); // log thông tin
     }
 
     /// <summary>
     /// Notify tất cả clients trong showtime group về ghế đã được chọn
     /// </summary>
-    public async Task NotifySeatSelected(int showtimeId, int seatId, string userId)
+    public async Task NotifySeatSelected(int showtimeId, int seatId, string userId)  // thông báo cho các client khác trong group về ghế đã được chọn
     {
         var groupName = GetShowtimeGroupName(showtimeId);
-        await Clients.OthersInGroup(groupName).SendAsync("SeatSelected", new
+        await Clients.OthersInGroup(groupName).SendAsync("SeatSelected", new // gửi thông báo cho các client khác trong group
         {
             showtimeId,
             seatId,
@@ -56,7 +56,7 @@ public class SeatHub : Hub
     /// <summary>
     /// Notify khi ghế được release (hết timeout hoặc user bỏ chọn)
     /// </summary>
-    public async Task NotifySeatReleased(int showtimeId, int seatId)
+    public async Task NotifySeatReleased(int showtimeId, int seatId) // thông báo khi ghế được release (hết timeout hoặc user bỏ chọn)
     {
         var groupName = GetShowtimeGroupName(showtimeId);
         await Clients.Group(groupName).SendAsync("SeatReleased", new

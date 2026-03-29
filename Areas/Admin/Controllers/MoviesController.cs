@@ -17,10 +17,10 @@ public class MoviesController : Controller
     }
 
     // GET: /Admin/Movies
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() // danh sách phim
     {
         var movies = await _unitOfWork.Movies.GetAllAsync();
-        return View(movies.OrderByDescending(m => m.CreatedAt).ToList());
+        return View(movies.OrderByDescending(m => m.CreatedAt).ToList()); // sắp xếp theo ngày tạo
     }
 
     // GET: /Admin/Movies/Create
@@ -31,35 +31,35 @@ public class MoviesController : Controller
 
     // POST: /Admin/Movies/Create
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateAntiForgeryToken] // chống hack CSRF
     public async Task<IActionResult> Create(Movie movie)
     {
         try
         {
-            // Remove optional fields from validation
-            ModelState.Remove("PosterUrl");
+            // xóa các trường không bắt buộc
+            ModelState.Remove("PosterUrl"); 
             ModelState.Remove("TrailerUrl");
-            ModelState.Remove("Description");
-            ModelState.Remove("AgeRating");
-            ModelState.Remove("Rating");
-            ModelState.Remove("Director");
-            ModelState.Remove("Cast");
-            ModelState.Remove("CreatedAt");
-            ModelState.Remove("IsActive");
+            ModelState.Remove("Description"); // xóa mô tả
+            ModelState.Remove("AgeRating"); // xóa đánh giá tuổi
+            ModelState.Remove("Rating"); // xóa đánh giá
+            ModelState.Remove("Director"); // xóa đạo diễn
+            ModelState.Remove("Cast"); // xóa diễn viên
+            ModelState.Remove("CreatedAt"); // xóa ngày tạo
+            ModelState.Remove("IsActive"); // xóa trạng thái hoạt động
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) 
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
                 return View(movie);
             }
 
-            movie.CreatedAt = DateTime.Now;
-            await _unitOfWork.Movies.AddAsync(movie);
+            movie.CreatedAt = DateTime.Now; // gán ngày tạo phim 
+            await _unitOfWork.Movies.AddAsync(movie); 
             await _unitOfWork.SaveChangesAsync();
 
             TempData["Success"] = $"Đã thêm phim '{movie.Title}' thành công!";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index)); // chuyển sang trang danh sách phim
         }
         catch (Exception ex)
         {
@@ -93,9 +93,9 @@ public class MoviesController : Controller
         try
         {
             // Remove optional fields
-            ModelState.Remove("PosterUrl");
+            ModelState.Remove("PosterUrl"); 
             ModelState.Remove("TrailerUrl");
-            ModelState.Remove("Description");
+            ModelState.Remove("Description"); 
             ModelState.Remove("AgeRating");
             ModelState.Remove("Rating");
             ModelState.Remove("Director");

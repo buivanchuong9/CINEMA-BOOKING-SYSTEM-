@@ -12,17 +12,17 @@ public interface IBookingService
     /// <summary>
     /// Bước 1: Chọn ghế và hold trong Redis (10 phút)
     /// </summary>
-    Task<BookingSeatResult> SelectSeatsAsync(int showtimeId, List<int> seatIds, string userId);
+    Task<BookingSeatResult> SelectSeatsAsync(int showtimeId, List<int> seatIds, string userId); // chọn ghế và hold trong Redis (10 phút)
     
     /// <summary>
     /// Bước 2: Tạo Booking (Status = Pending)
     /// </summary>
-    Task<CreateBookingResult> CreateBookingAsync(CreateBookingDto dto);
+    Task<CreateBookingResult> CreateBookingAsync(CreateBookingDto dto); // tạo booking (Status = Pending)
     
     /// <summary>
     /// Bước 3: Xác nhận thanh toán và chuyển Status = Paid
     /// </summary>
-    Task<bool> ConfirmPaymentAsync(int bookingId, string transactionId);
+    Task<bool> ConfirmPaymentAsync(int bookingId, string transactionId); // xác nhận thanh toán và chuyển Status = Paid
     
     /// <summary>
     /// Hủy booking và release seats
@@ -33,20 +33,20 @@ public interface IBookingService
     /// Tính tổng giá vé (Dynamic Pricing)
     /// BasePrice * SeatType.Ratio * (Weekend Multiplier) - Voucher + Food
     /// </summary>
-    Task<decimal> CalculateTotalPriceAsync(int showtimeId, List<int> seatIds, int? voucherId = null, List<FoodItemDto>? foods = null);
+    Task<decimal> CalculateTotalPriceAsync(int showtimeId, List<int> seatIds, int? voucherId = null, List<FoodItemDto>? foods = null); // tính tổng giá vé (Dynamic Pricing)
     
     /// <summary>
     /// Get seat status cho showtime (Available, Held, Sold)
     /// </summary>
-    Task<List<SeatStatusDto>> GetSeatStatusAsync(int showtimeId);
+    Task<List<SeatStatusDto>> GetSeatStatusAsync(int showtimeId); // lấy trạng thái ghế cho showtime (Available, Held, Sold)
     
     /// <summary>
     /// Get booking details cho user
     /// </summary>
-    Task<Booking?> GetBookingByIdAsync(int bookingId, string userId);
+    Task<Booking?> GetBookingByIdAsync(int bookingId, string userId); // lấy chi tiết booking cho user
     
     /// <summary>
     /// Get user's booking history
     /// </summary>
-    Task<List<Booking>> GetUserBookingsAsync(string userId);
+    Task<List<Booking>> GetUserBookingsAsync(string userId); // lấy lịch sử đặt vé của user
 }

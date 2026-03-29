@@ -25,17 +25,17 @@ public class ShowtimesController : Controller
         var movies = await _unitOfWork.Movies.GetAllAsync();
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
         
-        ViewBag.Movies = movies.ToDictionary(m => m.Id, m => m.Title);
-        ViewBag.Rooms = rooms.ToDictionary(r => r.Id, r => r.Name);
+        ViewBag.Movies = movies.ToDictionary(m => m.Id, m => m.Title); // danh sách phim theo id và tên
+        ViewBag.Rooms = rooms.ToDictionary(r => r.Id, r => r.Name); // danh sách phòng theo id và tên
         
         // Tạo ViewModel để truyền dữ liệu tính toán
         var showtimeViewModels = new List<dynamic>();
         
         foreach (var showtime in showtimes)
         {
-            var room = rooms.FirstOrDefault(r => r.Id == showtime.RoomId);
-            var totalSeats = room != null ? (room.TotalRows * room.SeatsPerRow) : 0;
-            var bookedSeats = await GetBookedSeatsCountAsync(showtime.Id);
+            var room = rooms.FirstOrDefault(r => r.Id == showtime.RoomId); // tìm phòng theo id nếu kh thấy sẽ null
+            var totalSeats = room != null ? (room.TotalRows * room.SeatsPerRow) : 0; // tính tổng số ghế nếu kh thấy sẽ là 0
+            var bookedSeats = await GetBookedSeatsCountAsync(showtime.Id); // đếm số ghế đã đặt 
             
             showtimeViewModels.Add(new
             {
@@ -55,33 +55,33 @@ public class ShowtimesController : Controller
     // GET: /Admin/Showtimes/Create
     public async Task<IActionResult> Create()
     {
-        await PopulateDropdowns();
+        await PopulateDropdowns(); // hiển thị danh sách phim và phòng  
         return View();
     }
 
     // POST: /Admin/Showtimes/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Showtime showtime)
+    public async Task<IActionResult> Create(Showtime showtime) // tạo lịch chiếu
     {
         try
         {
             ModelState.Remove("Movie");
             ModelState.Remove("Room");
-            ModelState.Remove("EndTime");
+            ModelState.Remove("EndTime"); // xoá thời gian kết thúc
             ModelState.Remove("CreatedAt");
-            ModelState.Remove("IsActive");
+            ModelState.Remove("IsActive"); // xoá trạng thái hoạt động
 
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
-                await PopulateDropdowns();
+                await PopulateDropdowns(); // hiển thị danh sách phim và phòng  
                 return View(showtime);
             }
 
             // Calculate EndTime based on Movie duration
-            var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+            var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId); // lấy thông tin phim
             if (movie != null)
             {
                 showtime.EndTime = showtime.StartTime.AddMinutes(movie.Duration + 15); // +15 phút dọn dẹp
@@ -89,10 +89,10 @@ public class ShowtimesController : Controller
             
             // Check if room is available at this time
             var conflictingShowtime = await CheckRoomConflictAsync(showtime.RoomId, showtime.StartTime, showtime.EndTime);
-            if (conflictingShowtime != null)
+            if (conflictingShowtime != null) // kiểm tra phòng chiếu đã có lịch chiếu trong khung giờ này chưa
             {
                 TempData["Error"] = "Phòng chiếu đã có lịch chiếu trong khung giờ này!";
-                await PopulateDropdowns();
+                await PopulateDropdowns(); // hiển thị danh sách phim và phòng  
                 return View(showtime);
             }
 
@@ -108,18 +108,18 @@ public class ShowtimesController : Controller
         catch (Exception ex)
         {
             TempData["Error"] = $"Lỗi: {ex.Message}";
-            await PopulateDropdowns();
+            await PopulateDropdowns(); 
             return View(showtime);
         }
     }
 
     // GET: /Admin/Showtimes/Edit/5
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id) // cập nhật lịch chiếu
     {
         var showtime = await _unitOfWork.Showtimes.GetByIdAsync(id);
         if (showtime == null)
         {
-            return NotFound();
+            return NotFound(); // nếu không tìm thấy lịch chiếu thì trả về 404
         }
         
         await PopulateDropdowns();
@@ -183,9 +183,9 @@ public class ShowtimesController : Controller
             return NotFound();
         }
 
-        // Check if there are any bookings
+        // Kiểm tra xem có đặt chỗ nào không.
         var hasBookings = await HasBookingsAsync(showtime.Id);
-        if (hasBookings)
+        if (hasBookings) // nếu có đặt chỗ thì không thể xóa
         {
             TempData["Error"] = "Không thể xóa lịch chiếu đã có người đặt vé!";
             return RedirectToAction(nameof(Index));
@@ -198,7 +198,8 @@ public class ShowtimesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    #region Helper Methods
+    // Các phương thức hỗ trợ    
+    #region Helper Methods 
 
     private async Task PopulateDropdowns()
     {
@@ -207,24 +208,24 @@ public class ShowtimesController : Controller
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         
         ViewBag.MovieSelectList = new SelectList(
-            movies.Where(m => m.IsActive).OrderBy(m => m.Title), 
+            movies.Where(m => m.IsActive).OrderBy(m => m.Title), // lọc danh sách phim đang hoạt động
             "Id", "Title"
         );
         
         ViewBag.RoomSelectList = new SelectList(
-            rooms.Where(r => r.IsActive).OrderBy(r => r.Name), 
+            rooms.Where(r => r.IsActive).OrderBy(r => r.Name), // lọc danh sách phòng đang hoạt động
             "Id", "Name"
         );
         
         ViewBag.CinemaSelectList = new SelectList(
-            cinemas.Where(c => c.IsActive).OrderBy(c => c.Name),
+            cinemas.Where(c => c.IsActive).OrderBy(c => c.Name), // lọc danh sách rạp đang hoạt động
             "Id", "Name"
         );
     }
 
-    private async Task<int> GetBookedSeatsCountAsync(int showtimeId)
+    private async Task<int> GetBookedSeatsCountAsync(int showtimeId) // lấy số ghế đã đặt
     {
-        // Lấy tất cả seats của showtime này
+        // Lấy tất cả ghế của lịch chiếu này
         var showtime = await _unitOfWork.Showtimes.GetByIdAsync(showtimeId);
         if (showtime == null) return 0;
         
@@ -247,11 +248,11 @@ public class ShowtimesController : Controller
         );
     }
 
-    private async Task<bool> HasBookingsAsync(int showtimeId)
+    private async Task<bool> HasBookingsAsync(int showtimeId) // kiểm tra xem có đặt chỗ nào không
     {
-        var bookedCount = await GetBookedSeatsCountAsync(showtimeId);
-        return bookedCount > 0;
+        var bookedCount = await GetBookedSeatsCountAsync(showtimeId); // lấy số ghế đã đặt
+        return bookedCount > 0; //đặt chỗ thì trả về true, ngược lại trả về false
     }
 
-    #endregion
+    #endregion // kết thúc các phương thức hỗ trợ    
 }

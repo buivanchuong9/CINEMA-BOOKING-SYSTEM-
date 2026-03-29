@@ -37,78 +37,78 @@ public class BookingController : Controller
     {
         _logger.LogInformation($"SelectSeats called with showtimeId: {showtimeId}");
         
-        // IMPORTANT: Clear change tracker để đảm bảo load fresh data từ DB
+        // Xóa change tracker để đảm bảo load fresh data từ DB
         _context.ChangeTracker.Clear();
         
-        if (showtimeId <= 0)
+        if (showtimeId <= 0) // kiểm tra showtimeId có hợp lệ không
         {
             TempData["Error"] = "Lịch chiếu không hợp lệ!";
             _logger.LogWarning($"Invalid showtimeId: {showtimeId}");
-            return RedirectToAction("Index", "Movies");
+            return RedirectToAction("Index", "Movies"); // chuyển hướng đến trang danh sách phim
         }
 
-        // Validate showtime exists và đang active
+        // Kiểm tra showtime tồn tại và đang hoạt động
         var showtime = await _unitOfWork.Showtimes.GetByIdAsync(showtimeId);
-        if (showtime == null)
+        if (showtime == null) // nếu không tìm thấy showtime
         {
             TempData["Error"] = "Không tìm thấy lịch chiếu!";
             _logger.LogWarning($"Showtime not found: {showtimeId}");
-            return RedirectToAction("Index", "Movies");
+            return RedirectToAction("Index", "Movies"); // chuyển hướng đến trang danh sách phim
         }
         
-        if (!showtime.IsActive)
+        if (!showtime.IsActive) // kiểm tra showtime còn hoạt động không
         {
             TempData["Error"] = "Lịch chiếu đã ngừng bán vé!";
             _logger.LogWarning($"Showtime inactive: {showtimeId}");
-            return RedirectToAction("Index", "Movies");
+            return RedirectToAction("Index", "Movies"); // chuyển hướng đến trang danh sách phim
         }
         
-        if (showtime.StartTime < DateTime.Now)
+        if (showtime.StartTime < DateTime.Now) // kiểm tra showtime đã hết hạn chưa
         {
             TempData["Error"] = "Lịch chiếu đã hết hạn!";
             _logger.LogWarning($"Showtime expired: {showtimeId}, StartTime: {showtime.StartTime}");
             return RedirectToAction("Index", "Movies");
         }
 
-        // Load navigation properties
-        var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
-        var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
-        if (room != null)
+        // Tải thuộc tính điều hướng
+        var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId); // lấy thông tin phim
+        var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId); 
+        if (room != null) // nếu tìm thấy phòng
         {
-            var cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId);
-            if (cinema != null)
+            var cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId); // lấy thông tin rạp
+            if (cinema != null) // nếu tìm thấy rạp
             {
-                room.Cinema = cinema;
+                room.Cinema = cinema; // gán rạp cho phòng
             }
         }
         
-        // Get all seats in room with their types
+        // Lấy tất cả ghế trong phòng với loại ghế của chúng
         var seats = (await _unitOfWork.Seats.GetAllAsync())
             .Where(s => s.RoomId == showtime.RoomId)
             .OrderBy(s => s.Row)
             .ThenBy(s => s.Number)
             .ToList();
         
-        foreach (var seat in seats)
+        foreach (var seat in seats) // duyệt qua từng ghế
         {
-            var seatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId);
-            if (seatType != null)
+            var seatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId); // lấy loại ghế
+            if (seatType != null) // nếu tìm thấy loại ghế
             {
-                seat.SeatType = seatType;
+                seat.SeatType = seatType; // gán loại ghế cho ghế
             }
         }
         
-        // Get seat status for this showtime
+        // Lấy trạng thái ghế cho showtime này
         var seatStatus = await _bookingService.GetSeatStatusAsync(showtimeId);
         
-        // Get available foods
+        // Lấy thực phẩm có sẵn
         var foods = (await _unitOfWork.Foods.GetAllAsync())
             .Where(f => f.IsAvailable)
             .OrderBy(f => f.DisplayOrder)
             .ThenBy(f => f.Name)
             .ToList();
         
-        ViewBag.ShowtimeId = showtimeId;
+        ViewBag.ShowtimeId = showtimeId; // gán showtimeId cho ViewBag
         ViewBag.Showtime = showtime;
         ViewBag.Movie = movie;
         ViewBag.Room = room;
@@ -119,26 +119,6 @@ public class BookingController : Controller
         return View();
     }
 
-    // POST: /Booking/HoldSeats
-    // MVC PATTERN: Không cần HoldSeats API nữa - submit form trực tiếp
-    // Giữ lại để backward compatibility nếu cần
-    /*
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> HoldSeats(int showtimeId, List<int> seatIds)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
-        }
-
-        var result = await _bookingService.SelectSeatsAsync(showtimeId, seatIds, userId);
-        return Json(result);
-    }
-    */
-
     // POST: /Booking/Create
     [HttpPost]
     [Authorize]
@@ -147,7 +127,7 @@ public class BookingController : Controller
     {
         _logger.LogInformation($"Create booking called with ShowtimeId: {dto.ShowtimeId}, SeatIds count: {dto.SeatIds?.Count ?? 0}, UseTestPayment: {useTestPayment}");
         
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // lấy Id của người dùng đang đăng nhập.
         if (string.IsNullOrEmpty(userId))
         {
             TempData["Error"] = "Vui lòng đăng nhập!";
@@ -155,37 +135,37 @@ public class BookingController : Controller
         }
 
         dto.UserId = userId;
-        var result = await _bookingService.CreateBookingAsync(dto);
+        var result = await _bookingService.CreateBookingAsync(dto); 
 
-        if (result.Success)
+        if (result.Success) // nếu tạo booking thành công
         {
-            // Tạo booking thành công → Redirect đến VNPay
+            // Tạo booking thành công -> Redirect đến VNPay
             try
             {
-                if (!result.BookingId.HasValue)
+                if (!result.BookingId.HasValue) // nếu không có bookingId thì trả về lỗi
                 {
                     TempData["Error"] = "Không tạo được đơn đặt vé!";
                     return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
                 }
 
-                var booking = await _unitOfWork.Bookings.GetByIdAsync(result.BookingId.Value);
-                if (booking == null)
+                var booking = await _unitOfWork.Bookings.GetByIdAsync(result.BookingId.Value); // lấy booking
+                if (booking == null) // nếu không tìm thấy booking
                 {
                     TempData["Error"] = "Không tìm thấy đơn đặt vé!";
                     return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
                 }
 
-                // DEVELOPMENT: Bypass VNPay nếu useTestPayment = true
+                // dev Vượt qua VNPay nếu useTestPayment = true
                 if (useTestPayment)
                 {
                     _logger.LogInformation($"Using TEST PAYMENT for Booking ID={booking.Id}");
                     return RedirectToAction("TestPayment", "Payment", new { bookingId = booking.Id });
                 }
 
-                // Get client IP
+                // Lấy IP của client
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
                 
-                // Create VNPay payment URL
+                // Tạo URL thanh toán VNPay
                 var paymentUrl = _vnPayHelper.CreatePaymentUrl(
                     orderId: booking.Id.ToString(),
                     amount: booking.TotalAmount,
@@ -195,7 +175,7 @@ public class BookingController : Controller
 
                 _logger.LogInformation($"Redirecting to VNPay: {paymentUrl}");
                 
-                // Redirect to VNPay
+                // Redirect to VNPay 
                 return Redirect(paymentUrl);
             }
             catch (Exception ex)
@@ -212,15 +192,15 @@ public class BookingController : Controller
 
     [Authorize]
     // GET: /Booking/Details/5
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id) // hiển thị chi tiết đơn đặt vé
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // lấy Id của người dùng đang đăng nhập.
+        if (string.IsNullOrEmpty(userId)) // nếu không có Id
         {
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Login", "Account"); // chuyển hướng đến trang đăng nhập
         }
 
-        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id); 
         if (booking == null || booking.UserId != userId)
         {
             TempData["Error"] = "Không tìm thấy đơn đặt vé!";
@@ -233,7 +213,7 @@ public class BookingController : Controller
             .ToList();
 
         // Load showtime, movie, room, cinema
-        BE.Core.Entities.Movies.Showtime? showtime = null;
+        BE.Core.Entities.Movies.Showtime? showtime = null; 
         BE.Core.Entities.Movies.Movie? movie = null;
         BE.Core.Entities.CinemaInfrastructure.Room? room = null;
         BE.Core.Entities.CinemaInfrastructure.Cinema? cinema = null;

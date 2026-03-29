@@ -145,12 +145,12 @@ public class PaymentController : Controller
                 }
             }
             
-            return Json(new { RspCode = "99", Message = "Unknown error" });
+            return Json(new { RspCode = "99", Message = "Unknown error" }); // 99 lỗi chung, 01 lỗi dữ liệu, 00 thành công
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing VNPay IPN");
-            return Json(new { RspCode = "99", Message = ex.Message });
+            return Json(new { RspCode = "99", Message = ex.Message }); 
         }
     }
 }

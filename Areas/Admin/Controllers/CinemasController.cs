@@ -11,20 +11,20 @@ public class CinemasController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public CinemasController(IUnitOfWork unitOfWork)
+    public CinemasController(IUnitOfWork unitOfWork) // DI
     {
         _unitOfWork = unitOfWork;
     }
 
     // GET: /Admin/Cinemas
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() // danh sách rạp
     {
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         return View(cinemas.OrderBy(c => c.Name).ToList());
     }
 
     // GET: /Admin/Cinemas/Create
-    public IActionResult Create()
+    public IActionResult Create() // tạo rạp
     {
         return View();
     }
@@ -32,24 +32,24 @@ public class CinemasController : Controller
     // POST: /Admin/Cinemas/Create
     [HttpPost]
     [ValidateAntiForgeryToken] // Chống hack CSRF (giả mạo người dùng gửi form)
-    public async Task<IActionResult> Create(Cinema cinema)
+    public async Task<IActionResult> Create(Cinema cinema) // tạo rạp
     {
         try
         {
-            // Remove optional fields from ModelState
+            // Xóa các trường tùy chọn khỏi ModelState
             ModelState.Remove("MapEmbedUrl"); // gg map
             ModelState.Remove("Phone"); // số điện thoại
             ModelState.Remove("CreatedAt"); // thời gian tạo
             ModelState.Remove("IsActive"); // trạng thái hoạt động
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) // check dữ liệu nhập vào hợp lệ không
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList(); 
                 TempData["Error"] = "Vui lòng kiểm tra lại thông tin: " + string.Join(", ", errors);
                 return View(cinema);
             }
 
-            cinema.CreatedAt = DateTime.Now;
+            cinema.CreatedAt = DateTime.Now; 
             cinema.IsActive = true; // mặc định rạp hoạt động
             
             await _unitOfWork.Cinemas.AddAsync(cinema); // thêm rạp vào database
@@ -112,7 +112,7 @@ public class CinemasController : Controller
         }
     }
 
-    // POST: /Admin/Cinemas/Delete/5
+    // POST: /Admin/Cinemas/Delete/5 (Route parameter /Delete/5)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)

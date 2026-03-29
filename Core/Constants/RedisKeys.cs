@@ -18,8 +18,8 @@ public static class RedisKeys
     /// Value: Booking data (JSON)
     /// TTL: 15 phút
     /// </summary>
-    public static string BookingCache(int bookingId) 
-        => $"Booking:{bookingId}";
+    public static string BookingCache(int bookingId)  // tạo key để lưu thông tin đặt vé
+        => $"Booking:{bookingId}"; 
     
     /// <summary>
     /// Pattern: "Showtime:{ShowtimeId}:Seats"
@@ -27,7 +27,7 @@ public static class RedisKeys
     /// TTL: 5 phút
     /// </summary>
     public static string ShowtimeSeats(int showtimeId) 
-        => $"Showtime:{showtimeId}:Seats";
+        => $"Showtime:{showtimeId}:Seats"; // tạo key để lưu thông tin ghế
     
     /// <summary>
     /// Distributed lock pattern

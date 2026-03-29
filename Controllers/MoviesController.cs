@@ -68,16 +68,16 @@ public class MoviesController : Controller
     // GET: /Movies/NowShowing
     public async Task<IActionResult> NowShowing()
     {
-        var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.NowShowing);
-        ViewBag.CurrentStatus = "NowShowing";
-        return View("Index", movies.OrderByDescending(m => m.ReleaseDate));
+        var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.NowShowing); // lấy phim đang chiếu
+        ViewBag.CurrentStatus = "NowShowing"; // gán trạng thái cho ViewBag
+        return View("Index", movies.OrderByDescending(m => m.ReleaseDate)); // trả về danh sách phim đang chiếu
     }
 
     // GET: /Movies/ComingSoon
     public async Task<IActionResult> ComingSoon()
     {
-        var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.ComingSoon);
-        ViewBag.CurrentStatus = "ComingSoon";
-        return View("Index", movies.OrderByDescending(m => m.ReleaseDate));
+        var movies = await _unitOfWork.Movies.FindAsync(m => m.Status == MovieStatus.ComingSoon); // lấy phim sắp chiếu
+        ViewBag.CurrentStatus = "ComingSoon"; // gán trạng thái cho ViewBag
+        return View("Index", movies.OrderByDescending(m => m.ReleaseDate)); // trả về danh sách phim sắp chiếu
     }
 }

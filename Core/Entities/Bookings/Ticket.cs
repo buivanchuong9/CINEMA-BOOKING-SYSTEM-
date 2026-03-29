@@ -10,11 +10,11 @@ namespace BE.Core.Entities.Bookings;
 public class Ticket
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // tự động tăng
     public int Id { get; set; }
     
     [Required]
-    public int BookingDetailId { get; set; }
+    public int BookingDetailId { get; set; } // id của chi tiết đơn hàng
     
     /// <summary>
     /// Mã vé duy nhất (dùng để quét QR vào rạp)
@@ -23,12 +23,12 @@ public class Ticket
     /// </summary>
     [Required]
     [MaxLength(100)]
-    public string TicketCode { get; set; } = string.Empty;
+    public string TicketCode { get; set; } = string.Empty; // mã vé duy nhất
     
     /// <summary>
     /// URL ảnh QR code (lưu trong wwwroot/qrcodes/)
     /// </summary>
-    [MaxLength(500)]
+    [MaxLength(500)] // tối đa 500 ký tự
     public string? BarcodeImage { get; set; }
     
     /// <summary>

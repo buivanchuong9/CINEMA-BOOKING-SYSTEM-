@@ -20,14 +20,14 @@ public class DashboardController : Controller
     {
         try
         {
-            // Lấy thống kê cơ bản cho cards
+            // Lấy thống kê cơ bản cho thẻ
             var totalMovies = await _unitOfWork.Movies.CountAsync();
             var totalCinemas = await _unitOfWork.Cinemas.CountAsync();
             var totalRooms = await _unitOfWork.Rooms.CountAsync();
             
             var allBookings = (await _unitOfWork.Bookings.GetAllAsync()).ToList();
             var totalRevenue = allBookings
-                .Where(b => b.Status == Core.Enums.BookingStatus.Paid)
+                .Where(b => b.Status == Core.Enums.BookingStatus.Paid) // lọc bookings đã thanh toán
                 .Sum(b => b.TotalAmount);
             
             ViewBag.TotalMovies = totalMovies;

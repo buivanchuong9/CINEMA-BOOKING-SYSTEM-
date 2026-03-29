@@ -18,10 +18,10 @@ public class AppDbContext : IdentityDbContext<User>
     }
 
     // ===== GROUP 1: CINEMA INFRASTRUCTURE (4 tables) =====
-    public DbSet<Cinema> Cinemas { get; set; } = null!;
+    public DbSet<Cinema> Cinemas { get; set; } = null!; // rạp chiếu phim
     public DbSet<Room> Rooms { get; set; } = null!;
-    public DbSet<SeatType> SeatTypes { get; set; } = null!;
-    public DbSet<Seat> Seats { get; set; } = null!;
+    public DbSet<SeatType> SeatTypes { get; set; } = null!; // loại ghế
+    public DbSet<Seat> Seats { get; set; } = null!; // ghế
 
     // ===== GROUP 2: MOVIES & SCHEDULING (4 tables) =====
     public DbSet<Movie> Movies { get; set; } = null!;

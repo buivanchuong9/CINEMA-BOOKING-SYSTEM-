@@ -7,24 +7,24 @@ namespace BE.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize(Roles = "Admin")]
-public class GenresController : Controller
+public class GenresController : Controller // danh sách thể loại
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public GenresController(IUnitOfWork unitOfWork)
+    public GenresController(IUnitOfWork unitOfWork) // DI
     {
         _unitOfWork = unitOfWork;
     }
 
     // GET: /Admin/Genres
-    public async Task<IActionResult> Index()
-    {
+    public async Task<IActionResult> Index() // danh sách thể loại
+    { 
         var genres = await _unitOfWork.Genres.GetAllAsync();
-        return View(genres.OrderBy(g => g.Name).ToList());
+        return View(genres.OrderBy(g => g.Name).ToList()); // sắp xếp theo tên thể loại
     }
 
     // GET: /Admin/Genres/Create
-    public IActionResult Create()
+    public IActionResult Create() // tạo thể loại
     {
         return View();
     }
@@ -32,10 +32,10 @@ public class GenresController : Controller
     // POST: /Admin/Genres/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Genre genre)
+    public async Task<IActionResult> Create(Genre genre) 
     {
-        ModelState.Remove("Slug");
-        ModelState.Remove("CreatedAt");
+        ModelState.Remove("Slug"); // xóa slug
+        ModelState.Remove("CreatedAt"); // xóa ngày tạo
 
         if (!ModelState.IsValid)
         {
@@ -44,35 +44,35 @@ public class GenresController : Controller
             return View(genre);
         }
 
-        // Auto-generate slug from name
-        if (string.IsNullOrEmpty(genre.Slug))
+        // tạo slug từ tên
+        if (string.IsNullOrEmpty(genre.Slug)) // nếu slug rỗng thì tạo slug từ tên
         {
             genre.Slug = GenerateSlug(genre.Name);
         }
 
-        genre.CreatedAt = DateTime.Now;
+        genre.CreatedAt = DateTime.Now; // gán ngày tạo
         await _unitOfWork.Genres.AddAsync(genre);
         await _unitOfWork.SaveChangesAsync();
 
         TempData["Success"] = $"Đã thêm thể loại '{genre.Name}' thành công!";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index)); // chuyển sang trang danh sách thể loại
     }
 
     // GET: /Admin/Genres/Edit/5
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id) // chỉnh sửa thể loại
     {
         var genre = await _unitOfWork.Genres.GetByIdAsync(id);
         if (genre == null)
         {
             return NotFound();
         }
-        return View(genre);
+        return View(genre); // trả về view chỉnh sửa thể loại
     }
 
     // POST: /Admin/Genres/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Genre genre)
+    public async Task<IActionResult> Edit(int id, Genre genre) 
     {
         if (id != genre.Id)
         {
@@ -91,11 +91,11 @@ public class GenresController : Controller
 
         if (string.IsNullOrEmpty(genre.Slug))
         {
-            genre.Slug = GenerateSlug(genre.Name);
+            genre.Slug = GenerateSlug(genre.Name); // tạo slug từ tên
         }
 
-        _unitOfWork.Genres.Update(genre);
-        await _unitOfWork.SaveChangesAsync();
+        _unitOfWork.Genres.Update(genre); // cập nhật thể loại
+        await _unitOfWork.SaveChangesAsync(); // lưu thay đổi
 
         TempData["Success"] = $"Đã cập nhật thể loại '{genre.Name}' thành công!";
         return RedirectToAction(nameof(Index));
@@ -104,7 +104,7 @@ public class GenresController : Controller
     // POST: /Admin/Genres/Delete/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id) // xóa thể loại
     {
         var genre = await _unitOfWork.Genres.GetByIdAsync(id);
         if (genre == null)
@@ -112,8 +112,8 @@ public class GenresController : Controller
             return NotFound();
         }
 
-        _unitOfWork.Genres.Delete(genre);
-        await _unitOfWork.SaveChangesAsync();
+        _unitOfWork.Genres.Delete(genre); // xóa thể loại
+        await _unitOfWork.SaveChangesAsync(); // lưu thay đổi
 
         TempData["Success"] = $"Đã xóa thể loại '{genre.Name}' thành công!";
         return RedirectToAction(nameof(Index));
@@ -122,17 +122,17 @@ public class GenresController : Controller
     private string GenerateSlug(string name)
     {
         // Simple slug generation (Vietnamese to Latin)
-        var slug = name.ToLower()
-            .Replace(" ", "-")
-            .Replace("đ", "d")
-            .Replace("ă", "a")
-            .Replace("â", "a")
-            .Replace("ê", "e")
+        var slug = name.ToLower() // chuyển sang chữ thường
+            .Replace(" ", "-") // thay khoảng trắng bằng dấu gạch ngang
+            .Replace("đ", "d") // thay đ bằng d
+            .Replace("ă", "a") // thay ă bằng a
+            .Replace("â", "a") // thay â bằng a
+            .Replace("ê", "e") // thay ê bằng e
             .Replace("ô", "o")
             .Replace("ơ", "o")
             .Replace("ư", "u");
         
-        // Remove accents and special characters
+        // xóa dấu và ký tự đặc biệt
         return System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\-]", "");
     }
 }

@@ -12,33 +12,33 @@ namespace BE.Infrastructure.Repositories;
 /// <summary>
 /// Unit of Work Implementation - Quản lý tất cả repositories và transactions
 /// </summary>
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork : IUnitOfWork 
 {
-    private readonly AppDbContext _context;
-    private IDbContextTransaction? _transaction;
+    private readonly AppDbContext _context; // Là class đại diện cho Database trong Entity Framework Core
+    private IDbContextTransaction? _transaction;  // cho phép nhóm nhiều thao tác database thành một đơn vị.
 
-    // Cinema Infrastructure Repositories
-    public IRepository<Cinema> Cinemas { get; }
+    // Kho lưu trữ cơ sở hạ tầng điện ảnh
+    public IRepository<Cinema> Cinemas { get; } 
     public IRepository<Room> Rooms { get; }
     public IRepository<SeatType> SeatTypes { get; }
     public IRepository<Seat> Seats { get; }
 
-    // Movies Repositories
+    // Kho lưu trữ phim
     public IRepository<Movie> Movies { get; }
     public IRepository<Genre> Genres { get; }
     public IRepository<MovieGenre> MovieGenres { get; }
     public IShowtimeRepository Showtimes { get; }
 
-    // Booking Repositories
+    // Kho lưu trữ đặt vé
     public IRepository<Booking> Bookings { get; }
     public IRepository<BookingDetail> BookingDetails { get; }
     public IRepository<Ticket> Tickets { get; }
 
-    // Concessions Repositories
+    // Kho lưu trữ đồ ăn
     public IRepository<Food> Foods { get; }
     public IRepository<BookingFood> BookingFoods { get; }
 
-    // Business Repositories
+    // Kho lưu trữ doanh nghiệp
     public IRepository<User> Users { get; }
     public IRepository<Voucher> Vouchers { get; }
     public IRepository<Transaction> Transactions { get; }

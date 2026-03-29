@@ -22,12 +22,12 @@ public class CinemasController : Controller
         return View(cinemas.Where(c => c.IsActive).OrderBy(c => c.Name));
     }
 
-    // GET: /Cinemas/Details/5
-    public async Task<IActionResult> Details(int id)
+    // GET: /Cinemas/Details/5 (id = 5)
+    public async Task<IActionResult> Details(int id) // hiển thị chi tiết rạp chiếu phim
     {
         var cinema = await _unitOfWork.Cinemas.GetByIdAsync(id);
         
-        if (cinema == null)
+        if (cinema == null) // nếu không tìm thấy rạp chiếu phim
         {
             return NotFound();
         }

@@ -8,25 +8,25 @@ namespace BE.Core.Interfaces;
 /// <typeparam name="T">Entity type</typeparam>
 public interface IRepository<T> where T : class
 {
-    // READ Operations
+    // Hoạt động ĐỌC
     Task<T?> GetByIdAsync(int id);
     Task<IEnumerable<T>> GetAllAsync();
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate); // Expression biến cái hàm đó sang Entity để đọc sang SQL , predicate điều kiện lọc
     Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate); // Lấy phần tử đầu tiên thỏa mãn điều kiện
     
-    // CREATE Operation
-    Task AddAsync(T entity); 
-    Task AddRangeAsync(IEnumerable<T> entities);
+    // Hoạt động THÊM
+    Task AddAsync(T entity); // Thêm 1 entity
+    Task AddRangeAsync(IEnumerable<T> entities); // Thêm nhiều entity
     
-    // UPDATE Operation
+    // Hoạt động SỬA
     void Update(T entity);
     void UpdateRange(IEnumerable<T> entities);
     
-    // DELETE Operation
+    // Hoạt động XÓA
     void Delete(T entity);
     void DeleteRange(IEnumerable<T> entities);
     
-    // COUNT Operation
+    // Đếm số lượng entity thỏa mãn điều kiện
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null); // Đếm số lượng entity thỏa mãn điều kiện
     
     // EXISTS Operation

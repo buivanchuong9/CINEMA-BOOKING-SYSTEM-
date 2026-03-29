@@ -8,7 +8,8 @@ namespace BE.Infrastructure.Repositories;
 /// <summary>
 /// Generic Repository Implementation - Tái sử dụng cho tất cả entities
 /// </summary>
-public class GenericRepository<T> : IRepository<T> where T : class
+// T là một class bất kỳ có thể tái sử dụng cho tất cả entities 
+public class GenericRepository<T> : IRepository<T> where T : class  
 {
     protected readonly AppDbContext _context;
     protected readonly DbSet<T> _dbSet;
@@ -19,11 +20,11 @@ public class GenericRepository<T> : IRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    // READ Operations
-    public virtual async Task<T?> GetByIdAsync(int id)
+    // Thao tác ĐỌC
+    public virtual async Task<T?> GetByIdAsync(int id) // tìm kiếm theo id T là một class bất kỳ có thể tái sử dụng cho tất cả entities 
     {
-        // Use FirstOrDefaultAsync instead of FindAsync to avoid tracking issues
-        // Assumes entity has an 'Id' property
+        // Sử dụng FirstOrDefaultAsync thay vì FindAsync để tránh các vấn đề theo dõi
+        // Giả định thực thể có thuộc tính 'Id'
         var idProperty = typeof(T).GetProperty("Id");
         if (idProperty == null)
         {
@@ -34,7 +35,7 @@ public class GenericRepository<T> : IRepository<T> where T : class
         return await _dbSet.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync() // lấy toàn bộ dữ liệu của bảng tương ứng với 
     {
         // AsNoTracking để tránh cache, luôn lấy data mới từ DB
         return await _dbSet.AsNoTracking().ToListAsync();
@@ -50,7 +51,7 @@ public class GenericRepository<T> : IRepository<T> where T : class
         return await _dbSet.FirstOrDefaultAsync(predicate);
     }
 
-    // CREATE Operations
+    // TẠO hoạt động
     public virtual async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);

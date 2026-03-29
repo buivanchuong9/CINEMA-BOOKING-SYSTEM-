@@ -12,20 +12,20 @@ public class RoomsController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public RoomsController(IUnitOfWork unitOfWork)
+    public RoomsController(IUnitOfWork unitOfWork) 
     {
         _unitOfWork = unitOfWork;
     }
 
     // GET: /Admin/Rooms
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() // danh sách phòng
     {
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         
-        ViewBag.Cinemas = cinemas.ToDictionary(c => c.Id, c => c.Name);
+        ViewBag.Cinemas = cinemas.ToDictionary(c => c.Id, c => c.Name); // danh sách rạp
         
-        return View(rooms.OrderBy(r => r.CinemaId).ThenBy(r => r.Name).ToList());
+        return View(rooms.OrderBy(r => r.CinemaId).ThenBy(r => r.Name).ToList()); // sắp xếp theo rạp và tên phòng
     }
 
     // GET: /Admin/Rooms/Create
@@ -42,13 +42,13 @@ public class RoomsController : Controller
     {
         try
         {
-            ModelState.Remove("Cinema");
-            ModelState.Remove("Seats");
-            ModelState.Remove("SeatMapMatrix");
-            ModelState.Remove("CreatedAt");
-            ModelState.Remove("IsActive");
+            ModelState.Remove("Cinema"); 
+            ModelState.Remove("Seats"); 
+            ModelState.Remove("SeatMapMatrix"); // xoá sơ đồ ghế
+            ModelState.Remove("CreatedAt"); // xoá ngày tạo
+            ModelState.Remove("IsActive"); // xoá trạng thái hoạt động
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) // kiểm tra người dùng nhâp dữ liệu có hợp lệ không
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
@@ -56,10 +56,10 @@ public class RoomsController : Controller
                 return View(room);
             }
 
-            // Generate default seat map matrix (JSON)
-            if (string.IsNullOrEmpty(room.SeatMapMatrix))
+            // Tạo ma trận sơ đồ chỗ ngồi mặc định (JSON)
+            if (string.IsNullOrEmpty(room.SeatMapMatrix)) // nếu không có sơ đồ ghế thì tạo sơ đồ ghế mặc định
             {
-                room.SeatMapMatrix = GenerateDefaultSeatMap(room.TotalRows, room.SeatsPerRow);
+                room.SeatMapMatrix = GenerateDefaultSeatMap(room.TotalRows, room.SeatsPerRow); // tạo sơ đồ ghế mặc định
             }
 
             room.CreatedAt = DateTime.Now;
@@ -97,26 +97,26 @@ public class RoomsController : Controller
     // POST: /Admin/Rooms/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Room room)
+    public async Task<IActionResult> Edit(int id, Room room) // cập nhật phòng
     {
-        if (id != room.Id)
+        if (id != room.Id) // kiểm tra id có khớp không
         {
             return NotFound();
         }
 
         try
         {
-            ModelState.Remove("Cinema");
+            ModelState.Remove("Cinema"); 
             ModelState.Remove("Seats");
-            ModelState.Remove("SeatMapMatrix");
-            ModelState.Remove("CreatedAt");
+            ModelState.Remove("SeatMapMatrix"); // xoá sơ đồ ghế
+            ModelState.Remove("CreatedAt"); // xoá ngày tạo
 
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
-                await PopulateDropdowns();
-                return View(room);
+                await PopulateDropdowns(); // hiển thị danh sách rạp
+                return View(room); 
             }
 
             _unitOfWork.Rooms.Update(room);
@@ -153,13 +153,13 @@ public class RoomsController : Controller
 
     // GET: /Admin/Rooms/GetRoomsByCinema?cinemaId=1
     [HttpGet]
-    public async Task<IActionResult> GetRoomsByCinema(int cinemaId)
+    public async Task<IActionResult> GetRoomsByCinema(int cinemaId) // lấy danh sách phòng theo rạp
     {
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
-        var filteredRooms = rooms
-            .Where(r => r.CinemaId == cinemaId && r.IsActive)
-            .OrderBy(r => r.Name)
-            .Select(r => new
+        var filteredRooms = rooms // lọc phòng theo rạp và trạng thái hoạt động
+            .Where(r => r.CinemaId == cinemaId && r.IsActive) // lọc phòng theo rạp và trạng thái hoạt động
+            .OrderBy(r => r.Name) // sắp xếp theo tên phòng
+            .Select(r => new // chọn các trường cần thiết
             {
                 id = r.Id,
                 name = r.Name,
@@ -168,45 +168,45 @@ public class RoomsController : Controller
             })
             .ToList();
 
-        return Json(filteredRooms);
+        return Json(filteredRooms); // trả về danh sách phòng dưới dạng JSON
     }
 
-    private async Task PopulateDropdowns()
+    private async Task PopulateDropdowns() // hiển thị danh sách rạp
     {
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         ViewBag.CinemaSelectList = new SelectList(
-            cinemas.Where(c => c.IsActive).OrderBy(c => c.Name), 
+            cinemas.Where(c => c.IsActive).OrderBy(c => c.Name), // lọc rạp theo trạng thái hoạt động và sắp xếp theo tên
             "Id", "Name"
         );
     }
 
-    private string GenerateDefaultSeatMap(int rows, int seatsPerRow)
+    private string GenerateDefaultSeatMap(int rows, int seatsPerRow) // tạo sơ đồ ghế mặc định
     {
-        // Generate simple matrix: all seats are standard type (1)
-        // Format: "1,1,1,1,1;1,1,1,1,1;..." (semicolon separates rows)
+        // Tạo ma trận đơn giản: tất cả các ghế đều là loại tiêu chuẩn (1)
+        // Định dạng: "1,1,1,1,1;1,1,1,1,1;..." (dấu chấm phẩy phân tách các hàng)
         var seatRows = new List<string>();
         
         for (int r = 0; r < rows; r++)
         {
-            var row = string.Join(",", Enumerable.Repeat("1", seatsPerRow));
+            var row = string.Join(",", Enumerable.Repeat("1", seatsPerRow)); // tạo hàng ghế 1 là mặc định 
             seatRows.Add(row);
         }
         
-        return string.Join(";", seatRows);
+        return string.Join(";", seatRows); // trả về sơ đồ ghế
     }
 
-    private async Task GenerateSeatsForRoom(int roomId, int totalRows, int seatsPerRow)
+    private async Task GenerateSeatsForRoom(int roomId, int totalRows, int seatsPerRow) // tạo ghế cho phòng
     {
         var seats = new List<Seat>();
-        var seatTypes = (await _unitOfWork.SeatTypes.GetAllAsync()).ToList();
-        
+        var seatTypes = (await _unitOfWork.SeatTypes.GetAllAsync()).ToList(); // lấy danh sách loại ghế
+
         // Lấy loại ghế mặc định (Standard)
-        var standardSeatType = seatTypes.FirstOrDefault(st => st.Name == "Standard") 
-                               ?? seatTypes.FirstOrDefault();
+        var standardSeatType = seatTypes.FirstOrDefault(st => st.Name == "Standard") // lấy loại ghế tiêu chuẩn
+                               ?? seatTypes.FirstOrDefault(); // nếu không có loại ghế tiêu chuẩn thì lấy loại ghế đầu tiên
         
         if (standardSeatType == null)
         {
-            throw new Exception("Không tìm thấy loại ghế nào trong hệ thống!");
+            throw new Exception("Không tìm thấy loại ghế nào trong hệ thống!"); // nếu không có loại ghế thì báo lỗi
         }
 
         // Tạo ghế cho từng hàng

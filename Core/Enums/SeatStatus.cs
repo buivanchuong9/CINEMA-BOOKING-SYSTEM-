@@ -3,7 +3,7 @@ namespace BE.Core.Enums;
 /// <summary>
 /// Trạng thái ghế ngồi
 /// </summary>
-public enum SeatStatus
+public enum SeatStatus // 0: Ghế trống, có thể đặt, 1: Ghế đang được giữ bởi user khác (trong Redis, TTL 10 phút), 2: Ghế đã được đặt và thanh toán thành công, 3: Ghế bị hỏng/bảo trì, không cho phép đặt
 {
     /// <summary>
     /// Ghế trống, có thể đặt

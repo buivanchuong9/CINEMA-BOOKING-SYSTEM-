@@ -3,7 +3,7 @@ namespace BE.Core.Enums;
 /// <summary>
 /// Trạng thái phim
 /// </summary>
-public enum MovieStatus
+public enum MovieStatus // 0: Đang chiếu, 1: Sắp chiếu, 2: Đã ngừng chiếu
 {
     /// <summary>
     /// Phim đang chiếu

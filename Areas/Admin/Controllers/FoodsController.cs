@@ -7,24 +7,24 @@ namespace BE.Areas.Admin.Controllers;
 
 [Area("Admin")]
 [Authorize(Roles = "Admin")]
-public class FoodsController : Controller
+public class FoodsController : Controller // danh sách món ăn
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public FoodsController(IUnitOfWork unitOfWork)
+    public FoodsController(IUnitOfWork unitOfWork) // DI
     {
         _unitOfWork = unitOfWork;
     }
 
     // GET: /Admin/Foods
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index() // danh sách món ăn
     {
         var foods = await _unitOfWork.Foods.GetAllAsync();
-        return View(foods.OrderBy(f => f.Name).ToList());
+        return View(foods.OrderBy(f => f.Name).ToList()); // sắp xếp theo tên món ăn
     }
 
     // GET: /Admin/Foods/Create
-    public IActionResult Create()
+    public IActionResult Create() // tạo món ăn
     {
         return View();
     }
@@ -62,19 +62,19 @@ public class FoodsController : Controller
     }
 
     // GET: /Admin/Foods/Edit/5
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id) // chỉnh sửa món ăn
     {
         var food = await _unitOfWork.Foods.GetByIdAsync(id);
         if (food == null)
         {
-            return NotFound();
+            return NotFound(); // không tìm thấy món ăn
         }
         return View(food);
     }
 
     // POST: /Admin/Foods/Edit/5
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateAntiForgeryToken] // chống hack CSRF
     public async Task<IActionResult> Edit(int id, Food food)
     {
         if (id != food.Id)
@@ -84,10 +84,10 @@ public class FoodsController : Controller
 
         try
         {
-            ModelState.Remove("Description");
+            ModelState.Remove("Description"); // xóa mô tả
             ModelState.Remove("ImageUrl");
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) // check dữ liệu nhập vào hợp lệ không
             {
                 return View(food);
             }

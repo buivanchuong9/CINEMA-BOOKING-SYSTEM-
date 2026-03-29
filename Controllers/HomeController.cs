@@ -19,34 +19,34 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        // Load movies for homepage - CHỈ HIỂN THỊ ĐANG CHIẾU VÀ SẮP CHIẾU
-        var allMovies = await _unitOfWork.Movies.GetAllAsync();
+        // Load phim cho trang chủ - CHỈ HIỂN THỊ ĐANG CHIẾU VÀ SẮP CHIẾU
+        var allMovies = await _unitOfWork.Movies.GetAllAsync(); 
         
-        var nowShowing = allMovies.Where(m => m.Status == MovieStatus.NowShowing)
-                                  .OrderByDescending(m => m.Rating)
-                                  .Take(8)
+        var nowShowing = allMovies.Where(m => m.Status == MovieStatus.NowShowing) // lấy phim đang chiếu
+                                  .OrderByDescending(m => m.Rating) // sắp xếp theo điểm giảm dần
+                                  .Take(8) // lấy 8 phim
                                   .ToList();
         
-        var comingSoon = allMovies.Where(m => m.Status == MovieStatus.ComingSoon)
-                                  .OrderBy(m => m.ReleaseDate)
+        var comingSoon = allMovies.Where(m => m.Status == MovieStatus.ComingSoon) // lấy phim sắp chiếu
+                                  .OrderBy(m => m.ReleaseDate) // sắp xếp theo ngày phát hành
                                   .Take(6)
                                   .ToList();
 
-        ViewBag.NowShowing = nowShowing;
-        ViewBag.ComingSoon = comingSoon;
-        ViewBag.FeaturedMovie = nowShowing.FirstOrDefault();
+        ViewBag.NowShowing = nowShowing; // gán phim đang chiếu cho ViewBag
+        ViewBag.ComingSoon = comingSoon; // gán phim sắp chiếu cho ViewBag
+        ViewBag.FeaturedMovie = nowShowing.FirstOrDefault(); // gán phim nổi bật cho ViewBag
 
         return View();
     }
 
-    public IActionResult Privacy()
+    public IActionResult Privacy() // trang quyền riêng tư
     {
         return View();
     }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // tắt hoàn toàn caching cho action 
+    public IActionResult Error() // trang lỗi
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier }); // trả về ErrorViewModel
     }
 }
