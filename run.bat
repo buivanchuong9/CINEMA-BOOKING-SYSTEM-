@@ -83,8 +83,17 @@ echo =^> Redis Server OK! (Port 6379)
 echo.
 
 :: 4. Database Migration 
-echo [4/5] Khoi tao Database (CinemaBooking_DB)...
+echo [4/5] Khoi phuc NuGet va Khoi tao Database...
 set "ConnectionStrings__DefaultConnection=Server=%DB_SERVER%;Database=CinemaBooking_DB;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
+
+dotnet restore
+if errorlevel 1 (
+    echo [LOI] Phuc hoi thu vien (NuGet Restore) that bai!
+    echo Nguyen nhan: Do ban giai nen Code qua nhieu lop thu muc (qua 260 ky tu).
+    echo Vui long Copy thu muc code ra thang o D:\ hoac C:\ (VD: D:\Auto\BeCinema) roi chay lai!
+    pause
+    exit /b 1
+)
 
 dotnet tool install --global dotnet-ef >nul 2>&1
 echo Dang chay Entity Framework Migrations...
