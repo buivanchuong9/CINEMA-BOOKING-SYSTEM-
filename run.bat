@@ -6,17 +6,24 @@ title BeCinema - One Click Startup (Super Auto)
 :: [0] Yeu cau quyen Admin (De tu dong mo Firewall & bat SQL Service)
 >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
 IF %ERRORLEVEL% NEQ 0 (
-    echo [INFO] Dang yeu cau quyen Admin de tu dong cau hinh...
-    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
-    echo UAC.ShellExecute "cmd.exe", "/c ""%~s0"" %*", "", "runas", 1 >> "%temp%\getadmin.vbs"
-    "%temp%\getadmin.vbs"
-    del "%temp%\getadmin.vbs"
-    exit /B
+    goto UACPrompt
+) ELSE (
+    goto GotAdmin
 )
 
+:UACPrompt
+echo [INFO] Dang yeu cau quyen Admin de tu dong cau hinh...
+echo Set UAC = CreateObject("Shell.Application") > "%temp%\getadmin.vbs"
+echo UAC.ShellExecute "cmd.exe", "/c ""%~s0"" %*", "", "runas", 1 >> "%temp%\getadmin.vbs"
+"%temp%\getadmin.vbs"
+del "%temp%\getadmin.vbs"
+exit /B
+
+:GotAdmin
 set "PROJECT_DIR=%~dp0"
 pushd "%PROJECT_DIR%"
 
+:: (Giữ nguyên toàn bộ phần code bên dưới từ đoạn echo ========= trở đi)
 echo ===================================================
 echo   BE-CINEMA ONE-CLICK STARTUP (SUPER AUTO)
 echo ===================================================
