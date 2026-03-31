@@ -9,8 +9,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eeef43fb-7576-458d-af98-25d9d14e3419" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfo.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net8.0/BE.AssemblyInfoInputs.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" afterPath="$PROJECT_DIR$/run.bat" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -110,7 +108,7 @@
       <workItem from="1773970029750" duration="259000" />
       <workItem from="1773973898750" duration="681000" />
       <workItem from="1774794944747" duration="246000" />
-      <workItem from="1774915687926" duration="143000" />
+      <workItem from="1774915687926" duration="558000" />
     </task>
     <servers />
   </component>
