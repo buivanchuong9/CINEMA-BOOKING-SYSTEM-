@@ -1,4 +1,4 @@
-﻿@using BE.Core.Entities.Movies
+@using BE.Core.Entities.Movies
 @{
     ViewData["Title"] = "Trang Chủ - CineMax";
     var nowShowing = ViewBag.NowShowing as List<Movie> ?? new List<Movie>();
@@ -171,50 +171,59 @@
 
 
 <script>
-    // Hero Banner Carousel (Style Beta/CGV)
+    // Hero Banner Carousel (3D Coverflow Style)
     document.addEventListener('DOMContentLoaded', function() {
         new Swiper('.heroBannerSwiper', {
-            slidesPerView: 1,
-            spaceBetween: 0,
+            effect: 'coverflow',
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: 'auto',
             loop: true,
+            coverflowEffect: {
+                rotate: 20,
+                stretch: 0,
+                depth: 200,
+                modifier: 1,
+                slideShadows: true,
+            },
             autoplay: {
                 delay: 4000,
                 disableOnInteraction: false,
             },
-            speed: 800,
-            effect: 'fade',
+            speed: 1000,
             navigation: {
                 nextEl: '.swiper-button-next',
                 prevEl: '.swiper-button-prev',
             },
-            breakpoints: {
-                768: {
-                    slidesPerView: 1,
-                },
-            }
         });
     });
 </script>
 
 <style>
-    /* Hero Banner Section */
+    /* 1. HIỆU ỨNG 3D CHO HERO BANNER (GIỮ LẠI) */
     .hero-banner-section {
         position: relative;
         width: 100%;
         background: #000;
         overflow: hidden;
+        padding: 40px 0;
     }
 
     .heroBannerSwiper {
         width: 100%;
-        height: 100%;
+        padding-top: 20px;
+        padding-bottom: 50px;
     }
 
     .swiper-slide {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #000;
+        background-position: center;
+        background-size: cover;
+        width: 800px;
+        height: 450px;
+        transition: all 0.3s ease;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.5);
     }
 
     .hero-banner-item {
@@ -228,8 +237,7 @@
     .banner-image-wrapper {
         position: relative;
         width: 100%;
-        height: 600px; /* Fixed height for consistency */
-        overflow: hidden;
+        height: 100%;
     }
 
     .banner-image {
@@ -237,11 +245,6 @@
         height: 100%;
         object-fit: cover;
         object-position: center;
-        transition: transform 0.6s ease;
-    }
-
-    .hero-banner-item:hover .banner-image {
-        transform: scale(1.05);
     }
 
     .banner-overlay {
@@ -249,43 +252,36 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
-        padding: 60px 40px 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+        padding: 40px;
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transform: translateY(20px);
+        transition: all 0.5s ease;
     }
 
-    .hero-banner-item:hover .banner-overlay {
+    .swiper-slide-active .banner-overlay {
         opacity: 1;
-    }
-
-    .banner-info {
-        max-width: 600px;
-        margin: 0 auto;
+        transform: translateY(0);
     }
 
     .banner-title {
-        font-size: 2.5rem;
-        font-weight: bold;
+        font-size: 2rem;
+        font-weight: 800;
         color: #fff;
-        margin-bottom: 10px;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    .banner-rating {
-        color: #fff;
-        font-size: 1.2rem;
-        margin-bottom: 10px;
-    }
-
-    /* Navigation */
     .hero-banner-nav {
         color: #fff !important;
-        background: rgba(220, 38, 38, 0.8);
-        width: 50px;
-        height: 50px;
+        background: rgba(220, 38, 38, 0.6);
+        width: 55px;
+        height: 55px;
         border-radius: 50%;
+        backdrop-filter: blur(5px);
         transition: all 0.3s ease;
+        z-index: 100;
     }
 
     .hero-banner-nav:hover {
@@ -293,17 +289,11 @@
         transform: scale(1.1);
     }
 
-    .hero-banner-nav::after {
-        font-size: 20px;
-        font-weight: bold;
-    }
-
-    /* Background Gradient */
+    /* 2. KHÔI PHỤC ĐỊNH DẠNG BAN ĐẦU CHO CÁC PHẦN KHÁC */
     .bg-dark-gradient {
         background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
     }
 
-    /* Movie Cards */
     .movie-card-premium {
         position: relative;
         border-radius: 16px;
@@ -390,7 +380,6 @@
         color: #999;
     }
 
-    /* Coming Soon */
     .coming-soon-card {
         position: relative;
         border-radius: 16px;
@@ -421,38 +410,25 @@
         font-weight: bold;
     }
 
+    /* Responsive */
     @@media (max-width: 1200px) {
-        .banner-image-wrapper {
-            height: 500px;
+        .swiper-slide {
+            width: 700px;
+            height: 394px;
         }
     }
 
-    @@media (max-width: 768px) {
-        .banner-image-wrapper {
-            height: 400px;
-        }
-        
-        .banner-title {
-            font-size: 1.5rem;
-        }
-
-        .banner-overlay {
-            padding: 40px 20px 20px;
-        }
-
-        .hero-banner-nav {
-            width: 40px;
-            height: 40px;
+    @@media (max-width: 992px) {
+        .swiper-slide {
+            width: 85%;
+            height: 350px;
         }
     }
 
     @@media (max-width: 576px) {
-        .banner-image-wrapper {
-            height: 300px;
-        }
-
-        .banner-title {
-            font-size: 1.2rem;
+        .swiper-slide {
+            width: 90%;
+            height: 250px;
         }
     }
 </style>
