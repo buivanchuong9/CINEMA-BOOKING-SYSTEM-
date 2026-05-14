@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -90,6 +90,15 @@
                                         Vé Của Tôi
                                     </a>
                                 </li>
+                                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/Staff/Booking">
+                                            <i class="bi bi-shop me-2"></i>
+                                            Quầy Bán Vé (Staff)
+                                        </a>
+                                    </li>
+                                }
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <li>

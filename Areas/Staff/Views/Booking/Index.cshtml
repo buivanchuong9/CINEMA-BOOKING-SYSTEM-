@@ -1,0 +1,76 @@
+@model IEnumerable<BE.Core.Entities.Movies.Showtime>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Nhân Viên - Bán Vé";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-ticket-perforated me-2 text-cinema-red"></i>
+            Quầy Bán Vé
+        </h2>
+        <div>
+            <a asp-action="ManageBookings" class="btn btn-outline-light rounded-pill">
+                <i class="bi bi-list-ul me-2"></i>Quản Lý Đơn Hàng
+            </a>
+        </div>
+    </div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Phim</th>
+                        <th>Rạp & Phòng</th>
+                        <th>Thời Gian</th>
+                        <th>Giá Cơ Bản</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="@item.Movie?.PosterUrl" alt="" style="width: 50px; height: 75px; object-fit: cover;" class="rounded me-3">
+                                    <div>
+                                        <div class="fw-bold">@item.Movie?.Title</div>
+                                        <small class="text-muted">@item.Movie?.Duration Phút</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>@item.Room?.Cinema?.Name</div>
+                                <small class="text-muted">@item.Room?.Name</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@item.StartTime.ToString("HH:mm")</div>
+                                <small class="text-muted">@item.StartTime.ToString("dd/MM/yyyy")</small>
+                            </td>
+                            <td>@item.BasePrice.ToString("N0") ₫</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success">Đang Mở</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Đã Đóng</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="SelectSeats" asp-route-showtimeId="@item.Id" class="btn btn-cinema-red btn-sm rounded-pill px-3">
+                                    Bán Vé
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -214,7 +214,7 @@ public class BookingService : IBookingService
                 BookingDate = DateTime.Now,
                 TotalAmount = totalAmount, // tổng tiền 
                 Status = BookingStatus.Pending, // Sẽ chuyển Paid sau khi thanh toán
-                PaymentMethod = PaymentMethod.VNPAY,
+                PaymentMethod = dto.PaymentMethod,
                 VoucherId = dto.VoucherId,
                 Notes = dto.Notes,
                 CreatedAt = DateTime.Now // thời gian tạo 
@@ -371,6 +371,53 @@ public class BookingService : IBookingService
         
         await _unitOfWork.SaveChangesAsync();
 
+        return true;
+    }
+
+    public async Task<bool> ConfirmCounterPaymentAsync(int bookingId, string staffId)
+    {
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+        if (booking == null) return false;
+
+        booking.Status = BookingStatus.Paid;
+        booking.PaymentMethod = PaymentMethod.Cash;
+        booking.TransactionId = $"CASH-{staffId}-{DateTime.Now:yyyyMMddHHmmss}";
+        booking.UpdatedAt = DateTime.Now;
+
+        _unitOfWork.Bookings.Update(booking);
+
+        // Process seats and loyalty (similar to ConfirmPaymentAsync)
+        var bookingDetails = (await _unitOfWork.BookingDetails.GetAllAsync())
+            .Where(bd => bd.BookingId == bookingId)
+            .ToList();
+        
+        foreach (var detail in bookingDetails)
+        {
+            var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
+            if (seat != null)
+            {
+                if (booking.ShowtimeId.HasValue)
+                {
+                    await _redisService.ReleaseSeatAsync(booking.ShowtimeId.Value, seat.Id);
+                }
+            }
+        }
+        
+        // Loyalty points
+        var user = await _context.Users.FindAsync(booking.UserId);
+        if (user != null)
+        {
+            int ticketCount = bookingDetails.Count;
+            user.Points += ticketCount * 200; // Fixed points for counter booking
+            user.TotalTicketsPurchased += ticketCount;
+            
+            if (user.MembershipLevel == "Bronze" && user.TotalTicketsPurchased >= 2) user.MembershipLevel = "Silver";
+            if (user.TotalTicketsPurchased >= 10 && user.MembershipLevel != "Platinum") user.MembershipLevel = "Platinum";
+            
+            _context.Users.Update(user);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 

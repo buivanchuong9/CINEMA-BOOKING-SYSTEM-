@@ -25,6 +25,11 @@ public interface IBookingService
     Task<bool> ConfirmPaymentAsync(int bookingId, string transactionId); // xác nhận thanh toán và chuyển Status = Paid
     
     /// <summary>
+    /// Xác nhận thanh toán tại quầy (bởi nhân viên)
+    /// </summary>
+    Task<bool> ConfirmCounterPaymentAsync(int bookingId, string staffId);
+    
+    /// <summary>
     /// Hủy booking và release seats
     /// </summary>
     Task<bool> CancelBookingAsync(int bookingId);
