@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
 using BE.Core.Entities.Movies;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -17,10 +18,12 @@ public class GenresController : Controller // danh sách thể loại
     }
 
     // GET: /Admin/Genres
-    public async Task<IActionResult> Index() // danh sách thể loại
+    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách thể loại
     { 
+        int pageSize = 20;
         var genres = await _unitOfWork.Genres.GetAllAsync();
-        return View(genres.OrderBy(g => g.Name).ToList()); // sắp xếp theo tên thể loại
+        var sortedGenres = genres.OrderBy(g => g.Name);
+        return View(PaginatedList<Genre>.Create(sortedGenres, pageNumber, pageSize)); // sắp xếp theo tên thể loại và phân trang
     }
 
     // GET: /Admin/Genres/Create

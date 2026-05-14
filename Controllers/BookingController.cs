@@ -7,6 +7,8 @@ using System.Security.Claims;
 using BE.Infrastructure.Payment;
 using BE.Data;
 using Microsoft.EntityFrameworkCore;
+using BE.Application.Helpers;
+using BE.Core.Entities.Bookings;
 
 namespace BE.Controllers;
 
@@ -272,8 +274,9 @@ public class BookingController : Controller
 
     [Authorize]
     // GET: /Booking/MyBookings
-    public async Task<IActionResult> MyBookings()
+    public async Task<IActionResult> MyBookings(int pageNumber = 1)
     {
+        int pageSize = 20;
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
@@ -281,7 +284,8 @@ public class BookingController : Controller
         }
 
         var bookings = await _bookingService.GetUserBookingsAsync(userId);
-        return View(bookings);
+        var sortedBookings = bookings.OrderByDescending(b => b.BookingDate);
+        return View(PaginatedList<Booking>.Create(sortedBookings, pageNumber, pageSize));
     }
 
     // POST: /Booking/Cancel/5

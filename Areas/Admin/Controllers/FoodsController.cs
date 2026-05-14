@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
 using BE.Core.Entities.Concessions;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -17,10 +18,12 @@ public class FoodsController : Controller // danh sách món ăn
     }
 
     // GET: /Admin/Foods
-    public async Task<IActionResult> Index() // danh sách món ăn
+    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách món ăn
     {
+        int pageSize = 20;
         var foods = await _unitOfWork.Foods.GetAllAsync();
-        return View(foods.OrderBy(f => f.Name).ToList()); // sắp xếp theo tên món ăn
+        var sortedFoods = foods.OrderBy(f => f.Name);
+        return View(PaginatedList<Food>.Create(sortedFoods, pageNumber, pageSize)); // sắp xếp theo tên món ăn và phân trang
     }
 
     // GET: /Admin/Foods/Create

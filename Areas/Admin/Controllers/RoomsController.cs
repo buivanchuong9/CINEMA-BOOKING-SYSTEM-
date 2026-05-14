@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BE.Core.Interfaces;
 using BE.Core.Entities.CinemaInfrastructure;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -18,14 +19,16 @@ public class RoomsController : Controller
     }
 
     // GET: /Admin/Rooms
-    public async Task<IActionResult> Index() // danh sách phòng
+    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách phòng
     {
+        int pageSize = 20;
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
+        var sortedRooms = rooms.OrderBy(r => r.CinemaId).ThenBy(r => r.Name);
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         
         ViewBag.Cinemas = cinemas.ToDictionary(c => c.Id, c => c.Name); // danh sách rạp
         
-        return View(rooms.OrderBy(r => r.CinemaId).ThenBy(r => r.Name).ToList()); // sắp xếp theo rạp và tên phòng
+        return View(PaginatedList<Room>.Create(sortedRooms, pageNumber, pageSize)); // sắp xếp theo rạp và tên phòng và phân trang
     }
 
     // GET: /Admin/Rooms/Create

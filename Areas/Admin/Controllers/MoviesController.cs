@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
 using BE.Core.Entities.Movies;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -17,10 +18,13 @@ public class MoviesController : Controller
     }
 
     // GET: /Admin/Movies
-    public async Task<IActionResult> Index() // danh sách phim
+    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách phim
     {
+        int pageSize = 20;
         var movies = await _unitOfWork.Movies.GetAllAsync();
-        return View(movies.OrderByDescending(m => m.CreatedAt).ToList()); // sắp xếp theo ngày tạo
+        var sortedMovies = movies.OrderByDescending(m => m.CreatedAt);
+        
+        return View(PaginatedList<Movie>.Create(sortedMovies, pageNumber, pageSize)); // sắp xếp theo ngày tạo và phân trang
     }
 
     // GET: /Admin/Movies/Create

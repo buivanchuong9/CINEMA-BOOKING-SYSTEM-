@@ -1,4 +1,5 @@
-@model IEnumerable<BE.Core.Entities.CinemaInfrastructure.Cinema>
+@using BE.Application.Helpers
+@model PaginatedList<BE.Core.Entities.CinemaInfrastructure.Cinema>
 @{
     ViewData["Title"] = "Rạp Chiếu Phim - CineMax";
 }
@@ -12,7 +13,7 @@
                 <i class="bi bi-building me-2 text-cinema-red"></i>
                 Hệ Thống Rạp CineMax
             </h2>
-            <p class="text-muted">Trải nghiệm điện ảnh đẳng cấp tại @Model.Count() địa điểm</p>
+            <p class="text-muted">Trang @Model.PageIndex / @Model.TotalPages</p>
         </div>
 
         @if (!Model.Any())
@@ -84,6 +85,33 @@
                         </div>
                     </div>
                 }
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-5">
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Cinemas?pageNumber=@(Model.PageIndex - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")" 
+                                   href="/Cinemas?pageNumber=@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Cinemas?pageNumber=@(Model.PageIndex + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         }
     </div>

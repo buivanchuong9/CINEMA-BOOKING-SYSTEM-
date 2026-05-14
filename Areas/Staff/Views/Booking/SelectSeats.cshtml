@@ -1,0 +1,265 @@
+@using BE.Core.Entities.Movies
+@using BE.Core.Entities.CinemaInfrastructure
+@using System.Text.Json
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Nhân Viên - Chọn Ghế";
+    var showtime = ViewBag.Showtime as BE.Core.Entities.Movies.Showtime;
+    var movie = ViewBag.Movie as Movie;
+    var room = ViewBag.Room as Room;
+    var seats = ViewBag.Seats as List<Seat> ?? new List<Seat>();
+    var seatStatus = ViewBag.SeatStatus as List<BE.Application.DTOs.SeatStatusDto> ?? new List<BE.Application.DTOs.SeatStatusDto>();
+    var foods = ViewBag.Foods as List<BE.Core.Entities.Concessions.Food> ?? new List<BE.Core.Entities.Concessions.Food>();
+}
+
+<!-- Staff Seat Selection -->
+<section class="booking-info-bar py-3 bg-dark">
+    <div class="container">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-film text-cinema-red me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Phim</small>
+                        <strong>@movie?.Title</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar3 text-cinema-red me-2 fs-5"></i>
+                    <div>
+                        <small class="text-muted d-block">Suất Chiếu</small>
+                        <strong>@showtime?.StartTime.ToString("dd/MM HH:mm")</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <a asp-action="Index" class="btn btn-outline-light btn-sm rounded-pill">Quay Lại</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4">
+    <div class="container-fluid px-lg-5">
+        <div class="row">
+            <div class="col-lg-9">
+                <!-- Seat Map Legend -->
+                <div class="d-flex justify-content-center gap-4 mb-4 flex-wrap">
+                    <div class="d-flex align-items-center gap-2"><div class="seat seat-available" style="width:20px;height:20px"></div><span>Trống</span></div>
+                    <div class="d-flex align-items-center gap-2"><div class="seat seat-selected" style="width:20px;height:20px"></div><span>Đang Chọn</span></div>
+                    <div class="d-flex align-items-center gap-2"><div class="seat seat-sold" style="width:20px;height:20px"></div><span>Đã Bán</span></div>
+                    <div class="d-flex align-items-center gap-2"><div class="seat seat-vip" style="width:20px;height:20px"></div><span>VIP</span></div>
+                </div>
+
+                <div class="cinema-screen mb-5">
+                    <div class="screen-curve"></div>
+                    <p class="text-center text-muted small">MÀN HÌNH</p>
+                </div>
+
+                <div class="seat-map-wrapper">
+                    <div class="seat-map" id="seatMap">
+                        <!-- JS Generated -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="glass-card p-4 sticky-top" style="top: 100px;">
+                    <h5 class="fw-bold mb-4">Thông Tin Đơn Hàng</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Email Khách Hàng (Tùy chọn)</label>
+                        <input type="email" id="customerEmail" class="form-control bg-dark text-white border-secondary" placeholder="guest@cinemax.com">
+                        <small class="text-muted">Để trống nếu là khách vãng lai</small>
+                    </div>
+
+                    <div id="selectedSeatsInfo" class="mb-4">
+                        <h6 class="text-muted small mb-2">Ghế Đã Chọn:</h6>
+                        <div id="selectedSeatsList" class="d-flex flex-wrap gap-1">
+                            <span class="text-muted italic">Chưa chọn ghế</span>
+                        </div>
+                    </div>
+
+                    <div class="foods-selection mb-4">
+                        <h6 class="text-muted small mb-3">Đồ Ăn & Nước:</h6>
+                        <div id="foodList" class="food-menu-compact" style="max-height: 200px; overflow-y: auto;">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary">
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fw-bold">Tổng Cộng:</span>
+                        <h4 class="text-cinema-red fw-bold mb-0" id="totalPrice">0 ₫</h4>
+                    </div>
+
+                    <button class="btn btn-cinema-red w-100 rounded-pill py-2" id="staffCreateBtn" onclick="submitStaffBooking()" disabled>
+                        <i class="bi bi-check-circle me-2"></i>Xác Nhận & In Vé
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        window.showtimeData = @Html.Raw(JsonSerializer.Serialize(new { id = showtime?.Id ?? 0, basePrice = showtime?.BasePrice ?? 0 }));
+        window.seatsData = @Html.Raw(JsonSerializer.Serialize(seats.Select(s => new { id = s.Id, row = s.Row, number = s.Number, type = s.SeatType?.Name ?? "Standard", ratio = s.SeatType?.SurchargeRatio ?? 1.0m })));
+        window.seatStatusData = @Html.Raw(JsonSerializer.Serialize(seatStatus, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        window.foodsData = @Html.Raw(JsonSerializer.Serialize(foods.Select(f => new { id = f.Id, name = f.Name, price = f.Price })));
+
+        let selectedSeats = [];
+        const foodQuantities = {};
+
+        function init() {
+            renderSeats();
+            renderFoods();
+            updateSummary();
+        }
+
+        function renderSeats() {
+            const container = document.getElementById('seatMap');
+            const rows = {};
+            window.seatsData.forEach(s => {
+                if(!rows[s.row]) rows[s.row] = [];
+                rows[s.row].push(s);
+            });
+
+            let html = '';
+            Object.keys(rows).sort().forEach(r => {
+                html += `<div class="seat-row mb-2 d-flex align-items-center justify-content-center gap-2">`;
+                html += `<div class="fw-bold text-muted" style="width:25px">${r}</div>`;
+                rows[r].sort((a,b) => a.number - b.number).forEach(s => {
+                    const statusObj = window.seatStatusData.find(st => st.seatId === s.id);
+                    const status = (statusObj?.status || 'available').toLowerCase();
+                    const isSold = status === 'sold' || status === 'held';
+                    const typeClass = s.type.toLowerCase() === 'vip' ? 'seat-vip' : (s.type.toLowerCase() === 'couple' ? 'seat-couple' : 'seat-available');
+                    
+                    html += `<div class="seat ${typeClass} ${isSold ? 'seat-sold' : ''}" 
+                                 data-id="${s.id}" data-label="${s.row}${s.number}" data-price="${window.showtimeData.basePrice * s.ratio}"
+                                 onclick="${isSold ? '' : 'toggleSeat(this)'}">
+                                 ${s.number}
+                            </div>`;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleSeat(el) {
+            const id = parseInt(el.dataset.id);
+            const label = el.dataset.label;
+            const price = parseFloat(el.dataset.price);
+
+            if(el.classList.contains('seat-selected')) {
+                el.classList.remove('seat-selected');
+                selectedSeats = selectedSeats.filter(s => s.id !== id);
+            } else {
+                el.classList.add('seat-selected');
+                selectedSeats.push({ id, label, price });
+            }
+            updateSummary();
+        }
+
+        function renderFoods() {
+            const container = document.getElementById('foodList');
+            container.innerHTML = window.foodsData.map(f => `
+                <div class="d-flex align-items-center gap-2 mb-2 bg-dark p-2 rounded">
+                    <div class="flex-grow-1 small">${f.name}</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary p-0 px-2" onclick="changeFood(${f.id}, -1)">-</button>
+                        <span id="food-qty-${f.id}">0</span>
+                        <button class="btn btn-sm btn-outline-secondary p-0 px-2" onclick="changeFood(${f.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function changeFood(id, delta) {
+            foodQuantities[id] = (foodQuantities[id] || 0) + delta;
+            if(foodQuantities[id] < 0) foodQuantities[id] = 0;
+            document.getElementById(`food-qty-${id}`).innerText = foodQuantities[id];
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const seatTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
+            let foodTotal = 0;
+            for(const id in foodQuantities) {
+                const food = window.foodsData.find(f => f.id == id);
+                foodTotal += food.price * foodQuantities[id];
+            }
+
+            const total = seatTotal + foodTotal;
+            document.getElementById('totalPrice').innerText = total.toLocaleString('vi-VN') + ' ₫';
+            
+            const list = document.getElementById('selectedSeatsList');
+            if(selectedSeats.length > 0) {
+                list.innerHTML = selectedSeats.map(s => `<span class="badge bg-cinema-red">${s.label}</span>`).join('');
+                document.getElementById('staffCreateBtn').disabled = false;
+            } else {
+                list.innerHTML = '<span class="text-muted italic">Chưa chọn ghế</span>';
+                document.getElementById('staffCreateBtn').disabled = true;
+            }
+        }
+
+        async function submitStaffBooking() {
+            const foods = [];
+            for(const id in foodQuantities) {
+                if(foodQuantities[id] > 0) foods.push({ FoodId: parseInt(id), Quantity: foodQuantities[id] });
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Staff/Booking/Create';
+            
+            const addInput = (name, val) => {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = name; i.value = val;
+                form.appendChild(i);
+            };
+
+            addInput('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+            addInput('ShowtimeId', window.showtimeData.id);
+            addInput('customerEmail', document.getElementById('customerEmail').value);
+            
+            selectedSeats.forEach((s, idx) => addInput(`SeatIds[${idx}]`, s.id));
+            foods.forEach((f, idx) => {
+                addInput(`Foods[${idx}].FoodId`, f.FoodId);
+                addInput(`Foods[${idx}].Quantity`, f.Quantity);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        init();
+    </script>
+
+    <style>
+        .seat {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            background: #4b5563;
+        }
+        .seat-vip { background: #8b5cf6; }
+        .seat-selected { background: #10b981 !important; transform: scale(1.1); }
+        .seat-sold { background: #dc2626 !important; opacity: 0.5; cursor: not-allowed; }
+        .cinema-screen { position: relative; }
+        .screen-curve { width: 80%; height: 5px; background: white; margin: 0 auto; border-radius: 50% 50% 0 0; box-shadow: 0 -5px 15px rgba(255,255,255,0.2); }
+    </style>
+}

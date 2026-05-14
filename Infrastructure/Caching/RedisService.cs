@@ -149,7 +149,7 @@ public class RedisService : IRedisService
         // duy trì một Redis Set chứa các ghế đã được giữ cho mỗi suất chiếu
         _logger.LogWarning("GetHeldSeatsAsync is not fully implemented - requires Redis Set structure");
         
-        return heldSeats;
+        return await Task.FromResult(heldSeats);
     }
 
     #endregion

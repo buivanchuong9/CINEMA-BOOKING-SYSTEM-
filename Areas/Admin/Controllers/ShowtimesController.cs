@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BE.Core.Interfaces;
 using BE.Core.Entities.Movies;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -19,9 +20,14 @@ public class ShowtimesController : Controller
     }
 
     // GET: /Admin/Showtimes
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int pageNumber = 1)
     {
-        var showtimes = await _unitOfWork.Showtimes.GetAllAsync();
+        int pageSize = 20;
+        var allShowtimes = await _unitOfWork.Showtimes.GetAllAsync();
+        var sortedShowtimes = allShowtimes.OrderByDescending(s => s.StartTime);
+        
+        var paginatedShowtimes = PaginatedList<Showtime>.Create(sortedShowtimes, pageNumber, pageSize);
+
         var movies = await _unitOfWork.Movies.GetAllAsync();
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
         
@@ -31,7 +37,7 @@ public class ShowtimesController : Controller
         // Tạo ViewModel để truyền dữ liệu tính toán
         var showtimeViewModels = new List<dynamic>();
         
-        foreach (var showtime in showtimes)
+        foreach (var showtime in paginatedShowtimes)
         {
             var room = rooms.FirstOrDefault(r => r.Id == showtime.RoomId); // tìm phòng theo id nếu kh thấy sẽ null
             var totalSeats = room != null ? (room.TotalRows * room.SeatsPerRow) : 0; // tính tổng số ghế nếu kh thấy sẽ là 0
@@ -49,7 +55,7 @@ public class ShowtimesController : Controller
         
         ViewBag.ShowtimeData = showtimeViewModels;
         
-        return View(showtimes.OrderByDescending(s => s.StartTime).ToList());
+        return View(paginatedShowtimes);
     }
 
     // GET: /Admin/Showtimes/Create

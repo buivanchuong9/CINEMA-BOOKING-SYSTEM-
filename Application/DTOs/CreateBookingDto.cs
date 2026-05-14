@@ -8,6 +8,7 @@ public class CreateBookingDto
     public int? VoucherId { get; set; }
     public List<FoodItemDto>? Foods { get; set; }
     public string? Notes { get; set; }
+    public BE.Core.Enums.PaymentMethod PaymentMethod { get; set; } = BE.Core.Enums.PaymentMethod.VNPAY;
 }
 
 public class FoodItemDto

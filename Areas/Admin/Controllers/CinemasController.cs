@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
 using BE.Core.Entities.CinemaInfrastructure;
+using BE.Application.Helpers;
 
 namespace BE.Areas.Admin.Controllers;
 
@@ -17,10 +18,12 @@ public class CinemasController : Controller
     }
 
     // GET: /Admin/Cinemas
-    public async Task<IActionResult> Index() // danh sách rạp
+    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách rạp
     {
+        int pageSize = 20;
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
-        return View(cinemas.OrderBy(c => c.Name).ToList());
+        var sortedCinemas = cinemas.OrderBy(c => c.Name);
+        return View(PaginatedList<Cinema>.Create(sortedCinemas, pageNumber, pageSize));
     }
 
     // GET: /Admin/Cinemas/Create

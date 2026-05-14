@@ -1,4 +1,5 @@
-@model IEnumerable<BE.Core.Entities.CinemaInfrastructure.Room>
+@using BE.Application.Helpers
+@model PaginatedList<BE.Core.Entities.CinemaInfrastructure.Room>
 @{
     ViewData["Title"] = "Quản Lý Phòng Chiếu - Admin";
     var cinemas = ViewBag.Cinemas as Dictionary<int, string>;
@@ -11,7 +12,7 @@
                 <i class="bi bi-door-open me-2 text-cinema-red"></i>
                 Quản Lý Phòng Chiếu
             </h2>
-            <p class="text-muted mb-0">Tổng số: @Model.Count() phòng</p>
+            <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages</p>
         </div>
         <a href="/Admin/Rooms/Create" class="btn btn-cinema-red">
             <i class="bi bi-plus-circle me-2"></i>
@@ -78,9 +79,37 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-4">
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Rooms?pageNumber=@(Model.PageIndex - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")" 
+                                   href="/Admin/Rooms?pageNumber=@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Rooms?pageNumber=@(Model.PageIndex + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         }
     </div>
 </div>
+
 
 <form id="deleteForm" method="post" style="display: none;">
     @Html.AntiForgeryToken()
@@ -108,3 +137,4 @@
         }
     </script>
 }
+

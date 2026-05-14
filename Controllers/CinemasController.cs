@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using BE.Core.Interfaces;
+using BE.Application.Helpers;
+using BE.Core.Entities.CinemaInfrastructure;
 
 namespace BE.Controllers;
 
@@ -16,10 +18,12 @@ public class CinemasController : Controller
     }
 
     // GET: /Cinemas
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int pageNumber = 1)
     {
+        int pageSize = 20;
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
-        return View(cinemas.Where(c => c.IsActive).OrderBy(c => c.Name));
+        var sortedCinemas = cinemas.Where(c => c.IsActive).OrderBy(c => c.Name);
+        return View(PaginatedList<Cinema>.Create(sortedCinemas, pageNumber, pageSize));
     }
 
     // GET: /Cinemas/Details/5 (id = 5)

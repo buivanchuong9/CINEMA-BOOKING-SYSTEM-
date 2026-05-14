@@ -1,6 +1,8 @@
-@model IEnumerable<BE.Core.Entities.Movies.Movie>
+@using BE.Application.Helpers
+@model PaginatedList<BE.Core.Entities.Movies.Movie>
 @{
     ViewData["Title"] = "Danh Sách Phim - CineMax";
+    string currentStatus = ViewBag.CurrentStatus ?? "";
 }
 
 <!-- Movies Listing Page -->
@@ -11,11 +13,11 @@
             <div>
                 <h2 class="fw-bold mb-1">
                     <i class="bi bi-film me-2 text-cinema-red"></i>
-                    @if (ViewBag.CurrentStatus == "NowShowing")
+                    @if (currentStatus == "NowShowing")
                     {
                         <text>Phim Đang Chiếu</text>
                     }
-                    else if (ViewBag.CurrentStatus == "ComingSoon")
+                    else if (currentStatus == "ComingSoon")
                     {
                         <text>Phim Sắp Chiếu</text>
                     }
@@ -24,18 +26,18 @@
                         <text>Tất Cả Phim</text>
                     }
                 </h2>
-                <p class="text-muted mb-0">Tìm thấy @Model.Count() phim</p>
+                <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages</p>
             </div>
             
             <!-- Filter Buttons -->
             <div class="btn-group" role="group">
-                <a href="/Movies" class="btn @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "btn-cinema-red" : "btn-outline-light")">
+                <a href="/Movies" class="btn @(string.IsNullOrEmpty(currentStatus) ? "btn-cinema-red" : "btn-outline-light")">
                     Tất Cả
                 </a>
-                <a href="/Movies/NowShowing" class="btn @(ViewBag.CurrentStatus == "NowShowing" ? "btn-cinema-red" : "btn-outline-light")">
+                <a href="/Movies/NowShowing" class="btn @(currentStatus == "NowShowing" ? "btn-cinema-red" : "btn-outline-light")">
                     Đang Chiếu
                 </a>
-                <a href="/Movies/ComingSoon" class="btn @(ViewBag.CurrentStatus == "ComingSoon" ? "btn-cinema-red" : "btn-outline-light")">
+                <a href="/Movies/ComingSoon" class="btn @(currentStatus == "ComingSoon" ? "btn-cinema-red" : "btn-outline-light")">
                     Sắp Chiếu
                 </a>
             </div>
@@ -116,6 +118,35 @@
                         </div>
                     </div>
                 }
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-5">
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" 
+                               href="/Movies@(string.IsNullOrEmpty(currentStatus) ? "" : "/" + currentStatus)?pageNumber=@(Model.PageIndex - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")" 
+                                   href="/Movies@(string.IsNullOrEmpty(currentStatus) ? "" : "/" + currentStatus)?pageNumber=@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link bg-dark border-secondary text-white" 
+                               href="/Movies@(string.IsNullOrEmpty(currentStatus) ? "" : "/" + currentStatus)?pageNumber=@(Model.PageIndex + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         }
     </div>
