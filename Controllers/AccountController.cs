@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using BE.Core.Entities.Business;
 using BE.Application.DTOs;
+
 
 namespace BE.Controllers;
 
@@ -14,17 +16,20 @@ public class AccountController : Controller
     private readonly SignInManager<User> _signInManager;
     private readonly RoleManager<IdentityRole> _roleManager; // quản lý phân quyền
     private readonly BE.Core.Interfaces.IUnitOfWork _unitOfWork; // quản lý repository
+    private readonly BE.Core.Interfaces.Services.IEmailService _emailService; // dịch vụ gửi email
 
     public AccountController(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         RoleManager<IdentityRole> roleManager,
-        BE.Core.Interfaces.IUnitOfWork unitOfWork)
+        BE.Core.Interfaces.IUnitOfWork unitOfWork,
+        BE.Core.Interfaces.Services.IEmailService emailService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
     }
 
     // GET: /Account/Register
@@ -236,5 +241,108 @@ public class AccountController : Controller
 
         TempData["Success"] = $"Chúc mừng! Bạn nhận được voucher giảm {discount}% (Code: {voucher.Code})";
         return RedirectToAction("Profile");
+    }
+
+    // GET: /Account/ForgotPassword
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View();
+    }
+
+    // POST: /Account/ForgotPassword
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        // Kiểm tra xem email có tồn tại trong database không
+        Console.WriteLine($"[DEBUG] Looking for user with email: {model.Email}");
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        
+        if (user == null)
+        {
+            // Dự phòng: Tìm trực tiếp trong DB (đề phòng lỗi chuẩn hóa)
+            user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+        }
+        
+        if (user != null)
+        {
+            Console.WriteLine($"[DEBUG] Found user: {user.FullName} (ID: {user.Id})");
+        }
+        else 
+        {
+            Console.WriteLine($"[DEBUG] User NOT found for email: {model.Email}");
+        }
+
+        if (user == null)
+        {
+            // Hiển thị lỗi trực tiếp nếu không tìm thấy email (giúp user dễ kiểm tra)
+            ModelState.AddModelError(string.Empty, "Email này không tồn tại trong hệ thống.");
+            return View(model);
+        }
+
+        // Tạo token đặt lại mật khẩu
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        
+        // Thay vì gửi email, chúng ta chuyển hướng thẳng đến trang đổi mật khẩu mới
+        // (Dùng cho mục đích demo/test khi không cấu hình được SMTP)
+        Console.WriteLine($"[DEBUG] Bypass email. Redirecting to ResetPassword for: {model.Email}");
+        
+        return RedirectToAction("ResetPassword", new { email = model.Email, token = token });
+    }
+
+    // GET: /Account/ForgotPasswordConfirmation
+    [HttpGet]
+    public IActionResult ForgotPasswordConfirmation()
+    {
+        return View();
+    }
+
+    // GET: /Account/ResetPassword
+    [HttpGet]
+    public IActionResult ResetPassword(string token, string email)
+    {
+        if (token == null || email == null)
+        {
+            return RedirectToAction("Error", "Home");
+        }
+        var model = new ResetPasswordDto { Token = token, Email = email };
+        return View(model);
+    }
+
+    // POST: /Account/ResetPassword
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            return RedirectToAction("ResetPasswordConfirmation");
+        }
+
+        // Reset mật khẩu thẳng vào DB (Identity sẽ tự động mã hóa/hash)
+        var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+        if (result.Succeeded)
+        {
+            return RedirectToAction("ResetPasswordConfirmation");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+        return View(model);
+    }
+
+    // GET: /Account/ResetPasswordConfirmation
+    [HttpGet]
+    public IActionResult ResetPasswordConfirmation()
+    {
+        return View();
     }
 }
