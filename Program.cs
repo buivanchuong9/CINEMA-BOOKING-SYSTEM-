@@ -49,6 +49,8 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<BE.Core.Interfaces.IUnitOfWork, BE.Infrastructure.Repositories.UnitOfWork>();
 builder.Services.AddScoped<BE.Core.Interfaces.Services.IRedisService, BE.Infrastructure.Caching.RedisService>();
 builder.Services.AddScoped<BE.Core.Interfaces.Services.IBookingService, BE.Application.Services.BookingService>();
+builder.Services.AddScoped<BE.Core.Interfaces.Services.IEmailService, BE.Infrastructure.Services.EmailService>();
+
 
 // Cổng thanh toán VNPay
 builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
