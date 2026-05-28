@@ -58,6 +58,23 @@ public class MoviesController : Controller
                 return View(movie);
             }
 
+            // Kiểm tra trùng tên phim (không phân biệt hoa thường và khoảng trắng thừa)
+            if (!string.IsNullOrEmpty(movie.Title))
+            {
+                var movies = await _unitOfWork.Movies.GetAllAsync();
+                var duplicateMovie = movies.FirstOrDefault(m => 
+                    m.Title != null && 
+                    m.Title.Trim().Equals(movie.Title.Trim(), StringComparison.OrdinalIgnoreCase));
+                
+                if (duplicateMovie != null)
+                {
+                    TempData["DuplicateMovieId"] = duplicateMovie.Id;
+                    TempData["DuplicateMovieTitle"] = duplicateMovie.Title;
+                    TempData["Error"] = $"Phim '{movie.Title}' đã tồn tại trong hệ thống!";
+                    return View(movie);
+                }
+            }
+
             movie.CreatedAt = DateTime.Now; // gán ngày tạo phim 
             await _unitOfWork.Movies.AddAsync(movie); 
             await _unitOfWork.SaveChangesAsync();

@@ -175,6 +175,31 @@
                     console.log('Validation errors:', $(this).validate().errorList);
                 }
             });
+
+            // Hiển thị popup hỏi ý kiến khi phim bị trùng tên
+            @if (TempData["DuplicateMovieId"] != null)
+            {
+                <text>
+                Swal.fire({
+                    title: 'Đã tồn tại phim này!',
+                    html: `Phim <strong>"@Html.Raw(TempData["DuplicateMovieTitle"])"</strong> đã có sẵn trong hệ thống.<br/><br/>Bạn có muốn đi tới sửa thông tin phim này hay hủy bỏ việc thêm mới?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-pencil-square me-1"></i> Có, đi tới sửa phim',
+                    cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Không, hủy bỏ',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/Admin/Movies/Edit/@TempData["DuplicateMovieId"]`;
+                    } else {
+                        window.location.href = '/Admin/Movies';
+                    }
+                });
+                </text>
+            }
         });
     </script>
 }
