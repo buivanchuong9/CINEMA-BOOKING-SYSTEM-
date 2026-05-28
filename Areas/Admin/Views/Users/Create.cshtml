@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Thêm Tài Khoản Mới";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-white">Thêm Tài Khoản Mới</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="card shadow mb-4 bg-dark text-white border-secondary">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Họ và Tên</label>
+                        <input type="text" name="FullName" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Email (Dùng làm tên đăng nhập)</label>
+                        <input type="email" name="Email" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Số điện thoại</label>
+                        <input type="text" name="PhoneNumber" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Mật khẩu</label>
+                        <input type="password" name="Password" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Phân quyền (Role)</label>
+                        <select name="Role" class="form-select bg-black text-white border-secondary">
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Staff">Staff</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr />
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Thêm Tài Khoản
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

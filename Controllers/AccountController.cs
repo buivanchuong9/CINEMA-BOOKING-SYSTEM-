@@ -257,14 +257,19 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        // Kiểm tra xem email có tồn tại trong database không
-        Console.WriteLine($"[DEBUG] Looking for user with email: {model.Email}");
+        // Kiểm tra xem email hoặc username có tồn tại trong database không
+        Console.WriteLine($"[DEBUG] Looking for user with email/username: {model.Email}");
         var user = await _userManager.FindByEmailAsync(model.Email);
         
         if (user == null)
         {
+            user = await _userManager.FindByNameAsync(model.Email);
+        }
+
+        if (user == null)
+        {
             // Dự phòng: Tìm trực tiếp trong DB (đề phòng lỗi chuẩn hóa)
-            user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == model.Email || u.UserName == model.Email);
         }
         
         if (user != null)

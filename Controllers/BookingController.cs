@@ -209,7 +209,7 @@ public class BookingController : Controller
 
         var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
         var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
-        if (room != null) room.Cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId);
+        if (room != null) room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId))!;
 
         var selectedSeats = new List<BE.Core.Entities.CinemaInfrastructure.Seat>();
         foreach(var seatId in dto.SeatIds)
@@ -217,7 +217,7 @@ public class BookingController : Controller
             var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
             if (seat != null)
             {
-                seat.SeatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId);
+                seat.SeatType = (await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId))!;
                 selectedSeats.Add(seat);
             }
         }

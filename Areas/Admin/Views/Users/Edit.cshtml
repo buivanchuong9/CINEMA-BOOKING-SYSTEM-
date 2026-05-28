@@ -1,0 +1,59 @@
+@model BE.Core.Entities.Business.User
+@{
+    ViewData["Title"] = "Cập nhật Tài Khoản";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-white">Cập nhật Tài Khoản: @Model.Email</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="card shadow mb-4 bg-dark text-white border-secondary">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Họ và Tên</label>
+                        <input type="text" name="FullName" value="@Model.FullName" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Số điện thoại</label>
+                        <input type="text" name="PhoneNumber" value="@Model.PhoneNumber" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Hạng Thành Viên</label>
+                        <select name="MembershipLevel" class="form-select bg-black text-white border-secondary">
+                            <option value="Bronze" selected="@(Model.MembershipLevel == "Bronze")">Bronze</option>
+                            <option value="Silver" selected="@(Model.MembershipLevel == "Silver")">Silver</option>
+                            <option value="Gold" selected="@(Model.MembershipLevel == "Gold")">Gold</option>
+                            <option value="Platinum" selected="@(Model.MembershipLevel == "Platinum")">Platinum</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Điểm Tích Lũy</label>
+                        <input type="number" name="Points" value="@Model.Points" class="form-control" />
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Mật khẩu mới (Để trống nếu không đổi)</label>
+                        <input type="password" name="NewPassword" class="form-control" placeholder="Nhập mật khẩu mới..." />
+                    </div>
+                </div>
+
+                <hr />
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Lưu Thay Đổi
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
