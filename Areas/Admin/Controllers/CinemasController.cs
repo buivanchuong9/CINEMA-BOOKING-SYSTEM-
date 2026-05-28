@@ -52,6 +52,18 @@ public class CinemasController : Controller
                 return View(cinema);
             }
 
+            // Kiểm tra trùng lặp rạp chiếu (trùng cả tên và địa chỉ mới tính là trùng)
+            var existingCinemas = await _unitOfWork.Cinemas.GetAllAsync();
+            var duplicateCinema = existingCinemas.FirstOrDefault(c => 
+                c.Name != null && c.Name.Trim().Equals(cinema.Name.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                c.Address != null && c.Address.Trim().Equals(cinema.Address.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (duplicateCinema != null)
+            {
+                TempData["Error"] = $"Rạp phim '{cinema.Name}' với địa chỉ '{cinema.Address}' đã tồn tại trong hệ thống!";
+                return View(cinema);
+            }
+
             cinema.CreatedAt = DateTime.Now; 
             cinema.IsActive = true; // mặc định rạp hoạt động
             
@@ -99,6 +111,19 @@ public class CinemasController : Controller
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
+                return View(cinema);
+            }
+
+            // Kiểm tra trùng lặp rạp chiếu (loại trừ rạp đang chỉnh sửa, trùng cả tên và địa chỉ mới tính là trùng)
+            var existingCinemas = await _unitOfWork.Cinemas.GetAllAsync();
+            var duplicateCinema = existingCinemas.FirstOrDefault(c => 
+                c.Id != id &&
+                c.Name != null && c.Name.Trim().Equals(cinema.Name.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                c.Address != null && c.Address.Trim().Equals(cinema.Address.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (duplicateCinema != null)
+            {
+                TempData["Error"] = $"Rạp phim '{cinema.Name}' với địa chỉ '{cinema.Address}' đã tồn tại trong hệ thống!";
                 return View(cinema);
             }
 
