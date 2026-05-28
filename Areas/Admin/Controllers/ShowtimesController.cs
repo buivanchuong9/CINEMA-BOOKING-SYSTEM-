@@ -86,6 +86,22 @@ public class ShowtimesController : Controller
                 return View(showtime);
             }
 
+            // Kiểm tra giá trị hợp lệ của thời gian bắt đầu (phải trong tương lai và không thể là default)
+            if (showtime.StartTime == default || showtime.StartTime < DateTime.Now)
+            {
+                TempData["Error"] = "Thời gian bắt đầu chiếu không hợp lệ hoặc ở trong quá khứ!";
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+
+            // Kiểm tra giá vé cơ bản
+            if (showtime.BasePrice <= 0)
+            {
+                TempData["Error"] = "Giá vé cơ bản phải lớn hơn 0!";
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+
             // Tính EndTime dựa trên thời lượng phim
             var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
             if (movie == null)
@@ -163,6 +179,22 @@ public class ShowtimesController : Controller
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 TempData["Error"] = "Vui lòng kiểm tra lại: " + string.Join(", ", errors);
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+
+            // Kiểm tra giá trị hợp lệ của thời gian bắt đầu
+            if (showtime.StartTime == default)
+            {
+                TempData["Error"] = "Thời gian bắt đầu chiếu không hợp lệ!";
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+
+            // Kiểm tra giá vé cơ bản
+            if (showtime.BasePrice <= 0)
+            {
+                TempData["Error"] = "Giá vé cơ bản phải lớn hơn 0!";
                 await PopulateDropdowns();
                 return View(showtime);
             }
@@ -247,8 +279,18 @@ public class ShowtimesController : Controller
             "Id", "Title"
         );
         
+        // Hiển thị tên phòng kèm theo tên rạp để tránh trùng lặp
+        var roomSelectListData = rooms
+            .Where(r => r.IsActive)
+            .Select(r => new
+            {
+                Id = r.Id,
+                Name = $"{r.Name} ({cinemas.FirstOrDefault(c => c.Id == r.CinemaId)?.Name ?? "Không rõ rạp"})"
+            })
+            .OrderBy(r => r.Name);
+        
         ViewBag.RoomSelectList = new SelectList(
-            rooms.Where(r => r.IsActive).OrderBy(r => r.Name), // lọc danh sách phòng đang hoạt động
+            roomSelectListData,
             "Id", "Name"
         );
         
@@ -260,14 +302,17 @@ public class ShowtimesController : Controller
 
     private async Task<int> GetBookedSeatsCountAsync(int showtimeId) // lấy số ghế đã đặt
     {
-        // Lấy tất cả ghế của lịch chiếu này
-        var showtime = await _unitOfWork.Showtimes.GetByIdAsync(showtimeId);
-        if (showtime == null) return 0;
+        // Lấy danh sách booking đã thanh toán cho lịch chiếu này
+        var bookings = await _unitOfWork.Bookings.FindAsync(b => b.ShowtimeId == showtimeId && b.Status == Core.Enums.BookingStatus.Paid);
+        var bookingIds = bookings.Select(b => b.Id).ToList();
         
-        var seats = (await _unitOfWork.Seats.GetAllAsync())
-            .Where(s => s.RoomId == showtime.RoomId && s.Status == Core.Enums.SeatStatus.Booked);
+        if (!bookingIds.Any()) return 0;
         
-        return seats.Count();
+        // Lấy danh sách chi tiết đặt vé tương ứng với các booking này
+        var bookingDetails = await _unitOfWork.BookingDetails.FindAsync(bd => bookingIds.Contains(bd.BookingId));
+        
+        // Đếm số lượng ghế duy nhất đã được đặt
+        return bookingDetails.Select(bd => bd.SeatId).Distinct().Count();
     }
 
     /// <summary>
@@ -276,15 +321,12 @@ public class ShowtimesController : Controller
     /// </summary>
     private async Task<Showtime?> CheckRoomConflictAsync(int roomId, DateTime startTime, DateTime endTime, int? excludeId)
     {
-        var showtimes = await _unitOfWork.Showtimes.GetAllAsync();
-        
-        return showtimes.FirstOrDefault(s => 
+        return await _unitOfWork.Showtimes.FirstOrDefaultAsync(s => 
             s.RoomId == roomId &&
             s.IsActive &&
-            (excludeId == null || s.Id != excludeId) && // loại trừ chính lịch đang chỉnh sửa
-            ((s.StartTime >= startTime && s.StartTime < endTime) ||  // lịch khác bắt đầu trong khoảng giờ mới
-             (s.EndTime > startTime && s.EndTime <= endTime) ||       // lịch khác kết thúc trong khoảng giờ mới
-             (s.StartTime <= startTime && s.EndTime >= endTime))      // lịch khác bao trùm khoảng giờ mới
+            (!excludeId.HasValue || s.Id != excludeId.Value) && // loại trừ chính lịch đang chỉnh sửa
+            s.StartTime < endTime &&
+            s.EndTime > startTime // overlap check
         );
     }
 
