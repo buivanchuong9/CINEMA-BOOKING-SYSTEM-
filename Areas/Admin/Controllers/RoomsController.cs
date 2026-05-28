@@ -59,6 +59,41 @@ public class RoomsController : Controller
                 return View(room);
             }
 
+            // 1. Kiểm tra rạp chiếu được chọn có tồn tại không
+            var cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId);
+            if (cinema == null)
+            {
+                TempData["Error"] = "Rạp chiếu được chọn không tồn tại trong hệ thống!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
+            // 2. Kiểm tra trùng tên phòng trong cùng một rạp
+            var duplicateRoom = await _unitOfWork.Rooms.FirstOrDefaultAsync(r => 
+                r.CinemaId == room.CinemaId && 
+                r.Name.Trim().ToLower() == room.Name.Trim().ToLower()
+            );
+            if (duplicateRoom != null)
+            {
+                TempData["Error"] = $"Phòng chiếu '{room.Name}' đã tồn tại trong rạp '{cinema.Name}'!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
+            // 3. Kiểm tra số lượng hàng ghế và ghế mỗi hàng để tránh lỗi vẽ sơ đồ (A-Z tối đa 26 hàng)
+            if (room.TotalRows <= 0 || room.TotalRows > 26)
+            {
+                TempData["Error"] = "Số hàng ghế phải từ 1 đến 26 (tương ứng với các chữ cái từ A đến Z)!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+            if (room.SeatsPerRow <= 0 || room.SeatsPerRow > 30)
+            {
+                TempData["Error"] = "Số ghế mỗi hàng phải từ 1 đến 30!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
             // Tạo ma trận sơ đồ chỗ ngồi mặc định (JSON)
             if (string.IsNullOrEmpty(room.SeatMapMatrix)) // nếu không có sơ đồ ghế thì tạo sơ đồ ghế mặc định
             {
@@ -66,6 +101,7 @@ public class RoomsController : Controller
             }
 
             room.CreatedAt = DateTime.Now;
+            room.IsActive = true;
             
             await _unitOfWork.Rooms.AddAsync(room);
             await _unitOfWork.SaveChangesAsync();
@@ -122,7 +158,83 @@ public class RoomsController : Controller
                 return View(room); 
             }
 
-            _unitOfWork.Rooms.Update(room);
+            // 1. Kiểm tra phòng tồn tại
+            var existingRoom = await _unitOfWork.Rooms.GetByIdAsync(id);
+            if (existingRoom == null)
+            {
+                return NotFound();
+            }
+
+            // 2. Kiểm tra rạp chiếu được chọn có tồn tại không
+            var cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId);
+            if (cinema == null)
+            {
+                TempData["Error"] = "Rạp chiếu được chọn không tồn tại trong hệ thống!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
+            // 3. Kiểm tra trùng tên phòng trong cùng một rạp (trừ chính phòng đang sửa)
+            var duplicateRoom = await _unitOfWork.Rooms.FirstOrDefaultAsync(r => 
+                r.Id != id &&
+                r.CinemaId == room.CinemaId && 
+                r.Name.Trim().ToLower() == room.Name.Trim().ToLower()
+            );
+            if (duplicateRoom != null)
+            {
+                TempData["Error"] = $"Phòng chiếu '{room.Name}' đã tồn tại trong rạp '{cinema.Name}'!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
+            // 4. Kiểm tra số lượng hàng ghế và số ghế mỗi hàng hợp lệ
+            if (room.TotalRows <= 0 || room.TotalRows > 26)
+            {
+                TempData["Error"] = "Số hàng ghế phải từ 1 đến 26 (tương ứng với các chữ cái từ A đến Z)!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+            if (room.SeatsPerRow <= 0 || room.SeatsPerRow > 30)
+            {
+                TempData["Error"] = "Số ghế mỗi hàng phải từ 1 đến 30!";
+                await PopulateDropdowns();
+                return View(room);
+            }
+
+            // 5. Kiểm tra thay đổi sơ đồ ghế (layout)
+            bool layoutChanged = existingRoom.TotalRows != room.TotalRows || existingRoom.SeatsPerRow != room.SeatsPerRow;
+            if (layoutChanged)
+            {
+                // Nếu phòng đã có lịch chiếu rồi thì chặn không cho sửa số hàng/ghế để tránh hỏng dữ liệu đặt chỗ
+                var hasShowtimes = await _unitOfWork.Showtimes.ExistsAsync(s => s.RoomId == id);
+                if (hasShowtimes)
+                {
+                    TempData["Error"] = "Không thể thay đổi sơ đồ/số lượng ghế của phòng chiếu đã được lên lịch chiếu hoặc đã bán vé!";
+                    await PopulateDropdowns();
+                    return View(room);
+                }
+            }
+
+            // Áp dụng các thay đổi
+            existingRoom.Name = room.Name;
+            existingRoom.CinemaId = room.CinemaId;
+            existingRoom.IsActive = room.IsActive;
+
+            if (layoutChanged)
+            {
+                existingRoom.TotalRows = room.TotalRows;
+                existingRoom.SeatsPerRow = room.SeatsPerRow;
+                existingRoom.SeatMapMatrix = GenerateDefaultSeatMap(room.TotalRows, room.SeatsPerRow);
+
+                // Xóa toàn bộ ghế cũ
+                var oldSeats = await _unitOfWork.Seats.FindAsync(s => s.RoomId == id);
+                _unitOfWork.Seats.DeleteRange(oldSeats);
+
+                // Tạo lại ghế mới
+                await GenerateSeatsForRoom(id, room.TotalRows, room.SeatsPerRow);
+            }
+
+            _unitOfWork.Rooms.Update(existingRoom);
             await _unitOfWork.SaveChangesAsync();
 
             TempData["Success"] = $"Đã cập nhật phòng '{room.Name}' thành công!";
@@ -147,6 +259,19 @@ public class RoomsController : Controller
             return NotFound();
         }
 
+        // 1. Kiểm tra xem phòng có lịch chiếu nào không. Nếu có, chặn không cho xóa.
+        var hasShowtimes = await _unitOfWork.Showtimes.ExistsAsync(s => s.RoomId == id);
+        if (hasShowtimes)
+        {
+            TempData["Error"] = "Không thể xóa phòng chiếu đã được lên lịch chiếu hoặc đã có suất chiếu!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // 2. Xóa tất cả các ghế thuộc phòng chiếu này trước để tránh lỗi ràng buộc khóa ngoại
+        var seats = await _unitOfWork.Seats.FindAsync(s => s.RoomId == id);
+        _unitOfWork.Seats.DeleteRange(seats);
+
+        // 3. Xóa phòng chiếu
         _unitOfWork.Rooms.Delete(room);
         await _unitOfWork.SaveChangesAsync();
 

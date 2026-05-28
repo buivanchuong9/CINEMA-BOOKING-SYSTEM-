@@ -47,6 +47,16 @@ public class GenresController : Controller // danh sách thể loại
             return View(genre);
         }
 
+        // Kiểm tra trùng lặp thể loại
+        var duplicateGenre = await _unitOfWork.Genres.FirstOrDefaultAsync(g => 
+            g.Name.Trim().ToLower() == genre.Name.Trim().ToLower()
+        );
+        if (duplicateGenre != null)
+        {
+            TempData["Error"] = $"Thể loại '{genre.Name}' đã tồn tại trong hệ thống!";
+            return View(genre);
+        }
+
         // tạo slug từ tên
         if (string.IsNullOrEmpty(genre.Slug)) // nếu slug rỗng thì tạo slug từ tên
         {
@@ -92,6 +102,17 @@ public class GenresController : Controller // danh sách thể loại
             return View(genre);
         }
 
+        // Kiểm tra trùng lặp thể loại (loại trừ chính nó)
+        var duplicateGenre = await _unitOfWork.Genres.FirstOrDefaultAsync(g => 
+            g.Id != id &&
+            g.Name.Trim().ToLower() == genre.Name.Trim().ToLower()
+        );
+        if (duplicateGenre != null)
+        {
+            TempData["Error"] = $"Thể loại '{genre.Name}' đã tồn tại trong hệ thống!";
+            return View(genre);
+        }
+
         if (string.IsNullOrEmpty(genre.Slug))
         {
             genre.Slug = GenerateSlug(genre.Name); // tạo slug từ tên
@@ -113,6 +134,14 @@ public class GenresController : Controller // danh sách thể loại
         if (genre == null)
         {
             return NotFound();
+        }
+
+        // Kiểm tra xem thể loại có chứa phim nào không
+        var hasMovies = await _unitOfWork.MovieGenres.ExistsAsync(mg => mg.GenreId == id);
+        if (hasMovies)
+        {
+            TempData["Error"] = "Không thể xóa thể loại này vì đang có phim liên kết với nó!";
+            return RedirectToAction(nameof(Index));
         }
 
         _unitOfWork.Genres.Delete(genre); // xóa thể loại
