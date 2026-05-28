@@ -7,14 +7,21 @@
     <div class="mb-4">
         <h2 class="fw-bold">
             <i class="bi bi-pencil-square me-2 text-cinema-red"></i>
-            Sửa Lịch Chiếu
+            Sửa Lịch Chiếu #@Model.Id
         </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/Admin/Dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/Admin/Showtimes">Lịch Chiếu</a></li>
+                <li class="breadcrumb-item active">Sửa #@Model.Id</li>
+            </ol>
+        </nav>
     </div>
 
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="glass-card p-4">
-                <form method="post" asp-action="Edit">
+                <form method="post" asp-action="Edit" asp-route-id="@Model.Id" id="editShowtimeForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
                     <input type="hidden" asp-for="CreatedAt" />
@@ -26,6 +33,7 @@
                             <select asp-for="MovieId" asp-items="ViewBag.MovieSelectList" class="form-select form-select-lg">
                                 <option value="">-- Chọn phim --</option>
                             </select>
+                            <span asp-validation-for="MovieId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
@@ -33,24 +41,30 @@
                             <select asp-for="RoomId" asp-items="ViewBag.RoomSelectList" class="form-select">
                                 <option value="">-- Chọn phòng --</option>
                             </select>
+                            <span asp-validation-for="RoomId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="BasePrice" class="form-label required">Giá Vé Cơ Bản (VNĐ)</label>
                             <input asp-for="BasePrice" type="number" class="form-control" step="1000" />
+                            <span asp-validation-for="BasePrice" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-12">
                             <label asp-for="StartTime" class="form-label required">Thời Gian Chiếu</label>
                             <input asp-for="StartTime" type="datetime-local" class="form-control" />
-                            <div class="form-text">Thời gian kết thúc sẽ tự động tính dựa trên thời lượng phim</div>
+                            <div class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Thời gian kết thúc sẽ tự động tính dựa trên thời lượng phim (+15 phút dọn dẹp)
+                            </div>
+                            <span asp-validation-for="StartTime" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
                             <label asp-for="IsActive" class="form-label">Trạng Thái</label>
                             <select asp-for="IsActive" class="form-select">
-                                <option value="true">Hoạt Động</option>
-                                <option value="false">Ngừng Hoạt Động</option>
+                                <option value="true">✅ Hoạt Động</option>
+                                <option value="false">⛔ Ngừng Hoạt Động</option>
                             </select>
                         </div>
 
@@ -58,6 +72,7 @@
                             <div class="alert alert-warning">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 <strong>Lưu ý:</strong> Nếu có người đặt vé rồi, tránh thay đổi phim hoặc phòng chiếu.
+                                Hệ thống sẽ kiểm tra xung đột lịch chiếu tự động khi bạn lưu.
                             </div>
                         </div>
 
@@ -78,8 +93,6 @@
     </div>
 </div>
 
-
-
 <style>
     .required::after {
         content: " *";
@@ -87,5 +100,16 @@
     }
 </style>
 
-<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            var form = $('#editShowtimeForm');
+            if (form.length > 0) {
+                form.removeData('validator');
+                form.removeData('unobtrusiveValidation');
+                $.validator.unobtrusive.parse(form);
+            }
+        });
+    </script>
+}

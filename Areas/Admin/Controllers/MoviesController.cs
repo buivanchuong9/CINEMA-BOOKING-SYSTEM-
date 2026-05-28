@@ -36,7 +36,7 @@ public class MoviesController : Controller
     // POST: /Admin/Movies/Create
     [HttpPost]
     [ValidateAntiForgeryToken] // chống hack CSRF
-    public async Task<IActionResult> Create(Movie movie)
+    public async Task<IActionResult> Create(Movie movie, bool forceCreate = false)
     {
         try
         {
@@ -58,19 +58,47 @@ public class MoviesController : Controller
                 return View(movie);
             }
 
-            // Kiểm tra trùng tên phim (không phân biệt hoa thường và khoảng trắng thừa)
-            if (!string.IsNullOrEmpty(movie.Title))
+            // Chỉ kiểm tra trùng lặp nếu người dùng không chọn Force Create
+            if (!string.IsNullOrEmpty(movie.Title) && !forceCreate)
             {
                 var movies = await _unitOfWork.Movies.GetAllAsync();
-                var duplicateMovie = movies.FirstOrDefault(m => 
+                
+                // 1. Kiểm tra trùng tên tuyệt đối (100%)
+                var exactDuplicate = movies.FirstOrDefault(m => 
                     m.Title != null && 
                     m.Title.Trim().Equals(movie.Title.Trim(), StringComparison.OrdinalIgnoreCase));
                 
-                if (duplicateMovie != null)
+                if (exactDuplicate != null)
                 {
-                    TempData["DuplicateMovieId"] = duplicateMovie.Id;
-                    TempData["DuplicateMovieTitle"] = duplicateMovie.Title;
+                    TempData["DuplicateMovieId"] = exactDuplicate.Id;
+                    TempData["DuplicateMovieTitle"] = exactDuplicate.Title;
                     TempData["Error"] = $"Phim '{movie.Title}' đã tồn tại trong hệ thống!";
+                    return View(movie);
+                }
+
+                // 2. Kiểm tra trùng trên 80% (Levenshtein Distance)
+                Movie? similarMovie = null;
+                double maxSimilarity = 0;
+
+                foreach (var m in movies)
+                {
+                    if (m.Title != null)
+                    {
+                        double similarity = CalculateSimilarity(movie.Title, m.Title);
+                        if (similarity >= 0.80 && similarity > maxSimilarity)
+                        {
+                            maxSimilarity = similarity;
+                            similarMovie = m;
+                        }
+                    }
+                }
+
+                if (similarMovie != null)
+                {
+                    TempData["SimilarMovieTitle"] = similarMovie.Title;
+                    TempData["SimilarMoviePercent"] = (int)(maxSimilarity * 100);
+                    TempData["IsSimilarWarning"] = true;
+                    TempData["Error"] = $"Tên phim gần giống với phim '{similarMovie.Title}' đã có sẵn (trùng {(int)(maxSimilarity * 100)}%)!";
                     return View(movie);
                 }
             }
@@ -87,6 +115,40 @@ public class MoviesController : Controller
             TempData["Error"] = $"Lỗi: {ex.Message}";
             return View(movie);
         }
+    }
+
+    private static int LevenshteinDistance(string s, string t)
+    {
+        if (string.IsNullOrEmpty(s)) return string.IsNullOrEmpty(t) ? 0 : t.Length;
+        if (string.IsNullOrEmpty(t)) return s.Length;
+
+        int n = s.Length;
+        int m = t.Length;
+        int[,] d = new int[n + 1, m + 1];
+
+        for (int i = 0; i <= n; d[i, 0] = i++) ;
+        for (int j = 0; j <= m; d[0, j] = j++) ;
+
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                d[i, j] = Math.Min(
+                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[n, m];
+    }
+
+    private static double CalculateSimilarity(string s, string t)
+    {
+        if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(t)) return 0;
+        s = s.ToLower().Trim();
+        t = t.ToLower().Trim();
+        int distance = LevenshteinDistance(s, t);
+        return 1.0 - ((double)distance / Math.Max(s.Length, t.Length));
     }
 
     // GET: /Admin/Movies/Edit/5

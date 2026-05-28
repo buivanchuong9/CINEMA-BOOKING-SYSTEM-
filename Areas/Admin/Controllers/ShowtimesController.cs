@@ -86,19 +86,29 @@ public class ShowtimesController : Controller
                 return View(showtime);
             }
 
-            // Calculate EndTime based on Movie duration
-            var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId); // lấy thông tin phim
-            if (movie != null)
+            // Tính EndTime dựa trên thời lượng phim
+            var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+            if (movie == null)
             {
-                showtime.EndTime = showtime.StartTime.AddMinutes(movie.Duration + 15); // +15 phút dọn dẹp
+                TempData["Error"] = "Không tìm thấy phim đã chọn!";
+                await PopulateDropdowns();
+                return View(showtime);
             }
-            
-            // Check if room is available at this time
-            var conflictingShowtime = await CheckRoomConflictAsync(showtime.RoomId, showtime.StartTime, showtime.EndTime);
-            if (conflictingShowtime != null) // kiểm tra phòng chiếu đã có lịch chiếu trong khung giờ này chưa
+            showtime.EndTime = showtime.StartTime.AddMinutes(movie.Duration + 15); // +15 phút dọn dẹp
+
+            // Kiểm tra phòng chiếu có bị trùng lịch không
+            var conflict = await CheckRoomConflictAsync(showtime.RoomId, showtime.StartTime, showtime.EndTime, excludeId: null);
+            if (conflict != null)
             {
-                TempData["Error"] = "Phòng chiếu đã có lịch chiếu trong khung giờ này!";
-                await PopulateDropdowns(); // hiển thị danh sách phim và phòng  
+                var rooms = await _unitOfWork.Rooms.GetAllAsync();
+                var conflictRoom = rooms.FirstOrDefault(r => r.Id == showtime.RoomId);
+                var conflictMovies = await _unitOfWork.Movies.GetAllAsync();
+                var conflictMovie = conflictMovies.FirstOrDefault(m => m.Id == conflict.MovieId);
+
+                TempData["Error"] = $"⚠️ Phòng \"{conflictRoom?.Name ?? ""}\" đã có lịch chiếu phim " +
+                    $"\"{conflictMovie?.Title ?? ""}\" từ {conflict.StartTime:HH:mm} đến {conflict.EndTime:HH:mm} " +
+                    $"ngày {conflict.StartTime:dd/MM/yyyy}. Vui lòng chọn giờ chiếu khác!";
+                await PopulateDropdowns();
                 return View(showtime);
             }
 
@@ -108,7 +118,7 @@ public class ShowtimesController : Controller
             await _unitOfWork.Showtimes.AddAsync(showtime);
             await _unitOfWork.SaveChangesAsync();
 
-            TempData["Success"] = "Đã tạo lịch chiếu thành công!";
+            TempData["Success"] = $"Đã tạo lịch chiếu phim \"{movie.Title}\" lúc {showtime.StartTime:HH:mm dd/MM/yyyy} thành công!";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -157,17 +167,36 @@ public class ShowtimesController : Controller
                 return View(showtime);
             }
 
-            // Recalculate EndTime
+            // Tính lại EndTime theo thời lượng phim mới
             var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
-            if (movie != null)
+            if (movie == null)
             {
-                showtime.EndTime = showtime.StartTime.AddMinutes(movie.Duration + 15);
+                TempData["Error"] = "Không tìm thấy phim đã chọn!";
+                await PopulateDropdowns();
+                return View(showtime);
+            }
+            showtime.EndTime = showtime.StartTime.AddMinutes(movie.Duration + 15);
+
+            // Kiểm tra trùng lịch phòng chiếu (loại trừ chính lịch đang sửa)
+            var conflict = await CheckRoomConflictAsync(showtime.RoomId, showtime.StartTime, showtime.EndTime, excludeId: showtime.Id);
+            if (conflict != null)
+            {
+                var rooms = await _unitOfWork.Rooms.GetAllAsync();
+                var conflictRoom = rooms.FirstOrDefault(r => r.Id == showtime.RoomId);
+                var conflictMovies = await _unitOfWork.Movies.GetAllAsync();
+                var conflictMovie = conflictMovies.FirstOrDefault(m => m.Id == conflict.MovieId);
+
+                TempData["Error"] = $"⚠️ Phòng \"{conflictRoom?.Name ?? ""}\" đã có lịch chiếu phim " +
+                    $"\"{conflictMovie?.Title ?? ""}\" từ {conflict.StartTime:HH:mm} đến {conflict.EndTime:HH:mm} " +
+                    $"ngày {conflict.StartTime:dd/MM/yyyy}. Vui lòng chọn giờ chiếu khác!";
+                await PopulateDropdowns();
+                return View(showtime);
             }
 
             _unitOfWork.Showtimes.Update(showtime);
             await _unitOfWork.SaveChangesAsync();
 
-            TempData["Success"] = "Đã cập nhật lịch chiếu thành công!";
+            TempData["Success"] = $"Đã cập nhật lịch chiếu phim \"{movie.Title}\" thành công!";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -241,16 +270,21 @@ public class ShowtimesController : Controller
         return seats.Count();
     }
 
-    private async Task<Showtime?> CheckRoomConflictAsync(int roomId, DateTime startTime, DateTime endTime)
+    /// <summary>
+    /// Kiểm tra xem phòng có bị trùng lịch chiếu trong khoảng thời gian không.
+    /// excludeId: bỏ qua lịch chiếu có id này (dùng khi Edit để không conflict với chính mình)
+    /// </summary>
+    private async Task<Showtime?> CheckRoomConflictAsync(int roomId, DateTime startTime, DateTime endTime, int? excludeId)
     {
         var showtimes = await _unitOfWork.Showtimes.GetAllAsync();
         
         return showtimes.FirstOrDefault(s => 
             s.RoomId == roomId &&
             s.IsActive &&
-            ((s.StartTime >= startTime && s.StartTime < endTime) ||
-             (s.EndTime > startTime && s.EndTime <= endTime) ||
-             (s.StartTime <= startTime && s.EndTime >= endTime))
+            (excludeId == null || s.Id != excludeId) && // loại trừ chính lịch đang chỉnh sửa
+            ((s.StartTime >= startTime && s.StartTime < endTime) ||  // lịch khác bắt đầu trong khoảng giờ mới
+             (s.EndTime > startTime && s.EndTime <= endTime) ||       // lịch khác kết thúc trong khoảng giờ mới
+             (s.StartTime <= startTime && s.EndTime >= endTime))      // lịch khác bao trùm khoảng giờ mới
         );
     }
 
