@@ -192,6 +192,72 @@ public class BookingController : Controller
         return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
     }
 
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Checkout(CreateBookingDto dto, bool useTestPayment = false)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            TempData["Error"] = "Vui lòng đăng nhập!";
+            return RedirectToAction("Login", "Account");
+        }
+
+        var showtime = await _unitOfWork.Showtimes.GetByIdAsync(dto.ShowtimeId);
+        if (showtime == null) return RedirectToAction("Index", "Movies");
+
+        var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+        var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+        if (room != null) room.Cinema = await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId);
+
+        var selectedSeats = new List<BE.Core.Entities.CinemaInfrastructure.Seat>();
+        foreach(var seatId in dto.SeatIds)
+        {
+            var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
+            if (seat != null)
+            {
+                seat.SeatType = await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId);
+                selectedSeats.Add(seat);
+            }
+        }
+
+        var selectedFoods = new List<(BE.Core.Entities.Concessions.Food food, int quantity)>();
+        if (dto.Foods != null)
+        {
+            foreach(var f in dto.Foods)
+            {
+                var food = await _unitOfWork.Foods.GetByIdAsync(f.FoodId);
+                if (food != null) selectedFoods.Add((food, f.Quantity));
+            }
+        }
+
+        decimal subtotal = 0;
+        foreach (var seat in selectedSeats)
+        {
+            subtotal += showtime.BasePrice * (seat.SeatType?.SurchargeRatio ?? 1.0m);
+        }
+        foreach (var item in selectedFoods)
+        {
+            subtotal += item.food.Price * item.quantity;
+        }
+
+        var vouchers = (await _unitOfWork.Vouchers.GetAllAsync())
+            .Where(v => v.IsActive && v.StartDate <= DateTime.Now && v.ExpiryDate >= DateTime.Now && (v.UsageLimit == null || v.UsedCount < v.UsageLimit) && (string.IsNullOrEmpty(v.UserId) || v.UserId == userId) && v.MinOrderAmount <= subtotal)
+            .ToList();
+
+        ViewBag.Showtime = showtime;
+        ViewBag.Movie = movie;
+        ViewBag.Room = room;
+        ViewBag.SelectedSeats = selectedSeats;
+        ViewBag.SelectedFoods = selectedFoods;
+        ViewBag.Subtotal = subtotal;
+        ViewBag.Vouchers = vouchers;
+        ViewBag.UseTestPayment = useTestPayment;
+
+        return View(dto);
+    }
+
     [Authorize]
     // GET: /Booking/Details/5
     public async Task<IActionResult> Details(int id) // hiển thị chi tiết đơn đặt vé

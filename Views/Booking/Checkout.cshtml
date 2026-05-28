@@ -1,0 +1,178 @@
+@model BE.Application.DTOs.CreateBookingDto
+@using BE.Core.Entities.Movies
+@using BE.Core.Entities.CinemaInfrastructure
+@using BE.Core.Entities.Concessions
+@using BE.Core.Entities.Business
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Thanh toán & Voucher";
+    var showtime = ViewBag.Showtime as Showtime;
+    var movie = ViewBag.Movie as Movie;
+    var room = ViewBag.Room as Room;
+    var selectedSeats = ViewBag.SelectedSeats as List<Seat> ?? new List<Seat>();
+    var selectedFoods = ViewBag.SelectedFoods as List<(Food food, int quantity)> ?? new List<(Food food, int quantity)>();
+    decimal subtotal = ViewBag.Subtotal ?? 0;
+    var vouchers = ViewBag.Vouchers as List<Voucher> ?? new List<Voucher>();
+    bool useTestPayment = ViewBag.UseTestPayment ?? false;
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Thông tin đơn hàng -->
+        <div class="col-lg-7 mb-4">
+            <div class="card bg-dark text-white shadow-sm mb-4 border-secondary">
+                <div class="card-header bg-black border-secondary">
+                    <h5 class="mb-0 text-cinema-red fw-bold">Chi tiết vé phim</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="@(movie?.PosterUrl ?? "/images/placeholder.jpg")" alt="@movie?.Title" class="rounded" style="width: 80px; height: 120px; object-fit: cover;">
+                        <div class="ms-3">
+                            <h4 class="mb-1">@movie?.Title</h4>
+                            <p class="mb-0 text-muted"><i class="bi bi-calendar"></i> @showtime?.StartTime.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="mb-0 text-muted"><i class="bi bi-geo-alt"></i> @room?.Cinema?.Name - @room?.Name</p>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-secondary">
+                    
+                    <h6 class="text-popcorn-gold">Ghế đã chọn:</h6>
+                    <div class="mb-3">
+                        @foreach (var seat in selectedSeats)
+                        {
+                            <span class="badge bg-secondary me-1 fs-6">@seat.Row@seat.Number (@seat.SeatType?.Name)</span>
+                        }
+                    </div>
+
+                    @if (selectedFoods.Any())
+                    {
+                        <hr class="border-secondary">
+                        <h6 class="text-popcorn-gold">Đồ ăn & Nước uống:</h6>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var item in selectedFoods)
+                            {
+                                <li>- @item.food.Name (x @item.quantity)</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Thanh toán & Voucher -->
+        <div class="col-lg-5 mb-4">
+            <div class="card bg-dark text-white shadow-sm border-secondary sticky-top" style="top: 20px;">
+                <div class="card-header bg-black border-secondary">
+                    <h5 class="mb-0 text-popcorn-gold fw-bold">Thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" asp-controller="Booking" method="post" id="checkoutForm">
+                        @Html.AntiForgeryToken()
+                        <!-- Hidden inputs để chuyển DTO qua Create -->
+                        <input type="hidden" name="ShowtimeId" value="@Model.ShowtimeId" />
+                        <input type="hidden" name="useTestPayment" value="@(useTestPayment ? "true" : "false")" />
+                        <input type="hidden" name="Notes" value="@Model.Notes" />
+                        
+                        @for (int i = 0; i < Model.SeatIds.Count; i++)
+                        {
+                            <input type="hidden" name="SeatIds[@i]" value="@Model.SeatIds[i]" />
+                        }
+                        
+                        @if (Model.Foods != null)
+                        {
+                            for (int i = 0; i < Model.Foods.Count; i++)
+                            {
+                                <input type="hidden" name="Foods[@i].FoodId" value="@Model.Foods[i].FoodId" />
+                                <input type="hidden" name="Foods[@i].Quantity" value="@Model.Foods[i].Quantity" />
+                            }
+                        }
+
+                        <input type="hidden" id="selectedVoucherId" name="VoucherId" value="" />
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính:</span>
+                            <span id="subtotalAmount" data-value="@subtotal">@subtotal.ToString("N0") ₫</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 text-success">
+                            <span>Giảm giá:</span>
+                            <span id="discountAmount">- 0 ₫</span>
+                        </div>
+                        
+                        <hr class="border-secondary">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Tổng cộng:</h5>
+                            <h3 class="mb-0 text-cinema-red fw-bold" id="finalTotal">@subtotal.ToString("N0") ₫</h3>
+                        </div>
+
+                        <!-- Chọn Voucher -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted"><i class="bi bi-ticket-perforated"></i> Áp dụng Voucher (nếu có)</label>
+                            <select class="form-select bg-black text-white border-secondary" id="voucherSelect" onchange="applyVoucher()">
+                                <option value="">-- Không sử dụng Voucher --</option>
+                                @foreach (var v in vouchers)
+                                {
+                                    <option value="@v.Id" data-discount="@v.DiscountPercent" data-max="@v.MaxAmount">
+                                        @v.Code - Giảm @v.DiscountPercent.ToString("G0")% (Tối đa @v.MaxAmount.ToString("N0") ₫)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (useTestPayment)
+                        {
+                            <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold py-2">
+                                <i class="bi bi-lightning-charge me-2"></i> Xác nhận & Thanh toán Test
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-cinema-red w-100 rounded-pill fw-bold py-2">
+                                <i class="bi bi-credit-card me-2"></i> Xác nhận & Thanh toán VNPay
+                            </button>
+                        }
+                        
+                        <a href="javascript:history.back()" class="btn btn-outline-light w-100 rounded-pill py-2 mt-2">
+                            <i class="bi bi-arrow-left"></i> Quay lại chọn ghế
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function applyVoucher() {
+            const select = document.getElementById('voucherSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            const subtotal = parseFloat(document.getElementById('subtotalAmount').getAttribute('data-value'));
+            
+            let discount = 0;
+            const voucherId = select.value;
+            
+            if (voucherId) {
+                const discountPercent = parseFloat(selectedOption.getAttribute('data-discount'));
+                const maxAmount = parseFloat(selectedOption.getAttribute('data-max'));
+                
+                discount = subtotal * (discountPercent / 100.0);
+                if (maxAmount > 0 && discount > maxAmount) {
+                    discount = maxAmount;
+                }
+            }
+            
+            let finalTotal = subtotal - discount;
+            if (finalTotal < 0) finalTotal = 0;
+            
+            // Format currency
+            const formatVND = (amount) => {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', '').trim() + ' ₫';
+            };
+            
+            document.getElementById('discountAmount').innerText = '- ' + formatVND(discount);
+            document.getElementById('finalTotal').innerText = formatVND(finalTotal);
+            document.getElementById('selectedVoucherId').value = voucherId;
+        }
+    </script>
+}
