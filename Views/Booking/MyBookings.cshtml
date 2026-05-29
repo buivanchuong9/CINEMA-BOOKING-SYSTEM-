@@ -88,7 +88,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Price & Actions -->
+                                 <!-- Price & Actions -->
                                 <div class="col-md-4 text-md-end">
                                     <div class="mb-3">
                                         <small class="text-muted d-block">Tổng tiền</small>
@@ -96,18 +96,67 @@
                                             @booking.TotalAmount.ToString("N0") ₫
                                         </h3>
                                     </div>
+
+                                    @{
+                                        var expiryTime = booking.BookingDate.AddMinutes(10);
+                                        var secondsRemaining = (expiryTime - DateTime.Now).TotalSeconds;
+                                        bool stillPending = booking.Status == BE.Core.Enums.BookingStatus.Pending && secondsRemaining > 0;
+                                        bool expiredPending = booking.Status == BE.Core.Enums.BookingStatus.Pending && secondsRemaining <= 0;
+                                    }
+
+                                    @if (stillPending)
+                                    {
+                                        <div class="pending-timer-badge mb-3 text-center py-2 px-3 rounded-3">
+                                            <small class="text-muted d-block mb-1" style="font-size:0.72rem; letter-spacing:0.05em; text-transform:uppercase;">Giữ ghế còn</small>
+                                            <span class="text-warning fw-bold font-monospace pending-countdown"
+                                                  data-seconds="@((int)secondsRemaining)">
+                                                @{
+                                                    int m = (int)secondsRemaining / 60;
+                                                    int s = (int)secondsRemaining % 60;
+                                                }
+                                                @m.ToString("D2"):@s.ToString("D2")
+                                            </span>
+                                        </div>
+                                    }
+
                                     <div class="d-grid gap-2">
-                                        <a href="/Booking/Details/@booking.Id" class="btn btn-outline-light btn-sm">
-                                            <i class="bi bi-eye me-1"></i>
-                                            Xem chi tiết
-                                        </a>
                                         @if (booking.Status == BE.Core.Enums.BookingStatus.Paid)
                                         {
-                                            <button class="btn btn-outline-danger btn-sm" 
+                                            <a href="/Booking/Details/@booking.Id" class="btn btn-outline-light btn-sm">
+                                                <i class="bi bi-eye me-1"></i>Xem hóa đơn
+                                            </a>
+                                            <button class="btn btn-outline-danger btn-sm"
                                                     onclick="confirmCancel(@booking.Id)">
-                                                <i class="bi bi-x-circle me-1"></i>
-                                                Hủy vé
+                                                <i class="bi bi-x-circle me-1"></i>Hủy vé
                                             </button>
+                                        }
+                                        else if (stillPending)
+                                        {
+                                            <a href="/Payment/VietQRPayment?bookingId=@booking.Id"
+                                               class="btn btn-success btn-sm fw-bold">
+                                                <i class="bi bi-qr-code-scan me-1"></i>Tiếp tục thanh toán
+                                            </a>
+                                            <a href="/Booking/CancelPayment?id=@booking.Id"
+                                               class="btn btn-outline-warning btn-sm">
+                                                <i class="bi bi-x-circle me-1"></i>Hủy giao dịch
+                                            </a>
+                                        }
+                                        else if (expiredPending)
+                                        {
+                                            <span class="badge bg-secondary py-2 px-3 mb-1">
+                                                <i class="bi bi-clock-history me-1"></i>Hết thời gian giữ ghế
+                                            </span>
+                                            <a href="/Booking/CancelPayment?id=@booking.Id"
+                                               class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash me-1"></i>Xóa đơn hủy
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <!-- Cancelled -->
+                                            <span class="badge bg-secondary py-2 px-3">
+                                                <i class="bi bi-slash-circle me-1"></i>Đã hủy
+                                            </span>
                                         }
                                     </div>
                                 </div>
@@ -149,6 +198,30 @@
 
 @section Scripts {
     <script>
+        // Live countdown for Pending bookings
+        document.querySelectorAll('.pending-countdown').forEach(function(el) {
+            var secs = parseInt(el.dataset.seconds, 10);
+            if (isNaN(secs) || secs <= 0) return;
+
+            var interval = setInterval(function() {
+                secs--;
+                if (secs <= 0) {
+                    clearInterval(interval);
+                    el.textContent = '00:00';
+                    el.classList.replace('text-warning', 'text-danger');
+                    // Show a small expired indicator
+                    var badge = el.closest('.pending-timer-badge');
+                    if (badge) {
+                        badge.innerHTML = '<small class="text-danger"><i class="bi bi-clock-history me-1"></i>Đã hết thời gian giữ ghế</small>';
+                    }
+                    return;
+                }
+                var m = Math.floor(secs / 60);
+                var s = secs % 60;
+                el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            }, 1000);
+        });
+
         function confirmCancel(bookingId) {
             Swal.fire({
                 title: 'Xác nhận hủy vé?',
@@ -163,17 +236,11 @@
                 color: '#f8fafc'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Submit form to cancel booking
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = `/Booking/Cancel/${bookingId}`;
-                    
-                    // Add CSRF token
                     const csrf = document.querySelector('input[name="__RequestVerificationToken"]');
-                    if (csrf) {
-                        form.appendChild(csrf.cloneNode(true));
-                    }
-                    
+                    if (csrf) form.appendChild(csrf.cloneNode(true));
                     document.body.appendChild(form);
                     form.submit();
                 }
@@ -215,6 +282,11 @@
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pending-timer-badge {
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px dashed rgba(245, 158, 11, 0.35);
     }
 </style>
 

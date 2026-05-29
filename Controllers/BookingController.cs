@@ -326,17 +326,87 @@ public class BookingController : Controller
         return View(PaginatedList<Booking>.Create(sortedBookings, pageNumber, pageSize));
     }
 
+    // GET: /Booking/CancelPayment?id=5
+    [Authorize]
+    public async Task<IActionResult> CancelPayment(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Account");
+
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+        if (booking == null || booking.UserId != userId)
+        {
+            TempData["Error"] = "Không tìm thấy đơn đặt vé!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.Status == BE.Core.Enums.BookingStatus.Paid)
+        {
+            TempData["Error"] = "Không thể hủy vé đã thanh toán từ trang này!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.Status == BE.Core.Enums.BookingStatus.Cancelled)
+        {
+            TempData["Info"] = "Đơn hàng này đã được hủy trước đó.";
+            return RedirectToAction("MyBookings");
+        }
+
+        // Load thêm thông tin để hiển thị trang confirm
+        BE.Core.Entities.Movies.Showtime? showtime = null;
+        BE.Core.Entities.Movies.Movie? movie = null;
+        BE.Core.Entities.CinemaInfrastructure.Room? room = null;
+
+        if (booking.ShowtimeId.HasValue)
+        {
+            showtime = await _unitOfWork.Showtimes.GetByIdAsync(booking.ShowtimeId.Value);
+            if (showtime != null)
+            {
+                movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+                room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+                if (room != null)
+                    room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId))!;
+            }
+        }
+
+        // Tính thời gian còn lại
+        var expiryTime = booking.BookingDate.AddMinutes(10);
+        var timeLeft = expiryTime - DateTime.Now;
+        bool isExpired = timeLeft.TotalSeconds <= 0;
+
+        ViewBag.Booking = booking;
+        ViewBag.Showtime = showtime;
+        ViewBag.Movie = movie;
+        ViewBag.Room = room;
+        ViewBag.ExpiryTime = expiryTime;
+        ViewBag.SecondsLeft = isExpired ? 0 : (int)timeLeft.TotalSeconds;
+        ViewBag.IsExpired = isExpired;
+
+        return View();
+    }
+
     // POST: /Booking/Cancel/5
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+
+        // Chỉ cho phép hủy nếu là owner
+        if (booking != null && !string.IsNullOrEmpty(userId) && booking.UserId != userId)
+        {
+            TempData["Error"] = "Bạn không có quyền hủy đơn hàng này!";
+            return RedirectToAction("MyBookings");
+        }
+
         var success = await _bookingService.CancelBookingAsync(id);
         
         if (success)
         {
-            TempData["Success"] = "Đã hủy đơn đặt vé thành công!";
+            TempData["Success"] = "Đã hủy đơn đặt vé thành công! Ghế đã được giải phóng.";
         }
         else
         {

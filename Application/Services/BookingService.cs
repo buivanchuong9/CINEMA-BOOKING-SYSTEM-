@@ -306,7 +306,7 @@ public class BookingService : IBookingService
 
         booking.Status = BookingStatus.Paid; // Đặt vé thành công
         booking.TransactionId = transactionId; // ID giao dịch
-        booking.PaymentMethod = PaymentMethod.VNPAY; // Phương thức thanh toán
+        booking.PaymentMethod = PaymentMethod.VietQR; // Phương thức thanh toán
         booking.UpdatedAt = DateTime.Now; // Thời gian cập nhật
 
         _unitOfWork.Bookings.Update(booking);
