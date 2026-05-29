@@ -1,0 +1,217 @@
+@using BE.Core.Enums
+@model BE.Core.Entities.Bookings.Booking
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"Chi Tiết Đơn Vé #{Model.Id}";
+    var showtime = ViewBag.Showtime as BE.Core.Entities.Movies.Showtime;
+    var foodsList = ViewBag.FoodsList as List<BE.Core.Entities.Concessions.BookingFood> ?? new List<BE.Core.Entities.Concessions.BookingFood>();
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-outline-light rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại Danh sách đơn vé
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Booking details -->
+        <div class="col-lg-8">
+            <div class="card bg-dark text-white border-secondary mb-4 shadow">
+                <div class="card-header py-3 bg-black border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-popcorn-gold"><i class="bi bi-receipt me-2"></i>Thông Tin Giao Dịch</h5>
+                    <span class="badge @(Model.Status == BookingStatus.Paid ? "bg-success" : (Model.Status == BookingStatus.Pending ? "bg-warning text-dark" : "bg-danger"))">
+                        @(Model.Status == BookingStatus.Paid ? "Đã Thanh Toán" : (Model.Status == BookingStatus.Pending ? "Chờ Thanh Toán" : "Đã Hủy"))
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Mã Đơn Vé</div>
+                        <div class="col-sm-8 fw-bold">#@Model.Id</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Thời Gian Tạo</div>
+                        <div class="col-sm-8">@Model.BookingDate.ToString("dd/MM/yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Phương Thức Thanh Toán</div>
+                        <div class="col-sm-8">@(Model.PaymentMethod?.ToString() ?? "Chưa thanh toán")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Mã Giao Dịch</div>
+                        <div class="col-sm-8 text-break">@Model.TransactionId</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Ghi Chú Đơn Vé</div>
+                        <div class="col-sm-8">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat & Showtime Details -->
+            <div class="card bg-dark text-white border-secondary mb-4 shadow">
+                <div class="card-header py-3 bg-black border-secondary">
+                    <h5 class="mb-0 text-popcorn-gold"><i class="bi bi-film me-2"></i>Chi Tiết Suất Chiếu & Vé</h5>
+                </div>
+                <div class="card-body">
+                    @if (showtime != null)
+                    {
+                        <div class="row g-3 align-items-center mb-4">
+                            <div class="col-md-3">
+                                <img src="@showtime.Movie?.PosterUrl" alt="" class="img-fluid rounded border border-secondary shadow" style="max-height: 150px; object-fit: cover;">
+                            </div>
+                            <div class="col-md-9">
+                                <h4 class="text-white fw-bold mb-1">@showtime.Movie?.Title</h4>
+                                <p class="text-muted mb-2">@showtime.Movie?.Duration Phút | @showtime.Movie?.Director</p>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <small class="text-muted d-block">Rạp & Phòng</small>
+                                        <strong>@showtime.Room?.Cinema?.Name - @showtime.Room?.Name</strong>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <small class="text-muted d-block">Suất Chiếu</small>
+                                        <strong>@showtime.StartTime.ToString("dd/MM/yyyy HH:mm")</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-secondary">
+
+                        <div class="row">
+                            <div class="col-sm-4 text-muted">Ghế Đã Đặt</div>
+                            <div class="col-sm-8">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach (var seatLabel in ViewBag.Seats.ToString().Split(", ", StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <span class="badge bg-cinema-red px-3 py-2 fs-6">@seatLabel</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">Thông tin lịch chiếu không có sẵn hoặc đã bị xóa.</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Foods list -->
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-header py-3 bg-black border-secondary">
+                    <h5 class="mb-0 text-popcorn-gold"><i class="bi bi-cup-straw me-2"></i>Đồ Ăn & Thức Uống Đã Mua</h5>
+                </div>
+                <div class="card-body">
+                    @if (!foodsList.Any())
+                    {
+                        <p class="text-muted mb-0 italic">Không mua đồ ăn kèm.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Món ăn</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var bf in foodsList)
+                                    {
+                                        <tr>
+                                            <td>@bf.Food?.Name</td>
+                                            <td class="text-center">@bf.Quantity</td>
+                                            <td class="text-end">@bf.UnitPrice.ToString("N0") ₫</td>
+                                            <td class="text-end fw-bold">@((bf.UnitPrice * bf.Quantity).ToString("N0")) ₫</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Money Column -->
+        <div class="col-lg-4">
+            <!-- Customer Card -->
+            <div class="card bg-dark text-white border-secondary mb-4 shadow">
+                <div class="card-header py-3 bg-black border-secondary">
+                    <h5 class="mb-0 text-popcorn-gold"><i class="bi bi-person-circle me-2"></i>Thông Tin Khách Hàng</h5>
+                </div>
+                <div class="card-body">
+                    <h5 class="fw-bold mb-1 text-white">@Model.User?.FullName</h5>
+                    <p class="text-muted mb-3">@Model.User?.Email</p>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-6 text-muted">Số điện thoại:</div>
+                        <div class="col-6 text-end">@Model.User?.PhoneNumber</div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6 text-muted">Hạng thành viên:</div>
+                        <div class="col-6 text-end"><span class="badge bg-info text-dark">@Model.User?.MembershipLevel</span></div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6 text-muted">Điểm tích lũy:</div>
+                        <div class="col-6 text-end text-popcorn-gold fw-bold">@Model.User?.Points</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price & Payment Actions Card -->
+            <div class="card bg-dark text-white border-secondary shadow">
+                <div class="card-header py-3 bg-black border-secondary">
+                    <h5 class="mb-0 text-popcorn-gold"><i class="bi bi-wallet2 me-2"></i>Thanh Toán & Hóa Đơn</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tổng Tiền Vé & Đồ ăn:</span>
+                        <span>@((Model.TotalAmount + Model.DiscountAmount).ToString("N0")) ₫</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Giảm giá (Voucher):</span>
+                        <span class="text-success">- @Model.DiscountAmount.ToString("N0") ₫</span>
+                    </div>
+                    @if (Model.Voucher != null)
+                    {
+                        <div class="mb-3 text-end"><small class="badge bg-outline-success">Áp dụng voucher: @Model.Voucher.Code</small></div>
+                    }
+                    <hr class="border-secondary">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fw-bold fs-5">Khách Cần Trả:</span>
+                        <span class="fw-bold fs-4 text-cinema-red">@Model.TotalAmount.ToString("N0") ₫</span>
+                    </div>
+
+                    @if (Model.Status == BookingStatus.Pending)
+                    {
+                        <form asp-action="ConfirmPayment" asp-route-id="@Model.Id" method="post" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success w-100 rounded-pill py-2">
+                                <i class="bi bi-check-circle me-1"></i> Xác nhận Đã Thu Tiền Mặt
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.Status == BookingStatus.Paid || Model.Status == BookingStatus.Pending)
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn vé này? Ghế sẽ được trả lại trạng thái trống.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger w-100 rounded-pill py-2">
+                                <i class="bi bi-x-circle me-1"></i> Hủy Đơn Hàng & Xả Ghế
+                            </button>
+                        </form>
+                    }
+                    
+                    <a href="/Staff/Booking/PrintTicket/@Model.Id" target="_blank" class="btn btn-outline-info w-100 rounded-pill py-2 mt-2">
+                        <i class="bi bi-printer me-1"></i> In Vé Phim (Bản In)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

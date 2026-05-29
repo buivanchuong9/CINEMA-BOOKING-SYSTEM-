@@ -102,6 +102,9 @@
                 <a href="/Admin/Showtimes" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Showtimes" ? "active" : "")">
                     <i class="bi bi-calendar-event me-2"></i> Lịch Chiếu
                 </a>
+                <a href="/Admin/Bookings" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" ? "active" : "")">
+                    <i class="bi bi-ticket-detailed me-2"></i> Quản Lý Vé Đã Đặt
+                </a>
                 <a href="/Admin/Cinemas" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cinemas" ? "active" : "")">
                     <i class="bi bi-building me-2"></i> Rạp Chiếu
                 </a>

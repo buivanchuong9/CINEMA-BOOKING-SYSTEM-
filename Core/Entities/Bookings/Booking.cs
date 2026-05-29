@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using BE.Core.Enums;
 using BE.Core.Entities.Business;
+using BE.Core.Entities.Movies;
 
 namespace BE.Core.Entities.Bookings;
 
@@ -87,6 +88,9 @@ public class Booking
     
     [ForeignKey(nameof(VoucherId))] // khóa ngoại của VoucherId
     public virtual Voucher? Voucher { get; set; }
+    
+    [ForeignKey(nameof(ShowtimeId))]
+    public virtual Showtime? Showtime { get; set; }
     
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>(); // danh sách chi tiết đơn hàng
 }
