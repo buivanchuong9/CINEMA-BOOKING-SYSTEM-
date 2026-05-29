@@ -17,20 +17,20 @@ public class BookingController : Controller
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBookingService _bookingService;
     private readonly ILogger<BookingController> _logger;
-    private readonly VNPayHelper _vnPayHelper;
+    private readonly VietQRHelper _vietQRHelper;
     private readonly AppDbContext _context;
 
     public BookingController(
         IUnitOfWork unitOfWork, 
         IBookingService bookingService, 
         ILogger<BookingController> logger,
-        VNPayHelper vnPayHelper,
+        VietQRHelper vietQRHelper,
         AppDbContext context)
     {
         _unitOfWork = unitOfWork;
         _bookingService = bookingService;
         _logger = logger;
-        _vnPayHelper = vnPayHelper;
+        _vietQRHelper = vietQRHelper;
         _context = context;
     }
 
@@ -125,9 +125,9 @@ public class BookingController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateBookingDto dto, bool useTestPayment = false)
+    public async Task<IActionResult> Create(CreateBookingDto dto)
     {
-        _logger.LogInformation($"Create booking called with ShowtimeId: {dto.ShowtimeId}, SeatIds count: {dto.SeatIds?.Count ?? 0}, UseTestPayment: {useTestPayment}");
+        _logger.LogInformation($"Create booking called with ShowtimeId: {dto.ShowtimeId}, SeatIds count: {dto.SeatIds?.Count ?? 0}");
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // lấy Id của người dùng đang đăng nhập.
         if (string.IsNullOrEmpty(userId))
@@ -141,7 +141,6 @@ public class BookingController : Controller
 
         if (result.Success) // nếu tạo booking thành công
         {
-            // Tạo booking thành công -> Redirect đến VNPay
             try
             {
                 if (!result.BookingId.HasValue) // nếu không có bookingId thì trả về lỗi
@@ -150,39 +149,12 @@ public class BookingController : Controller
                     return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
                 }
 
-                var booking = await _unitOfWork.Bookings.GetByIdAsync(result.BookingId.Value); // lấy booking
-                if (booking == null) // nếu không tìm thấy booking
-                {
-                    TempData["Error"] = "Không tìm thấy đơn đặt vé!";
-                    return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
-                }
-
-                // dev Vượt qua VNPay nếu useTestPayment = true
-                if (useTestPayment)
-                {
-                    _logger.LogInformation($"Using TEST PAYMENT for Booking ID={booking.Id}");
-                    return RedirectToAction("TestPayment", "Payment", new { bookingId = booking.Id });
-                }
-
-                // Lấy IP của client
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-                
-                // Tạo URL thanh toán VNPay
-                var paymentUrl = _vnPayHelper.CreatePaymentUrl(
-                    orderId: booking.Id.ToString(),
-                    amount: booking.TotalAmount,
-                    orderInfo: $"Thanh toan ve xem phim - Ma don: {booking.Id}",
-                    ipAddress: ipAddress
-                );
-
-                _logger.LogInformation($"Redirecting to VNPay: {paymentUrl}");
-                
-                // Redirect to VNPay 
-                return Redirect(paymentUrl);
+                _logger.LogInformation($"Booking ID={result.BookingId.Value} created. Redirecting to VietQR payment.");
+                return RedirectToAction("VietQRPayment", "Payment", new { bookingId = result.BookingId.Value });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating VNPay payment URL");
+                _logger.LogError(ex, "Error redirecting to VietQR payment page");
                 TempData["Error"] = "Có lỗi khi chuyển đến trang thanh toán!";
                 return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
             }

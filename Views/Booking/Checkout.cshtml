@@ -70,7 +70,6 @@
                         @Html.AntiForgeryToken()
                         <!-- Hidden inputs để chuyển DTO qua Create -->
                         <input type="hidden" name="ShowtimeId" value="@Model.ShowtimeId" />
-                        <input type="hidden" name="useTestPayment" value="@(useTestPayment ? "true" : "false")" />
                         <input type="hidden" name="Notes" value="@Model.Notes" />
                         
                         @for (int i = 0; i < Model.SeatIds.Count; i++)
@@ -119,18 +118,9 @@
                             </select>
                         </div>
 
-                        @if (useTestPayment)
-                        {
-                            <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold py-2">
-                                <i class="bi bi-lightning-charge me-2"></i> Xác nhận & Thanh toán Test
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-cinema-red w-100 rounded-pill fw-bold py-2">
-                                <i class="bi bi-credit-card me-2"></i> Xác nhận & Thanh toán VNPay
-                            </button>
-                        }
+                        <button type="submit" class="btn btn-cinema-red w-100 rounded-pill fw-bold py-2">
+                            <i class="bi bi-qr-code-scan me-2"></i> Xác nhận & Thanh toán VietQR
+                        </button>
                         
                         <a href="javascript:history.back()" class="btn btn-outline-light w-100 rounded-pill py-2 mt-2">
                             <i class="bi bi-arrow-left"></i> Quay lại chọn ghế
