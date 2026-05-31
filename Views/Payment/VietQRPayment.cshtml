@@ -304,7 +304,35 @@
                         // Restore original status message with slight message
                         setTimeout(function() {
                             statusBox.innerHTML = originalContent;
-                            alert("Hệ thống chưa ghi nhận biến động số dư cho nội dung '" + '@ViewBag.TransferContent' + "'. Vui lòng đợi hoặc thử quét lại!");
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'warning',
+                                title: "Chưa ghi nhận giao dịch cho nội dung <strong>'" + '@ViewBag.TransferContent' + "'</strong>.<br>Vui lòng đợi hoặc thử lại!",
+                                html: "Chưa ghi nhận giao dịch cho nội dung <strong style='color:#ffc107'>'" + '@ViewBag.TransferContent' + "'</strong>.<br><span style='font-size:0.88rem;color:#ccc'>Vui lòng đợi hoặc thử quét lại!</span>",
+                                showConfirmButton: true,
+                                confirmButtonText: '<i class="bi bi-arrow-clockwise me-1"></i> Thử lại ngay',
+                                confirmButtonColor: '#e11d48',
+                                showCancelButton: true,
+                                cancelButtonText: 'Đóng',
+                                cancelButtonColor: '#6c757d',
+                                timer: 15000,
+                                timerProgressBar: true,
+                                background: 'linear-gradient(135deg, #1a1200 0%, #332200 100%)',
+                                color: '#ffffff',
+                                customClass: {
+                                    popup: 'cinemax-toast-popup',
+                                    timerProgressBar: 'cinemax-toast-progress'
+                                },
+                                didOpen: (popup) => {
+                                    popup.addEventListener('mouseenter', Swal.stopTimer);
+                                    popup.addEventListener('mouseleave', Swal.resumeTimer);
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    checkStatusManually();
+                                }
+                            });
                         }, 1000);
                     }
                 })

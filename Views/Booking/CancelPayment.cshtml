@@ -96,11 +96,11 @@
                     </div>
                 }
                 <div class="col-md-@(isExpired ? "12" : "6")">
-                    <form asp-action="Cancel" asp-controller="Booking" method="post">
+                    <form id="cancelOrderForm" asp-action="Cancel" asp-controller="Booking" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@booking?.Id" />
-                        <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-6"
-                                onclick="return confirm('Xác nhận hủy đơn hàng #@booking?.Id.ToString("D6")?\nGhế sẽ được giải phóng ngay.')">
+                        <button type="button" class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-6"
+                                onclick="confirmCancelOrder('@booking?.Id.ToString("D6")', @(isExpired ? "true" : "false"))">
                             <i class="bi bi-x-circle me-2"></i>
                             @(isExpired ? "Xác Nhận Hủy Đơn" : "Hủy Giao Dịch Ngay")
                         </button>
@@ -130,7 +130,6 @@
                     el.classList.replace('text-warning', 'text-danger');
                 }
                 clearInterval(timer);
-                // Reload để hiển thị "đã hết thời gian"
                 setTimeout(() => location.reload(), 500);
                 return;
             }
@@ -143,6 +142,35 @@
         if (el) {
             tick();
             var timer = setInterval(tick, 1000);
+        }
+
+        function confirmCancelOrder(orderId, isExpired) {
+            var title = isExpired ? 'Xác nhận hủy đơn hàng' : 'Hủy giao dịch ngay?';
+            var html = isExpired
+                ? 'Thời gian giữ ghế đã hết. Xác nhận hủy đơn <strong style="color:#fbbf24">#' + orderId + '</strong>?<br><span style="font-size:0.85rem;color:#aaa">Ghế sẽ được giải phóng ngay lập tức.</span>'
+                : 'Bạn có chắc chắn muốn <strong style="color:#ef4444">hủy</strong> đơn hàng <strong style="color:#fbbf24">#' + orderId + '</strong> không?<br><span style="font-size:0.85rem;color:#aaa">Ghế sẽ được giải phóng và bạn cần đặt lại từ đầu.</span>';
+
+            Swal.fire({
+                title: title,
+                html: html,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-x-circle me-1"></i> ' + (isExpired ? 'Xác nhận hủy' : 'Hủy ngay'),
+                cancelButtonText: '<i class="bi bi-arrow-left me-1"></i> Quay lại thanh toán',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'cinemax-toast-popup',
+                    confirmButton: 'fw-bold',
+                    cancelButton: 'fw-semibold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('cancelOrderForm').submit();
+                }
+            });
         }
     </script>
 }

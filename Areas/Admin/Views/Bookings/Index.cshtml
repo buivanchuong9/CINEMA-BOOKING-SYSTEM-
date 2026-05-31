@@ -234,7 +234,7 @@
 
                                             @if (item.Status == BookingStatus.Paid || item.Status == BookingStatus.Pending)
                                             {
-                                                <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn vé này và giải phóng lại toàn bộ ghế?');">
+                                                <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline cancel-booking-form">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="cinemaId" value="@ViewBag.CinemaId" />
                                                     <input type="hidden" name="roomId" value="@ViewBag.RoomId" />
@@ -242,7 +242,7 @@
                                                     <input type="hidden" name="status" value="@ViewBag.Status" />
                                                     <input type="hidden" name="search" value="@ViewBag.Search" />
                                                     <input type="hidden" name="pageNumber" value="@Model.PageIndex" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmCancelBooking(this)">
                                                         <i class="bi bi-trash"></i> Hủy vé
                                                     </button>
                                                 </form>
@@ -290,6 +290,25 @@
             });
             document.querySelector('#filterForm input[name="search"]').value = "";
             document.getElementById('filterForm').submit();
+        }
+
+        function confirmCancelBooking(btn) {
+            var form = btn.closest('form');
+            Swal.fire({
+                title: 'Xác nhận hủy đơn vé',
+                html: 'Bạn có chắc chắn muốn <strong style="color:#ef4444">hủy</strong> đơn vé này không?<br><span style="font-size:0.85rem;color:#aaa">Toàn bộ ghế đặt sẽ được giải phóng lại.</span>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-x-circle me-1"></i> Hủy vé',
+                cancelButtonText: 'Giữ lại',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: { popup: 'cinemax-toast-popup' }
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
         }
     </script>
 }

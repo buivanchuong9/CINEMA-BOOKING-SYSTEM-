@@ -143,22 +143,22 @@
         </div>
     </nav>
 
-    <!-- TempData Notifications -->
+    <!-- TempData Notifications (SweetAlert2 Toast) -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <span id="_toast_success" data-message="@TempData["Success"]" style="display:none;"></span>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        <span id="_toast_error" data-message="@TempData["Error"]" style="display:none;"></span>
+    }
+    @if (TempData["Warning"] != null)
+    {
+        <span id="_toast_warning" data-message="@TempData["Warning"]" style="display:none;"></span>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <span id="_toast_info" data-message="@TempData["Info"]" style="display:none;"></span>
     }
 
     <!-- Main Content -->
@@ -299,28 +299,80 @@
             offset: 100
         });
 
-        // Auto-dismiss alerts after 15 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var alerts = document.querySelectorAll('.alert-dismissible');
-                alerts.forEach(function(alert) {
-                    var bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
+        // CineMax Toast Notification System
+        const CineToast = {
+            _showToast: function(type, message, icon) {
+                const bgMap = {
+                    success: 'linear-gradient(135deg, #0d6e3f 0%, #198754 100%)',
+                    error:   'linear-gradient(135deg, #7f0000 0%, #dc3545 100%)',
+                    warning: 'linear-gradient(135deg, #7c5a00 0%, #ffc107 100%)',
+                    info:    'linear-gradient(135deg, #0a3d6b 0%, #0dcaf0 100%)'
+                };
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showCloseButton: true,
+                    customClass: {
+                        popup: 'cinemax-toast-popup',
+                        title: 'cinemax-toast-title',
+                        timerProgressBar: 'cinemax-toast-progress'
+                    },
+                    background: bgMap[type] || bgMap.info,
+                    color: '#ffffff',
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
                 });
-            }, 10000); // 10 seconds (User asked for 15s in prompt "15s tự tắt đi" but usually 5-10s is better UX, I will set 10000ms as a reasonable middle ground or strictly 15000 if preferred. Let's do 15000 to match request exact).
+            },
+            success: function(msg) { this._showToast('success', msg); },
+            error:   function(msg) { this._showToast('error',   msg); },
+            warning: function(msg) { this._showToast('warning', msg); },
+            info:    function(msg) { this._showToast('info',    msg); }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var s = document.getElementById('_toast_success');
+            var e = document.getElementById('_toast_error');
+            var w = document.getElementById('_toast_warning');
+            var i = document.getElementById('_toast_info');
+            if (s) CineToast.success(s.getAttribute('data-message'));
+            if (e) CineToast.error(e.getAttribute('data-message'));
+            if (w) CineToast.warning(w.getAttribute('data-message'));
+            if (i) CineToast.info(i.getAttribute('data-message'));
         });
-        
-        // Update: User asked for 15s explcitly
-        setTimeout(function() {
-             var alerts = document.querySelectorAll('.alert-dismissible');
-             alerts.forEach(function(alert) {
-                 try {
-                     var bsAlert = bootstrap.Alert.getInstance(alert) || new bootstrap.Alert(alert);
-                     bsAlert.close();
-                 } catch (e) { console.log(e); }
-             });
-        }, 15000);
     </script>
+    <style>
+        .cinemax-toast-popup {
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            padding: 14px 18px !important;
+            min-width: 320px !important;
+            backdrop-filter: blur(10px);
+        }
+        .cinemax-toast-title {
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            text-align: left !important;
+            line-height: 1.4 !important;
+        }
+        .cinemax-toast-progress {
+            background: rgba(255,255,255,0.5) !important;
+            height: 3px !important;
+        }
+        .swal2-close {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .swal2-close:hover {
+            color: #fff !important;
+        }
+    </style>
     
     @if (IsSectionDefined("Scripts"))
     {

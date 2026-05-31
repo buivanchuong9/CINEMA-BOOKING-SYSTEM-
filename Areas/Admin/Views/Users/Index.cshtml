@@ -16,21 +16,7 @@
         </a>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+
 
     <!-- Search Form -->
     <div class="card bg-dark border-secondary mb-4">
@@ -83,8 +69,8 @@
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
                                         Sửa
                                     </a>
-                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline delete-form">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="confirmDelete(this)">
                                             Xóa
                                         </button>
                                     </form>
@@ -139,3 +125,30 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(btn) {
+            var form = btn.closest('form');
+            Swal.fire({
+                title: 'Xác nhận xóa tài khoản',
+                html: 'Bạn có chắc chắn muốn <strong style="color:#ef4444">xóa</strong> tài khoản này không?<br><span style="font-size:0.85rem;color:#aaa">Hành động này không thể hoàn tác.</span>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash me-1"></i> Xóa',
+                cancelButtonText: 'Hủy',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'cinemax-toast-popup'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}
