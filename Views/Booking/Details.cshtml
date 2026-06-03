@@ -245,9 +245,12 @@
                                         <button class="btn btn-cinema-red w-100 mb-2" onclick="downloadQR()">
                                             <i class="bi bi-download me-2"></i>Tải QR Code
                                         </button>
-                                        <button class="btn btn-outline-light w-100" onclick="window.print()">
-                                            <i class="bi bi-printer me-2"></i>In vé
-                                        </button>
+                                        @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
+                                        {
+                                            <button class="btn btn-outline-light w-100" onclick="window.print()">
+                                                <i class="bi bi-printer me-2"></i>In vé
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             </div>

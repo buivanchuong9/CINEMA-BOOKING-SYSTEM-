@@ -59,6 +59,14 @@
                             </a>
                         </li>
                     }
+                    else if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="/Admin/Dashboard">
+                                <i class="bi bi-speedometer2 me-1"></i> Trang Quản Trị
+                            </a>
+                        </li>
+                    }
                     else
                     {
                         <li class="nav-item">
@@ -82,7 +90,7 @@
                 <!-- Search & Auth -->
                 <div class="d-flex align-items-center gap-3">
                     <!-- Search Icon -->
-                    @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Staff") && !User.IsInRole("Admin")))
+                    @if (!(User.Identity?.IsAuthenticated == true && (User.IsInRole("Staff") || User.IsInRole("Admin"))))
                     {
                         <button class="btn btn-link text-white p-0" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
                             <i class="bi bi-search fs-5"></i>
@@ -98,7 +106,7 @@
                                 @User.Identity.Name
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                @if (!(User.IsInRole("Staff") && !User.IsInRole("Admin")))
+                                @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Staff") && !User.IsInRole("Admin"))
                                 {
                                     <li>
                                         <a class="dropdown-item" href="/Account/Profile">
@@ -113,7 +121,7 @@
                                         </a>
                                     </li>
                                 }
-                                @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                                @if (User.IsInRole("Staff") && !User.IsInRole("Admin"))
                                 {
                                     <li>
                                         <a class="dropdown-item" href="/Staff/Booking">
@@ -270,7 +278,7 @@
     </footer>
 
     <!-- Floating Chatbot -->
-    @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Staff") && !User.IsInRole("Admin")))
+    @if (!(User.Identity?.IsAuthenticated == true && (User.IsInRole("Staff") || User.IsInRole("Admin"))))
     {
         <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý AI" onclick="toggleChatPopup()">
             <i class="bi bi-chat-dots-fill"></i>

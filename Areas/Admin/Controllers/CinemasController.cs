@@ -18,11 +18,24 @@ public class CinemasController : Controller
     }
 
     // GET: /Admin/Cinemas
-    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách rạp
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null) // danh sách rạp
     {
         int pageSize = 20;
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
-        var sortedCinemas = cinemas.OrderBy(c => c.Name);
+        var query = cinemas.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(c => 
+                (c.Name != null && c.Name.ToLower().Contains(s)) ||
+                (c.Address != null && c.Address.ToLower().Contains(s)) ||
+                (c.Phone != null && c.Phone.ToLower().Contains(s))
+            );
+        }
+
+        ViewBag.Search = search;
+        var sortedCinemas = query.OrderBy(c => c.Name);
         return View(PaginatedList<Cinema>.Create(sortedCinemas, pageNumber, pageSize));
     }
 

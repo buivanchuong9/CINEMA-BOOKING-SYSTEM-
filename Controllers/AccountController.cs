@@ -144,6 +144,14 @@ public class AccountController : Controller
                         }
                         return Redirect("/Staff/Booking");
                     }
+                    if (isAdmin)
+                    {
+                        if (returnUrl.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+                    }
                     return Redirect(returnUrl); // chuyển hướng đến returnUrl
                 }
 

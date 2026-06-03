@@ -18,13 +18,24 @@ public class MoviesController : Controller
     }
 
     // GET: /Admin/Movies
-    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách phim
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null) // danh sách phim
     {
         int pageSize = 20;
         var movies = await _unitOfWork.Movies.GetAllAsync();
-        var sortedMovies = movies.OrderByDescending(m => m.CreatedAt);
-        
-        return View(PaginatedList<Movie>.Create(sortedMovies, pageNumber, pageSize)); // sắp xếp theo ngày tạo và phân trang
+        var query = movies.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(m => 
+                (m.Title != null && m.Title.ToLower().Contains(s)) ||
+                (m.Director != null && m.Director.ToLower().Contains(s)) ||
+                (m.Cast != null && m.Cast.ToLower().Contains(s)));
+        }
+
+        ViewBag.Search = search;
+        var sortedMovies = query.OrderByDescending(m => m.CreatedAt);
+        return View(PaginatedList<Movie>.Create(sortedMovies, pageNumber, pageSize));
     }
 
     // GET: /Admin/Movies/Create

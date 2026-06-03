@@ -121,26 +121,47 @@ app.UseAuthorization();
 
 app.UseSession();
 
-// Custom Middleware to restrict Staff users to only /Staff/Booking area
+// Custom Middleware to restrict Staff and Admin users to their respective areas
 app.Use(async (context, next) =>
 {
-    if (context.User.Identity?.IsAuthenticated == true && context.User.IsInRole("Staff") && !context.User.IsInRole("Admin"))
+    if (context.User.Identity?.IsAuthenticated == true)
     {
         var path = context.Request.Path.Value ?? "";
-        
-        bool isAllowed = path.StartsWith("/Staff/Booking", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/Account/Logout", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/Identity/Account/Logout", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/seatHub", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
-                          path.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
-                          path.Contains(".");
-                          
-        if (!isAllowed)
+        bool isAdmin = context.User.IsInRole("Admin");
+        bool isStaff = context.User.IsInRole("Staff") && !isAdmin; // Admin has priority
+
+        // Allow basic system/logout operations, API calls, and static files/assets
+        bool isSystemAllowed = path.StartsWith("/Account/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Identity/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/seatHub", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Home/Error", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Error", StringComparison.OrdinalIgnoreCase) ||
+                               path.Contains(".");
+
+        if (!isSystemAllowed)
         {
-            context.Response.Redirect("/Staff/Booking");
-            return;
+            if (isAdmin)
+            {
+                // Admin must stay in /Admin
+                if (!path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/Admin/Dashboard");
+                    return;
+                }
+            }
+            else if (isStaff)
+            {
+                // Staff must stay in /Staff/Booking
+                if (!path.StartsWith("/Staff/Booking", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/Staff/Booking");
+                    return;
+                }
+            }
         }
     }
     await next();
