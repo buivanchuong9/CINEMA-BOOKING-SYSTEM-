@@ -1,0 +1,283 @@
+@using BE.Core.Entities.Bookings
+@using BE.Core.Entities.Movies
+@using BE.Core.Entities.CinemaInfrastructure
+@{
+    ViewData["Title"] = "Hủy Vé & Hoàn Tiền - CineMax";
+    Layout = "_Layout";
+    var booking = ViewBag.Booking as Booking;
+    var showtime = ViewBag.Showtime as Showtime;
+    var movie = ViewBag.Movie as Movie;
+    var room = ViewBag.Room as Room;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+
+            @* ── HEADER ── *@
+            <div class="text-center mb-5" data-aos="fade-down">
+                <div class="cancel-icon-wrapper mb-4">
+                    <div class="cancel-icon-outer"></div>
+                    <i class="bi bi-bank cancel-icon-inner text-cinema-red"></i>
+                </div>
+                <h2 class="fw-bold text-white mb-2">Hủy Vé & Yêu Cầu Hoàn Tiền</h2>
+                <p class="text-muted fs-5">Nhập thông tin tài khoản ngân hàng để Admin chuyển tiền hoàn lại cho bạn.</p>
+            </div>
+
+            @* ── BOOKING SUMMARY CARD ── *@
+            <div class="cancel-card p-4 p-md-5 rounded-4 mb-4" data-aos="fade-up">
+                <div class="row g-4 align-items-center">
+                    <div class="col-sm-3 text-center">
+                        <img src="@(movie?.PosterUrl ?? "/images/placeholder.jpg")"
+                             alt="@movie?.Title"
+                             class="rounded-3 shadow poster-img w-100">
+                    </div>
+                    <div class="col-sm-9">
+                        <h4 class="fw-bold text-white mb-1">@(movie?.Title ?? "Phim chưa xác định")</h4>
+                        <div class="d-flex flex-wrap gap-3 mb-3 mt-2">
+                            <span class="info-chip"><i class="bi bi-building me-1 text-cinema-red"></i>@(room?.Cinema?.Name ?? "—")</span>
+                            <span class="info-chip"><i class="bi bi-door-open me-1 text-popcorn-gold"></i>@(room?.Name ?? "—")</span>
+                            <span class="info-chip"><i class="bi bi-calendar3 me-1 text-cinema-red"></i>@showtime?.StartTime.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <span class="text-muted small">Mã đơn: <span class="text-white fw-bold font-monospace">#@booking?.Id.ToString("D6")</span></span>
+                            <div class="price-badge">@booking?.TotalAmount.ToString("N0") ₫</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ── REFUND INFO ── *@
+            <div class="info-section rounded-4 p-4 mb-4" data-aos="fade-up">
+                <h6 class="fw-bold text-white mb-3"><i class="bi bi-info-circle-fill text-warning me-2"></i>Lưu ý quan trọng</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2 text-muted"><i class="bi bi-arrow-right text-cinema-red me-2"></i>Yêu cầu hủy vé sẽ được Admin xem xét và xử lý trong <strong class="text-white">1-3 ngày làm việc</strong>.</li>
+                    <li class="mb-2 text-muted"><i class="bi bi-arrow-right text-cinema-red me-2"></i>Số tiền hoàn lại: <strong class="text-popcorn-gold">@booking?.TotalAmount.ToString("N0") ₫</strong> (tùy theo chính sách hoàn tiền).</li>
+                    <li class="mb-2 text-muted"><i class="bi bi-arrow-right text-cinema-red me-2"></i>Admin sẽ upload bằng chứng chuyển khoản sau khi hoàn tiền.</li>
+                    <li class="text-muted"><i class="bi bi-x-circle text-warning me-2"></i>Hành động này không thể hoàn tác sau khi xác nhận.</li>
+                </ul>
+            </div>
+
+            @* ── BANK FORM ── *@
+            <div class="refund-form-card rounded-4 p-4 p-md-5 mb-4" data-aos="fade-up">
+                <h5 class="fw-bold text-white mb-4">
+                    <i class="bi bi-credit-card-2-front me-2 text-cinema-red"></i>
+                    Thông Tin Tài Khoản Nhận Hoàn Tiền
+                </h5>
+
+                <form id="cancelTicketForm" asp-action="CancelTicket" asp-controller="Booking" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@booking?.Id" />
+
+                    <div class="mb-4">
+                        <label for="bankName" class="form-label fw-semibold text-white">
+                            <i class="bi bi-bank me-1 text-cinema-red"></i>Tên Ngân Hàng <span class="text-danger">*</span>
+                        </label>
+                        <select id="bankName" name="bankName" class="form-select refund-input" required>
+                            <option value="">-- Chọn ngân hàng --</option>
+                            <option value="Vietcombank">Vietcombank (VCB)</option>
+                            <option value="Techcombank">Techcombank (TCB)</option>
+                            <option value="BIDV">BIDV</option>
+                            <option value="VietinBank">VietinBank (CTG)</option>
+                            <option value="Agribank">Agribank</option>
+                            <option value="MBBank">MBBank</option>
+                            <option value="ACB">ACB</option>
+                            <option value="Sacombank">Sacombank</option>
+                            <option value="VPBank">VPBank</option>
+                            <option value="TPBank">TPBank</option>
+                            <option value="MSB">MSB (Maritime Bank)</option>
+                            <option value="SHB">SHB</option>
+                            <option value="HDBank">HDBank</option>
+                            <option value="OCB">OCB</option>
+                            <option value="SeABank">SeABank</option>
+                            <option value="VIB">VIB</option>
+                            <option value="Eximbank">Eximbank</option>
+                            <option value="LPBank">LPBank</option>
+                            <option value="NamABank">Nam A Bank</option>
+                            <option value="BacABank">Bắc Á Bank</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="accountNumber" class="form-label fw-semibold text-white">
+                            <i class="bi bi-123 me-1 text-cinema-red"></i>Số Tài Khoản <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="accountNumber" name="accountNumber"
+                               class="form-control refund-input"
+                               placeholder="Nhập số tài khoản ngân hàng..."
+                               required maxlength="30" pattern="[0-9]+" title="Chỉ nhập số">
+                        <div class="form-text text-muted mt-1"><i class="bi bi-shield-check me-1"></i>Chỉ nhập chữ số, không có dấu cách hay ký tự đặc biệt.</div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="accountName" class="form-label fw-semibold text-white">
+                            <i class="bi bi-person-vcard me-1 text-cinema-red"></i>Tên Chủ Tài Khoản <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="accountName" name="accountName"
+                               class="form-control refund-input"
+                               placeholder="Nhập tên chủ tài khoản (viết HOA không dấu)..."
+                               required maxlength="100">
+                        <div class="form-text text-muted mt-1"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Tên phải khớp chính xác với tên trên tài khoản ngân hàng.</div>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-danger btn-lg rounded-pill py-3 fw-bold"
+                                id="submitRefundBtn"
+                                onclick="confirmSubmitRefund('@booking?.Id.ToString("D6")', '@booking?.TotalAmount.ToString("N0")')">
+                            <i class="bi bi-send-check me-2"></i>Xác Nhận Hủy Vé & Gửi Yêu Cầu Hoàn Tiền
+                        </button>
+                        <a href="@Url.Action("MyBookings", "Booking")" class="btn btn-outline-light btn-lg rounded-pill py-3">
+                            <i class="bi bi-arrow-left me-2"></i>Quay Lại Vé Của Tôi
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmSubmitRefund(orderId, amount) {
+            const bankName = document.getElementById('bankName').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const accountName = document.getElementById('accountName').value;
+
+            if (!bankName || !accountNumber || !accountName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu thông tin',
+                    text: 'Vui lòng điền đầy đủ tất cả thông tin tài khoản ngân hàng!',
+                    background: '#1e293b',
+                    color: '#f8fafc',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Xác nhận hủy vé?',
+                html: `
+                    <div style="text-align:left; font-size: 0.9rem; color: #cbd5e1;">
+                        <p class="mb-2">Đơn hàng <strong style="color:#fbbf24">#${orderId}</strong> • Hoàn tiền: <strong style="color:#4ade80">${amount} ₫</strong></p>
+                        <hr style="border-color: rgba(255,255,255,0.1)">
+                        <p class="mb-1"><strong>Ngân hàng:</strong> ${bankName}</p>
+                        <p class="mb-1"><strong>Số TK:</strong> ${accountNumber}</p>
+                        <p class="mb-0"><strong>Tên TK:</strong> ${accountName}</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="bi bi-send-check me-1"></i> Xác nhận gửi yêu cầu',
+                cancelButtonText: 'Kiểm tra lại',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: { popup: 'cinemax-toast-popup' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('cancelTicketForm').submit();
+                }
+            });
+        }
+
+        // Auto uppercase for account name
+        document.getElementById('accountName').addEventListener('input', function() {
+            const pos = this.selectionStart;
+            this.value = this.value.toUpperCase();
+            this.setSelectionRange(pos, pos);
+        });
+
+        // Only numbers for account number
+        document.getElementById('accountNumber').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+}
+
+<style>
+    .cancel-icon-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+    }
+    .cancel-icon-outer {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(220, 38, 38, 0.12);
+        border: 2px solid rgba(220, 38, 38, 0.4);
+        animation: pulseRed 2s ease-in-out infinite;
+    }
+    .cancel-icon-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.2rem;
+        line-height: 100px;
+        width: 100%;
+        text-align: center;
+    }
+    @@keyframes pulseRed {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50%       { transform: scale(1.12); opacity: 1; }
+    }
+
+    .cancel-card, .refund-form-card {
+        background: linear-gradient(145deg, #1a1e2e 0%, #111520 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .refund-form-card {
+        border-color: rgba(220, 38, 38, 0.2);
+        box-shadow: 0 0 30px rgba(220, 38, 38, 0.05);
+    }
+    .poster-img {
+        max-height: 160px;
+        object-fit: cover;
+    }
+    .info-chip {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+    }
+    .price-badge {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.3rem;
+        padding: 6px 18px;
+        border-radius: 30px;
+    }
+    .info-section {
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    .refund-input {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1.5px solid rgba(255,255,255,0.15) !important;
+        color: #f8fafc !important;
+        border-radius: 10px;
+        padding: 12px 16px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .refund-input:focus {
+        background: rgba(255,255,255,0.09) !important;
+        border-color: rgba(220, 38, 38, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        color: #fff !important;
+    }
+    .refund-input option {
+        background: #1a1e2e;
+        color: #f8fafc;
+    }
+    .refund-input::placeholder { color: rgba(255,255,255,0.3); }
+</style>

@@ -125,10 +125,20 @@
                                             <a href="/Booking/Details/@booking.Id" class="btn btn-outline-light btn-sm">
                                                 <i class="bi bi-eye me-1"></i>Xem hóa đơn
                                             </a>
-                                            <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="confirmCancel(@booking.Id)">
-                                                <i class="bi bi-x-circle me-1"></i>Hủy vé
-                                            </button>
+                                            @if (booking.RefundStatus == "None")
+                                            {
+                                                <a href="/Booking/CancelTicket/@booking.Id"
+                                                   class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-x-circle me-1"></i>Hủy vé & hoàn tiền
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a href="/Booking/CancelledTickets"
+                                                   class="btn btn-outline-warning btn-sm">
+                                                    <i class="bi bi-hourglass-split me-1"></i>Xem trạng thái hoàn tiền
+                                                </a>
+                                            }
                                         }
                                         else if (stillPending)
                                         {

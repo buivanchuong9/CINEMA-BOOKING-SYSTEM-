@@ -1,0 +1,271 @@
+@using BE.Application.Helpers
+@model PaginatedList<BE.Core.Entities.Bookings.Booking>
+@{
+    ViewData["Title"] = "Quản Lý Hoàn Tiền - CineMax Admin";
+    Layout = "_Layout";
+    string? activeStatus = ViewBag.RefundStatus as string;
+    string? search = ViewBag.Search as string;
+    int pendingCount  = ViewBag.PendingCount  ?? 0;
+    int refundedCount = ViewBag.RefundedCount ?? 0;
+    int rejectedCount = ViewBag.RejectedCount ?? 0;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-arrow-repeat me-2 text-warning"></i>Quản Lý Hoàn Tiền</h4>
+        <p class="text-muted mb-0">Xử lý yêu cầu hoàn tiền từ khách hàng hủy vé đã thanh toán</p>
+    </div>
+    <a href="@Url.Action("Index", "Bookings", new { area = "Admin" })" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Quản lý Đặt Vé
+    </a>
+</div>
+
+@* ── STAT CARDS ── *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="@Url.Action("RefundRequests", "Bookings", new { area = "Admin", refundStatus = "Pending" })"
+           class="text-decoration-none">
+            <div class="refund-stat-card refund-pending p-4 rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="refund-stat-icon bg-warning text-dark">
+                        <i class="bi bi-hourglass-split fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-2 text-warning">@pendingCount</div>
+                        <div class="text-muted">Chờ xử lý</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="@Url.Action("RefundRequests", "Bookings", new { area = "Admin", refundStatus = "Refunded" })"
+           class="text-decoration-none">
+            <div class="refund-stat-card refund-done p-4 rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="refund-stat-icon bg-success text-white">
+                        <i class="bi bi-check-circle-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-2 text-success">@refundedCount</div>
+                        <div class="text-muted">Đã hoàn tiền</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="@Url.Action("RefundRequests", "Bookings", new { area = "Admin", refundStatus = "Rejected" })"
+           class="text-decoration-none">
+            <div class="refund-stat-card refund-reject p-4 rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="refund-stat-icon bg-danger text-white">
+                        <i class="bi bi-x-circle-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-2 text-danger">@rejectedCount</div>
+                        <div class="text-muted">Đã từ chối</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+@* ── FILTER BAR ── *@
+<div class="admin-filter-card rounded-3 p-3 mb-4">
+    <form method="get" asp-action="RefundRequests" class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <input type="text" name="search" value="@search" class="form-control form-control-sm"
+                   placeholder="Tìm theo mã đơn, tên KH, email, số TK...">
+        </div>
+        <div class="col-md-4">
+            <select name="refundStatus" class="form-select form-select-sm">
+                <option value="">-- Tất cả trạng thái --</option>
+                @if (activeStatus == "Pending")   { <option value="Pending"  selected>⏳ Chờ xử lý</option>   }
+                else                              { <option value="Pending">⏳ Chờ xử lý</option>             }
+                @if (activeStatus == "Refunded")  { <option value="Refunded" selected>✅ Đã hoàn tiền</option> }
+                else                              { <option value="Refunded">✅ Đã hoàn tiền</option>         }
+                @if (activeStatus == "Rejected")  { <option value="Rejected" selected>❌ Đã từ chối</option>  }
+                else                              { <option value="Rejected">❌ Đã từ chối</option>           }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                <i class="bi bi-funnel me-1"></i>Lọc
+            </button>
+            <a href="@Url.Action("RefundRequests", "Bookings", new { area = "Admin" })"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@* ── TABLE ── *@
+<div class="admin-table-card rounded-3 overflow-hidden">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-3 text-muted mb-3"></i>
+            <h5 class="text-muted">Không có yêu cầu hoàn tiền nào</h5>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 align-middle">
+                <thead class="table-header">
+                    <tr>
+                        <th class="ps-4">#Đơn</th>
+                        <th>Khách Hàng</th>
+                        <th>Phim / Suất chiếu</th>
+                        <th>Số tiền</th>
+                        <th>Thông tin TK</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        var (bClass, bText, bIcon) = booking.RefundStatus switch
+                        {
+                            "Pending"  => ("warning",   "Chờ xử lý",    "bi-hourglass-split"),
+                            "Refunded" => ("success",   "Đã hoàn tiền", "bi-check-circle-fill"),
+                            "Rejected" => ("danger",    "Từ chối",      "bi-x-circle-fill"),
+                            _          => ("secondary", "—",            "bi-dash")
+                        };
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold font-monospace text-white">#@booking.Id.ToString("D6")</span>
+                                <div class="text-muted" style="font-size:.75rem;">@booking.BookingDate.ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@(booking.User?.FullName ?? "—")</div>
+                                <div class="text-muted small">@(booking.User?.Email ?? "—")</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@(booking.Showtime?.Movie?.Title ?? "—")</div>
+                                <div class="text-muted small">@booking.Showtime?.StartTime.ToString("dd/MM/yyyy HH:mm")</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-warning">@booking.TotalAmount.ToString("N0") ₫</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(booking.RefundAccountNumber))
+                                {
+                                    <div class="fw-semibold text-white">@booking.RefundBankName</div>
+                                    <div class="font-monospace small">@booking.RefundAccountNumber</div>
+                                    <div class="text-muted small">@booking.RefundAccountName</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-@bClass py-2 px-3">
+                                    <i class="bi @bIcon me-1"></i>@bText
+                                </span>
+                                @if (!string.IsNullOrEmpty(booking.RefundProofUrl))
+                                {
+                                    <br>
+                                    <a href="@booking.RefundProofUrl" target="_blank"
+                                       class="text-info small mt-1 d-inline-block">
+                                        <i class="bi bi-image me-1"></i>Xem bằng chứng
+                                    </a>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (booking.RefundStatus == "Pending")
+                                {
+                                    <a href="@Url.Action("ProcessRefund", "Bookings", new { area = "Admin", id = booking.Id })"
+                                       class="btn btn-sm btn-warning text-dark fw-bold">
+                                        <i class="bi bi-pencil-square me-1"></i>Xử lý
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("ProcessRefund", "Bookings", new { area = "Admin", id = booking.Id })"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye me-1"></i>Xem
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* Pagination *@
+        @if (Model.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("RefundRequests", new { refundStatus = activeStatus, search, pageNumber = Model.PageIndex - 1 })">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("RefundRequests", new { refundStatus = activeStatus, search, pageNumber = i })">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("RefundRequests", new { refundStatus = activeStatus, search, pageNumber = Model.PageIndex + 1 })">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .refund-stat-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .refund-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .refund-pending { border-color: rgba(245,158,11,0.25) !important; }
+    .refund-done    { border-color: rgba(34,197,94,0.25) !important; }
+    .refund-reject  { border-color: rgba(239,68,68,0.25) !important; }
+
+    .refund-stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .admin-filter-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-table-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .table-header th {
+        background: rgba(255,255,255,0.06);
+        color: #94a3b8;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        font-weight: 600;
+    }
+</style>
