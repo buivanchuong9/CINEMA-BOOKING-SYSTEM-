@@ -1,0 +1,309 @@
+@{
+    ViewData["Title"] = "Trợ Lý CineMax AI";
+    var isPopup = Context.Request.Query["popup"].ToString() == "1";
+    Layout = isPopup ? null : "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true" />
+
+<div class="chat-page @(isPopup ? "chat-popup-page" : "")">
+    <div class="chat-wrapper">
+
+        <!-- HEADER -->
+        <div class="chat-header">
+            <div class="bot-avatar-lg">🎬</div>
+            <div class="chat-header-info">
+                <h1>Trợ Lý CineMax AI</h1>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+                    <span class="status-badge">
+                        <span class="status-dot"></span>
+                        Trực tuyến
+                    </span>
+                    <span style="font-size:0.78rem; color:var(--text-muted);">Hỗ trợ 24/7 · Powered by Gemini AI</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="btn-icon" onclick="toggleHistory()" title="Lịch sử hội thoại">
+                    <i class="bi bi-clock-history"></i>
+                </button>
+                <button class="btn-icon" onclick="clearChat()" title="Xóa cuộc trò chuyện">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- QUICK SUGGESTIONS -->
+        <div class="quick-suggestions">
+            <button class="quick-btn" onclick="askQuick('Phim đang chiếu hôm nay là gì?')">
+                🎦 Phim đang chiếu
+            </button>
+            <button class="quick-btn" onclick="askQuick('Có phim mới nào sắp ra mắt không?')">
+                🆕 Phim sắp chiếu
+            </button>
+            <button class="quick-btn" onclick="askQuick('Rạp CineMax ở đâu?')">
+                📍 Địa chỉ rạp
+            </button>
+            <button class="quick-btn" onclick="askQuick('Giá vé như thế nào?')">
+                🎫 Giá vé
+            </button>
+            <button class="quick-btn" onclick="askQuick('Cách đặt vé online như thế nào?')">
+                📱 Cách đặt vé
+            </button>
+            <button class="quick-btn" onclick="askQuick('CineMax có ưu đãi thành viên không?')">
+                🎁 Ưu đãi
+            </button>
+        </div>
+
+        <!-- CHAT WINDOW -->
+        <div class="chat-window" id="chatWindow">
+            <div class="welcome-msg" id="welcomeMsg">
+                <span class="welcome-icon">🎬</span>
+                <h3>Xin chào! Tôi là trợ lý AI của CineMax</h3>
+                <p>Tôi có thể giúp bạn tìm hiểu về phim đang chiếu, lịch chiếu,<br>giá vé và nhiều thông tin hữu ích khác về rạp phim.</p>
+            </div>
+        </div>
+
+        <!-- INPUT FOOTER -->
+        <div class="input-footer">
+            <span>Nhấn <kbd>Enter</kbd> để gửi &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> xuống dòng</span>
+            <span id="charCount">0 / 500</span>
+        </div>
+
+        <!-- INPUT AREA -->
+        <div class="chat-input-area">
+            <textarea
+                id="messageInput"
+                placeholder="Hỏi về phim, lịch chiếu, giá vé..."
+                rows="1"
+                maxlength="500"
+                onkeydown="handleKeyDown(event)"
+                oninput="updateCharCount(this)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Gửi tin nhắn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+
+        <!-- HISTORY PANEL -->
+        <div class="history-panel" id="historyPanel">
+            <h4>
+                <i class="bi bi-clock-history" style="color:#e50914"></i>
+                Lịch sử hội thoại
+                <button onclick="clearHistoryFromDB()"
+                    style="margin-left:auto;background:none;border:1px solid rgba(229,9,20,0.3);color:#e50914;padding:3px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;">
+                    Xóa tất cả
+                </button>
+            </h4>
+            <div id="historyList">
+                <p style="color:#8888aa;font-size:0.82rem;text-align:center;padding:20px 0;">
+                    Đang tải lịch sử...
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let isWaiting = false;
+    let historyOpen = false;
+
+    function getTime() {
+        return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function removeWelcome() {
+        const w = document.getElementById('welcomeMsg');
+        if (w) w.remove();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatBotText(text) {
+        return escapeHtml(text)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function appendMessage(text, role) {
+        removeWelcome();
+        const win = document.getElementById('chatWindow');
+        const isUser = role === 'user';
+
+        const displayText = isUser ? escapeHtml(text) : formatBotText(text);
+
+        const row = document.createElement('div');
+        row.className = 'msg-row' + (isUser ? ' user-row' : '');
+        row.innerHTML = `
+            <div class="msg-avatar ${isUser ? 'user' : 'bot'}">${isUser ? '👤' : '🎬'}</div>
+            <div class="msg-content">
+                <div class="msg-bubble ${isUser ? 'user' : 'bot'}">${displayText}</div>
+                <div class="msg-time">${getTime()}</div>
+            </div>
+        `;
+        win.appendChild(row);
+        win.scrollTop = win.scrollHeight;
+    }
+
+    function showTyping() {
+        removeWelcome();
+        const win = document.getElementById('chatWindow');
+        const typing = document.createElement('div');
+        typing.className = 'typing-indicator';
+        typing.id = 'typingIndicator';
+        typing.innerHTML = `
+            <div class="msg-avatar bot">🎬</div>
+            <div class="typing-bubble">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
+        win.appendChild(typing);
+        win.scrollTop = win.scrollHeight;
+    }
+
+    function removeTyping() {
+        const t = document.getElementById('typingIndicator');
+        if (t) t.remove();
+    }
+
+    async function sendMessage() {
+        if (isWaiting) return;
+        const input = document.getElementById('messageInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        appendMessage(msg, 'user');
+        input.value = '';
+        updateCharCount(input);
+        autoResize(input);
+
+        isWaiting = true;
+        document.getElementById('sendBtn').disabled = true;
+        showTyping();
+
+        try {
+            const resp = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+
+            removeTyping();
+
+            if (!resp.ok) {
+                appendMessage('⚠️ Có lỗi xảy ra. Vui lòng thử lại.', 'bot');
+                return;
+            }
+
+            const data = await resp.json();
+            appendMessage(data.reply, 'bot');
+        } catch (e) {
+            removeTyping();
+            appendMessage('⚠️ Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.', 'bot');
+        } finally {
+            isWaiting = false;
+            document.getElementById('sendBtn').disabled = false;
+            input.focus();
+        }
+    }
+
+    function askQuick(text) {
+        document.getElementById('messageInput').value = text;
+        updateCharCount(document.getElementById('messageInput'));
+        sendMessage();
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+        autoResize(e.target);
+    }
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    function updateCharCount(el) {
+        document.getElementById('charCount').textContent = el.value.length + ' / 500';
+    }
+
+    function clearChat() {
+        const win = document.getElementById('chatWindow');
+        win.innerHTML = `
+            <div class="welcome-msg" id="welcomeMsg">
+                <span class="welcome-icon">✨</span>
+                <h3>Cuộc trò chuyện đã được xóa</h3>
+                <p>Hãy bắt đầu một cuộc trò chuyện mới!</p>
+            </div>
+        `;
+    }
+
+    async function toggleHistory() {
+        const panel = document.getElementById('historyPanel');
+        historyOpen = !historyOpen;
+        panel.classList.toggle('open', historyOpen);
+        if (historyOpen) await loadHistory();
+    }
+
+    async function loadHistory() {
+        const list = document.getElementById('historyList');
+        try {
+            const resp = await fetch('/api/chat/history?page=1&pageSize=30');
+            const data = await resp.json();
+
+            if (!data.history || data.history.length === 0) {
+                list.innerHTML = '<p style="color:#8888aa;font-size:0.82rem;text-align:center;padding:20px 0;">Chưa có lịch sử hội thoại.</p>';
+                return;
+            }
+
+            list.innerHTML = data.history.map(h => {
+                const q = escapeHtml(h.userMessage);
+                const a = escapeHtml(h.botReply.substring(0, 80));
+                const qRaw = h.userMessage.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                return `
+                    <div class="history-item" onclick="reuseQuestion('${qRaw}')">
+                        <div class="history-q">💬 ${q}</div>
+                        <div class="history-a">🤖 ${a}${h.botReply.length > 80 ? '...' : ''}</div>
+                        <div class="history-time">🕐 ${h.createdAt}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch(e) {
+            list.innerHTML = '<p style="color:#8888aa;font-size:0.82rem;text-align:center;padding:20px 0;">Không thể tải lịch sử.</p>';
+        }
+    }
+
+    function reuseQuestion(question) {
+        document.getElementById('messageInput').value = question;
+        updateCharCount(document.getElementById('messageInput'));
+        toggleHistory();
+        document.getElementById('messageInput').focus();
+    }
+
+    async function clearHistoryFromDB() {
+        if (!confirm('Bạn có chắc muốn xóa toàn bộ lịch sử hội thoại không?')) return;
+        try {
+            const resp = await fetch('/api/chat/history', { method: 'DELETE' });
+            if (resp.ok) {
+                document.getElementById('historyList').innerHTML =
+                    '<p style="color:#8888aa;font-size:0.82rem;text-align:center;padding:20px 0;">Đã xóa lịch sử.</p>';
+            }
+        } catch(e) {
+            alert('Có lỗi khi xóa lịch sử.');
+        }
+    }
+
+    // Focus input on load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('messageInput').focus();
+    });
+</script>

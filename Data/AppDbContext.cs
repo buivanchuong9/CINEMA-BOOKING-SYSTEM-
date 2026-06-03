@@ -43,6 +43,9 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Voucher> Vouchers { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
 
+    // ===== GROUP 6: CHATBOT (1 table) =====
+    public DbSet<BE.Core.Entities.Business.ChatHistory> ChatHistories { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder); // QUAN TRỌNG: Gọi base để tạo bảng Identity
@@ -98,5 +101,16 @@ public class AppDbContext : IdentityDbContext<User>
 
         // ===== SEED INITIAL DATA (Optional - có thể dùng DbSeeder riêng) =====
         // Sẽ tạo trong file Infrastructure/Data/DbSeeder.cs
+
+        // ===== CONFIGURE CHATHISTORY =====
+        modelBuilder.Entity<BE.Core.Entities.Business.ChatHistory>(entity =>
+        {
+            // Index để query lịch sử theo user
+            entity.HasIndex(ch => ch.UserId);
+            // Index để query lịch sử theo session
+            entity.HasIndex(ch => ch.SessionId);
+            // Index để query theo thời gian
+            entity.HasIndex(ch => ch.CreatedAt);
+        });
     }
 }

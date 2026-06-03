@@ -26,6 +26,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/typography-fix.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true"/>
 </head>
 <body>
     <!-- Sticky Navigation Bar -->
@@ -246,6 +247,24 @@
         </div>
     </footer>
 
+    <!-- Floating Chatbot -->
+    <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý AI" onclick="toggleChatPopup()">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+
+    <div id="chatPopup" class="chat-popup" aria-hidden="true">
+        <div class="chat-popup-header">
+            <div class="chat-popup-title">
+                <span class="mini-badge"></span>
+                Trợ lý CineMax AI
+            </div>
+            <button class="chat-popup-close" type="button" aria-label="Đóng chatbot" onclick="toggleChatPopup()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <iframe class="chat-popup-frame" src="/Chat?popup=1" title="Chatbot CineMax"></iframe>
+    </div>
+
     <!-- Search Modal -->
     <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -290,6 +309,23 @@
     
     <!-- Custom JS -->
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleChatPopup() {
+            const panel = document.getElementById('chatPopup');
+            const isOpen = panel.classList.toggle('open');
+            panel.setAttribute('aria-hidden', String(!isOpen));
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                const panel = document.getElementById('chatPopup');
+                if (panel && panel.classList.contains('open')) {
+                    panel.classList.remove('open');
+                    panel.setAttribute('aria-hidden', 'true');
+                }
+            }
+        });
+    </script>
     
     <!-- Initialize AOS -->
     <script>

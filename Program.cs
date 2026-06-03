@@ -12,6 +12,22 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// ===== CHATBOT SERVICES =====
+builder.Services.AddHttpClient(); // đăng ký IHttpClientFactory
+builder.Services.AddScoped<BE.Infrastructure.Services.CinemaDataService>();
+builder.Services.AddScoped<BE.Services.GeminiChatService>(sp =>
+{
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = factory.CreateClient();
+    var config = sp.GetRequiredService<IConfiguration>();
+    var db = sp.GetRequiredService<AppDbContext>();
+    var cinemaData = sp.GetRequiredService<BE.Infrastructure.Services.CinemaDataService>();
+    var logger = sp.GetRequiredService<ILogger<BE.Services.GeminiChatService>>();
+    return new BE.Services.GeminiChatService(httpClient, config, db, cinemaData, logger);
+});
+
+builder.Services.AddControllersWithViews();
+
 // ===== 2. IDENTITY CONFIGURATION =====
 builder.Services.AddIdentity<User, IdentityRole>(options => // 
 {
