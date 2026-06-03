@@ -12,6 +12,22 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// ===== CHATBOT SERVICES =====
+builder.Services.AddHttpClient(); // đăng ký IHttpClientFactory
+builder.Services.AddScoped<BE.Infrastructure.Services.CinemaDataService>();
+builder.Services.AddScoped<BE.Services.GeminiChatService>(sp =>
+{
+    var factory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = factory.CreateClient();
+    var config = sp.GetRequiredService<IConfiguration>();
+    var db = sp.GetRequiredService<AppDbContext>();
+    var cinemaData = sp.GetRequiredService<BE.Infrastructure.Services.CinemaDataService>();
+    var logger = sp.GetRequiredService<ILogger<BE.Services.GeminiChatService>>();
+    return new BE.Services.GeminiChatService(httpClient, config, db, cinemaData, logger);
+});
+
+builder.Services.AddControllersWithViews();
+
 // ===== 2. IDENTITY CONFIGURATION =====
 builder.Services.AddIdentity<User, IdentityRole>(options => // 
 {
@@ -52,18 +68,19 @@ builder.Services.AddScoped<BE.Core.Interfaces.Services.IBookingService, BE.Appli
 builder.Services.AddScoped<BE.Core.Interfaces.Services.IEmailService, BE.Infrastructure.Services.EmailService>();
 
 
-// Cổng thanh toán VNPay
-builder.Services.AddScoped<BE.Infrastructure.Payment.VNPayHelper>(sp =>
+// Cổng thanh toán VietQR
+builder.Services.AddScoped<BE.Infrastructure.Payment.VietQRHelper>(sp =>
 {
-    var config = new BE.Infrastructure.Payment.VNPayConfig
+    var config = new BE.Infrastructure.Payment.VietQRConfig
     {
-        TmnCode = builder.Configuration["Vnpay:TmnCode"] ?? "DEMO_TMN",
-        HashSecret = builder.Configuration["Vnpay:HashSecret"] ?? "DEMO_SECRET",
-        BaseUrl = builder.Configuration["Vnpay:Url"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-        ReturnUrl = builder.Configuration["Vnpay:ReturnUrl"] ?? "https://localhost:5001/Payment/VNPayReturn",
-        IpnUrl = builder.Configuration["Vnpay:IpnUrl"] ?? "https://localhost:5001/Payment/VNPayIPN"
+        BankId = builder.Configuration["VietQr:BankId"] ?? "VPB",
+        AccountNo = builder.Configuration["VietQr:AccountNo"] ?? "0964578206",
+        AccountName = builder.Configuration["VietQr:AccountName"] ?? "DAO VAN DUONG",
+        Template = builder.Configuration["VietQr:Template"] ?? "compact2",
+        Username = builder.Configuration["VietQr:Username"] ?? "vietqr_user",
+        Password = builder.Configuration["VietQr:Password"] ?? "vietqr_password_123"
     };
-    return new BE.Infrastructure.Payment.VNPayHelper(config);
+    return new BE.Infrastructure.Payment.VietQRHelper(config);
 });
 
 // ===== 6. RAZOR PAGES =====

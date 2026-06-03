@@ -102,6 +102,9 @@
                 <a href="/Admin/Showtimes" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Showtimes" ? "active" : "")">
                     <i class="bi bi-calendar-event me-2"></i> Lịch Chiếu
                 </a>
+                <a href="/Admin/Bookings" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" ? "active" : "")">
+                    <i class="bi bi-ticket-detailed me-2"></i> Quản Lý Vé Đã Đặt
+                </a>
                 <a href="/Admin/Cinemas" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cinemas" ? "active" : "")">
                     <i class="bi bi-building me-2"></i> Rạp Chiếu
                 </a>
@@ -113,6 +116,18 @@
                 </a>
                 <a href="/Admin/Foods" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Foods" ? "active" : "")">
                     <i class="bi bi-cup-straw me-2"></i> Đồ Ăn
+                </a>
+                <hr class="border-secondary mx-3">
+                <small class="text-muted px-3 text-uppercase" style="font-size: 0.75rem;">Người Dùng</small>
+                
+                <a href="/Admin/Users?role=Customer" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && Context.Request.Query["role"] == "Customer" ? "active" : "")">
+                    <i class="bi bi-people me-2"></i> Người Dùng
+                </a>
+                <a href="/Admin/Users?role=Staff" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && Context.Request.Query["role"] == "Staff" ? "active" : "")">
+                    <i class="bi bi-person-badge me-2"></i> Nhân Viên Bán Hàng
+                </a>
+                <a href="/Admin/Users?role=Admin" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && Context.Request.Query["role"] == "Admin" ? "active" : "")">
+                    <i class="bi bi-shield-lock me-2"></i> Quản Trị Viên
                 </a>
                 
                 <hr class="border-secondary mx-3">
@@ -145,22 +160,22 @@
             </div>
             
             <div class="p-0">
-                <!-- TempData Notifications -->
+                <!-- TempData Notifications (SweetAlert2 Toast) -->
                 @if (TempData["Success"] != null)
                 {
-                    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                        <i class="bi bi-check-circle me-2"></i>
-                        @TempData["Success"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <span id="_toast_success" data-message="@TempData["Success"]" style="display:none;"></span>
                 }
                 @if (TempData["Error"] != null)
                 {
-                    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        @TempData["Error"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <span id="_toast_error" data-message="@TempData["Error"]" style="display:none;"></span>
+                }
+                @if (TempData["Warning"] != null)
+                {
+                    <span id="_toast_warning" data-message="@TempData["Warning"]" style="display:none;"></span>
+                }
+                @if (TempData["Info"] != null)
+                {
+                    <span id="_toast_info" data-message="@TempData["Info"]" style="display:none;"></span>
                 }
                 
                 <!-- Page Content -->
@@ -178,6 +193,82 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     
+    <script>
+        // CineMax Admin Toast Notification System
+        const CineToast = {
+            _showToast: function(type, message) {
+                const bgMap = {
+                    success: 'linear-gradient(135deg, #0d6e3f 0%, #198754 100%)',
+                    error:   'linear-gradient(135deg, #7f0000 0%, #dc3545 100%)',
+                    warning: 'linear-gradient(135deg, #7c5a00 0%, #ffc107 100%)',
+                    info:    'linear-gradient(135deg, #0a3d6b 0%, #0dcaf0 100%)'
+                };
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showCloseButton: true,
+                    customClass: {
+                        popup: 'cinemax-toast-popup',
+                        title: 'cinemax-toast-title',
+                        timerProgressBar: 'cinemax-toast-progress'
+                    },
+                    background: bgMap[type] || bgMap.info,
+                    color: '#ffffff',
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+            },
+            success: function(msg) { this._showToast('success', msg); },
+            error:   function(msg) { this._showToast('error',   msg); },
+            warning: function(msg) { this._showToast('warning', msg); },
+            info:    function(msg) { this._showToast('info',    msg); }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var s = document.getElementById('_toast_success');
+            var e = document.getElementById('_toast_error');
+            var w = document.getElementById('_toast_warning');
+            var i = document.getElementById('_toast_info');
+            if (s) CineToast.success(s.getAttribute('data-message'));
+            if (e) CineToast.error(e.getAttribute('data-message'));
+            if (w) CineToast.warning(w.getAttribute('data-message'));
+            if (i) CineToast.info(i.getAttribute('data-message'));
+        });
+    </script>
+    <style>
+        .cinemax-toast-popup {
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            padding: 14px 18px !important;
+            min-width: 320px !important;
+            backdrop-filter: blur(10px);
+        }
+        .cinemax-toast-title {
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            text-align: left !important;
+            line-height: 1.4 !important;
+        }
+        .cinemax-toast-progress {
+            background: rgba(255,255,255,0.5) !important;
+            height: 3px !important;
+        }
+        .swal2-close {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .swal2-close:hover {
+            color: #fff !important;
+        }
+    </style>
+
     @if (IsSectionDefined("Scripts"))
     {
         @RenderSection("Scripts", required: false)

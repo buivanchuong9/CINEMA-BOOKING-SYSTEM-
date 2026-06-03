@@ -21,7 +21,7 @@
     <div class="row">
         <div class="col-md-8">
             <div class="glass-card p-4">
-                <form method="post" asp-action="Edit" asp-route-id="@Model.Id">
+                <form method="post" asp-action="Edit" asp-route-id="@Model.Id" id="editMovieForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Id" />
                     <input type="hidden" asp-for="CreatedAt" />
@@ -167,7 +167,7 @@
             });
 
             // Ensure form validation is properly initialized
-            var form = $('form');
+            var form = $('#editMovieForm');
             if (form.length > 0) {
                 form.removeData('validator');
                 form.removeData('unobtrusiveValidation');

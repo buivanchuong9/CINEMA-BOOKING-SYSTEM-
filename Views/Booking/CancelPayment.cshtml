@@ -1,0 +1,242 @@
+@using BE.Core.Entities.Bookings
+@using BE.Core.Entities.Movies
+@using BE.Core.Entities.CinemaInfrastructure
+@{
+    ViewData["Title"] = "Hủy Giao Dịch - CineMax";
+    Layout = "_Layout";
+    var booking = ViewBag.Booking as Booking;
+    var showtime = ViewBag.Showtime as Showtime;
+    var movie = ViewBag.Movie as Movie;
+    var room = ViewBag.Room as Room;
+    int secondsLeft = ViewBag.SecondsLeft ?? 0;
+    bool isExpired = ViewBag.IsExpired ?? false;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+
+            @* ── HEADER ── *@
+            <div class="text-center mb-5" data-aos="fade-down">
+                <div class="cancel-icon-wrapper mb-4">
+                    <div class="cancel-icon-outer"></div>
+                    <i class="bi bi-exclamation-triangle-fill cancel-icon-inner text-warning"></i>
+                </div>
+                <h2 class="fw-bold text-white mb-2">Bạn muốn hủy giao dịch?</h2>
+                <p class="text-muted fs-5">Vui lòng đọc kỹ thông tin bên dưới trước khi xác nhận hủy.</p>
+            </div>
+
+            @* ── BOOKING SUMMARY CARD ── *@
+            <div class="cancel-card p-4 p-md-5 rounded-4 mb-4" data-aos="fade-up">
+                <div class="row g-4 align-items-center">
+                    <div class="col-sm-3 text-center">
+                        <img src="@(movie?.PosterUrl ?? "/images/placeholder.jpg")"
+                             alt="@movie?.Title"
+                             class="rounded-3 shadow poster-img w-100">
+                    </div>
+                    <div class="col-sm-9">
+                        <h4 class="fw-bold text-white mb-1">@(movie?.Title ?? "Phim chưa xác định")</h4>
+                        <div class="d-flex flex-wrap gap-3 mb-3 mt-2">
+                            <span class="info-chip"><i class="bi bi-building me-1 text-cinema-red"></i>@(room?.Cinema?.Name ?? "—")</span>
+                            <span class="info-chip"><i class="bi bi-door-open me-1 text-popcorn-gold"></i>@(room?.Name ?? "—")</span>
+                            <span class="info-chip"><i class="bi bi-calendar3 me-1 text-cinema-red"></i>@showtime?.StartTime.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <span class="text-muted small">Mã đơn: <span class="text-white fw-bold font-monospace">#@booking?.Id.ToString("D6")</span></span>
+                            <div class="price-badge">@booking?.TotalAmount.ToString("N0") ₫</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ── TIME REMAINING ── *@
+            @if (!isExpired && secondsLeft > 0)
+            {
+                <div class="timer-notice rounded-4 p-4 mb-4 text-center" data-aos="fade-up">
+                    <p class="text-muted mb-2 small text-uppercase tracking-wide">Thời gian giữ ghế còn lại</p>
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                        <span id="cancelCountdown" class="fs-2 fw-bold text-warning font-monospace">00:00</span>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ghế của bạn sẽ vẫn được giữ đến hết thời gian này — bạn có thể quay lại thanh toán bất cứ lúc nào!
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger rounded-4 py-3 px-4 mb-4 border-0" data-aos="fade-up">
+                    <i class="bi bi-clock-history me-2"></i>
+                    <strong>Thời gian giữ ghế đã hết.</strong> Đơn hàng này sẽ bị hủy tự động.
+                </div>
+            }
+
+            @* ── WHAT HAPPENS WHEN CANCELLED ── *@
+            <div class="info-section rounded-4 p-4 mb-5" data-aos="fade-up">
+                <h6 class="fw-bold text-white mb-3"><i class="bi bi-info-circle-fill text-cinema-red me-2"></i>Điều gì xảy ra khi bạn hủy?</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2 text-muted"><i class="bi bi-check2 text-success me-2"></i>Ghế ngồi được giải phóng ngay lập tức để người khác có thể đặt.</li>
+                    <li class="mb-2 text-muted"><i class="bi bi-check2 text-success me-2"></i>Đơn hàng chuyển sang trạng thái <strong class="text-danger">Đã hủy</strong>.</li>
+                    <li class="mb-2 text-muted"><i class="bi bi-check2 text-success me-2"></i>Không mất bất kỳ chi phí nào (vì chưa thanh toán).</li>
+                    <li class="text-muted"><i class="bi bi-x-circle text-warning me-2"></i>Bạn sẽ cần chọn lại ghế nếu muốn đặt vé cho suất chiếu này.</li>
+                </ul>
+            </div>
+
+            @* ── ACTION BUTTONS ── *@
+            <div class="row g-3" data-aos="fade-up">
+                @if (!isExpired)
+                {
+                    <div class="col-md-6">
+                        <a href="@Url.Action("VietQRPayment", "Payment", new { bookingId = booking?.Id })"
+                           class="btn btn-success w-100 rounded-pill py-3 fw-bold fs-6">
+                            <i class="bi bi-qr-code-scan me-2"></i>
+                            Tiếp Tục Thanh Toán
+                        </a>
+                    </div>
+                }
+                <div class="col-md-@(isExpired ? "12" : "6")">
+                    <form id="cancelOrderForm" asp-action="Cancel" asp-controller="Booking" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@booking?.Id" />
+                        <button type="button" class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-6"
+                                onclick="confirmCancelOrder('@booking?.Id.ToString("D6")', @(isExpired ? "true" : "false"))">
+                            <i class="bi bi-x-circle me-2"></i>
+                            @(isExpired ? "Xác Nhận Hủy Đơn" : "Hủy Giao Dịch Ngay")
+                        </button>
+                    </form>
+                </div>
+                <div class="col-12">
+                    <a href="@Url.Action("MyBookings", "Booking")"
+                       class="btn btn-outline-light w-100 rounded-pill py-2">
+                        <i class="bi bi-arrow-left me-2"></i>Quay Lại Vé Của Tôi
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var secondsLeft = @secondsLeft;
+        var el = document.getElementById('cancelCountdown');
+
+        function tick() {
+            if (!el || secondsLeft <= 0) {
+                if (el) {
+                    el.textContent = '00:00';
+                    el.classList.replace('text-warning', 'text-danger');
+                }
+                clearInterval(timer);
+                setTimeout(() => location.reload(), 500);
+                return;
+            }
+            var m = Math.floor(secondsLeft / 60);
+            var s = secondsLeft % 60;
+            el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            secondsLeft--;
+        }
+
+        if (el) {
+            tick();
+            var timer = setInterval(tick, 1000);
+        }
+
+        function confirmCancelOrder(orderId, isExpired) {
+            var title = isExpired ? 'Xác nhận hủy đơn hàng' : 'Hủy giao dịch ngay?';
+            var html = isExpired
+                ? 'Thời gian giữ ghế đã hết. Xác nhận hủy đơn <strong style="color:#fbbf24">#' + orderId + '</strong>?<br><span style="font-size:0.85rem;color:#aaa">Ghế sẽ được giải phóng ngay lập tức.</span>'
+                : 'Bạn có chắc chắn muốn <strong style="color:#ef4444">hủy</strong> đơn hàng <strong style="color:#fbbf24">#' + orderId + '</strong> không?<br><span style="font-size:0.85rem;color:#aaa">Ghế sẽ được giải phóng và bạn cần đặt lại từ đầu.</span>';
+
+            Swal.fire({
+                title: title,
+                html: html,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-x-circle me-1"></i> ' + (isExpired ? 'Xác nhận hủy' : 'Hủy ngay'),
+                cancelButtonText: '<i class="bi bi-arrow-left me-1"></i> Quay lại thanh toán',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'cinemax-toast-popup',
+                    confirmButton: 'fw-bold',
+                    cancelButton: 'fw-semibold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('cancelOrderForm').submit();
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .cancel-icon-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+    }
+    .cancel-icon-outer {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(245, 158, 11, 0.15);
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        animation: pulseWarning 2s ease-in-out infinite;
+    }
+    .cancel-icon-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        line-height: 100px;
+        width: 100%;
+        text-align: center;
+    }
+    @@keyframes pulseWarning {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50%       { transform: scale(1.12); opacity: 1; }
+    }
+
+    .cancel-card {
+        background: linear-gradient(145deg, #1a1e2e 0%, #111520 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .poster-img {
+        max-height: 160px;
+        object-fit: cover;
+    }
+    .info-chip {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+    }
+    .price-badge {
+        background: linear-gradient(135deg, #e11d48, #be123c);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1.3rem;
+        padding: 6px 18px;
+        border-radius: 30px;
+    }
+    .timer-notice {
+        background: rgba(245, 158, 11, 0.07);
+        border: 1px dashed rgba(245, 158, 11, 0.35);
+    }
+    .info-section {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+    }
+    .tracking-wide { letter-spacing: 0.08em; }
+</style>

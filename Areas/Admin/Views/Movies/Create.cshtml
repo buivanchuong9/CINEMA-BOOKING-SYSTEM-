@@ -21,7 +21,7 @@
     <div class="row">
         <div class="col-md-8">
             <div class="glass-card p-4">
-                <form method="post" asp-action="Create">
+                <form method="post" asp-action="Create" id="createMovieForm">
                     @Html.AntiForgeryToken()
                     
                     <div class="row g-3">
@@ -160,7 +160,7 @@
             });
 
             // Ensure form validation is properly initialized
-            var form = $('form');
+            var form = $('#createMovieForm');
             if (form.length > 0) {
                 form.removeData('validator');
                 form.removeData('unobtrusiveValidation');
@@ -175,6 +175,61 @@
                     console.log('Validation errors:', $(this).validate().errorList);
                 }
             });
+
+            // Hiển thị popup hỏi ý kiến khi phim bị trùng tên
+            @if (TempData["DuplicateMovieId"] != null)
+            {
+                <text>
+                Swal.fire({
+                    title: 'Đã tồn tại phim này!',
+                    html: `Phim <strong>"@Html.Raw(TempData["DuplicateMovieTitle"])"</strong> đã có sẵn trong hệ thống.<br/><br/>Bạn có muốn đi tới sửa thông tin phim này hay hủy bỏ việc thêm mới?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-pencil-square me-1"></i> Có, đi tới sửa phim',
+                    cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Không, hủy bỏ',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/Admin/Movies/Edit/@TempData["DuplicateMovieId"]`;
+                    } else {
+                        window.location.href = '/Admin/Movies';
+                    }
+                });
+                </text>
+            }
+
+            // Hiển thị popup cảnh báo khi tên phim gần giống nhau (trùng >= 80%)
+            @if (TempData["IsSimilarWarning"] != null)
+            {
+                <text>
+                Swal.fire({
+                    title: 'Tên phim gần giống với phim sẵn có!',
+                    html: `Tên phim bạn nhập: <strong>"@Html.Raw(Model?.Title ?? "")"</strong><br/>
+                           Gần giống với phim sẵn có: <strong>"@Html.Raw(TempData["SimilarMovieTitle"])"</strong> (trùng @TempData["SimilarMoviePercent"]%)<br/><br/>
+                           Bạn vẫn muốn tạo phim mới này hay hủy bỏ việc thêm mới?`,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-plus-circle me-1"></i> Có, vẫn tạo phim mới',
+                    cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Không, hủy bỏ',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Thêm forceCreate = true vào form và submit lại trực tiếp
+                        var targetForm = $('#createMovieForm');
+                        targetForm.append('<input type="hidden" name="forceCreate" value="true" />');
+                        targetForm[0].submit(); // Sử dụng submit native để bypass validation của jQuery
+                    } else {
+                        window.location.href = '/Admin/Movies';
+                    }
+                });
+                </text>
+            }
         });
     </script>
 }

@@ -1,0 +1,314 @@
+@using BE.Application.Helpers
+@using BE.Core.Enums
+@model PaginatedList<BE.Core.Entities.Bookings.Booking>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Đơn Vé & Đối Chiếu";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/Admin/Dashboard" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+            <h2 class="h3 mb-0 text-white d-inline-block">Quản Lý Đơn Vé & Đối Chiếu Doanh Thu</h2>
+        </div>
+        <a href="/Staff/Booking" class="btn btn-cinema-red rounded-pill">
+            <i class="bi bi-shop me-1"></i> Đến Quầy Bán Vé
+        </a>
+    </div>
+
+    <!-- Premium Filters Card -->
+    <div class="card bg-dark border-secondary mb-4 shadow">
+        <div class="card-header py-3 bg-black border-secondary">
+            <h6 class="m-0 font-weight-bold text-popcorn-gold">
+                <i class="bi bi-funnel-fill me-2"></i>Bộ lọc đối chiếu vé
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="/Admin/Bookings" id="filterForm">
+                <div class="row g-3">
+                    <!-- Cinema Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Rạp Chiếu</label>
+                        <select name="cinemaId" class="form-select bg-black text-white border-secondary" onchange="this.form.submit()">
+                            <option value="">-- Tất cả các rạp --</option>
+                            @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
+                            {
+                                <option value="@c.Id" selected="@(ViewBag.CinemaId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Room Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small">Phòng Chiếu</label>
+                        <select name="roomId" class="form-select bg-black text-white border-secondary" onchange="this.form.submit()">
+                            <option value="">-- Tất cả phòng --</option>
+                            @foreach (var r in ViewBag.Rooms as List<BE.Core.Entities.CinemaInfrastructure.Room>)
+                            {
+                                <option value="@r.Id" selected="@(ViewBag.RoomId == r.Id ? "selected" : null)">@r.Name (@r.Cinema?.Name)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Movie Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Phim</label>
+                        <select name="movieId" class="form-select bg-black text-white border-secondary" onchange="this.form.submit()">
+                            <option value="">-- Tất cả các phim --</option>
+                            @foreach (var m in ViewBag.Movies as List<BE.Core.Entities.Movies.Movie>)
+                            {
+                                <option value="@m.Id" selected="@(ViewBag.MovieId == m.Id ? "selected" : null)">@m.Title</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label text-muted small">Trạng Thái</label>
+                        <select name="status" class="form-select bg-black text-white border-secondary" onchange="this.form.submit()">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            @foreach (var s in ViewBag.Statuses as List<BookingStatus>)
+                            {
+                                <option value="@s" selected="@(ViewBag.Status == s ? "selected" : null)">
+                                    @(s == BookingStatus.Paid ? "Đã Thanh Toán" : (s == BookingStatus.Pending ? "Chờ Thanh Toán" : s.ToString()))
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Text Search -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="bi bi-x-circle me-1"></i> Xóa Bộ Lọc
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="input-group">
+                            <span class="input-group-text bg-black text-muted border-secondary"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" value="@ViewBag.Search" class="form-control bg-black text-white border-secondary" placeholder="Tìm kiếm theo Mã đơn, Email khách, SĐT, hoặc Mã giao dịch...">
+                            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Booking List Card -->
+    <div class="card shadow bg-dark text-white border-secondary">
+        <div class="card-header py-3 bg-black border-secondary d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-popcorn-gold">
+                <i class="bi bi-ticket-detailed me-2"></i>Danh Sách Đơn Vé (Trang @Model.PageIndex / @Model.TotalPages)
+            </h6>
+            <span class="badge bg-secondary">Tổng số dòng: @Model.Count</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-bordered table-hover align-middle">
+                    <thead class="table-active">
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Ngày Đặt</th>
+                            <th>Khách Hàng</th>
+                            <th>Rạp & Phòng</th>
+                            <th>Phim</th>
+                            <th>Tổng Tiền</th>
+                            <th>Trạng Thái</th>
+                            <th>PTTT</th>
+                            <th class="text-center" style="width: 260px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Không tìm thấy đơn vé nào phù hợp với bộ lọc!
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-popcorn-gold">#@item.Id</td>
+                                    <td>
+                                        <div>@item.BookingDate.ToString("dd/MM/yyyy")</div>
+                                        <small class="text-muted">@item.BookingDate.ToString("HH:mm:ss")</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">@item.User?.FullName</div>
+                                        <small class="text-muted d-block">@item.User?.Email</small>
+                                        <small class="text-muted">@item.User?.PhoneNumber</small>
+                                    </td>
+                                    <td>
+                                        @if (item.Showtime?.Room != null)
+                                        {
+                                            <span class="badge bg-outline-light border border-secondary text-white mb-1">
+                                                @item.Showtime.Room.Cinema?.Name
+                                            </span>
+                                            <div class="small">Phòng: @item.Showtime.Room.Name</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted italic">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.Showtime?.Movie != null)
+                                        {
+                                            <div class="fw-bold" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="@item.Showtime.Movie.Title">
+                                                @item.Showtime.Movie.Title
+                                            </div>
+                                            <small class="text-muted">Suất: @item.Showtime.StartTime.ToString("dd/MM HH:mm")</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">@item.Notes</span>
+                                        }
+                                    </td>
+                                    <td class="fw-bold text-cinema-red">
+                                        @item.TotalAmount.ToString("N0") ₫
+                                    </td>
+                                    <td>
+                                        @if (item.Status == BookingStatus.Paid)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã Thanh Toán</span>
+                                        }
+                                        else if (item.Status == BookingStatus.Pending)
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Chờ Thanh Toán</span>
+                                        }
+                                        else if (item.Status == BookingStatus.Cancelled)
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Đã Hủy</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@item.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.PaymentMethod.HasValue)
+                                        {
+                                            <span class="small">@item.PaymentMethod</span>
+                                            @if (!string.IsNullOrEmpty(item.TransactionId))
+                                            {
+                                                <small class="text-muted d-block text-truncate" style="max-width: 100px;" title="@item.TransactionId">TXID: @item.TransactionId</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted italic">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </a>
+
+                                            @if (item.Status == BookingStatus.Pending)
+                                            {
+                                                <form asp-action="ConfirmPayment" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="cinemaId" value="@ViewBag.CinemaId" />
+                                                    <input type="hidden" name="roomId" value="@ViewBag.RoomId" />
+                                                    <input type="hidden" name="movieId" value="@ViewBag.MovieId" />
+                                                    <input type="hidden" name="status" value="@ViewBag.Status" />
+                                                    <input type="hidden" name="search" value="@ViewBag.Search" />
+                                                    <input type="hidden" name="pageNumber" value="@Model.PageIndex" />
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-currency-dollar"></i> Nhận Tiền
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            @if (item.Status == BookingStatus.Paid || item.Status == BookingStatus.Pending)
+                                            {
+                                                <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline cancel-booking-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="cinemaId" value="@ViewBag.CinemaId" />
+                                                    <input type="hidden" name="roomId" value="@ViewBag.RoomId" />
+                                                    <input type="hidden" name="movieId" value="@ViewBag.MovieId" />
+                                                    <input type="hidden" name="status" value="@ViewBag.Status" />
+                                                    <input type="hidden" name="search" value="@ViewBag.Search" />
+                                                    <input type="hidden" name="pageNumber" value="@Model.PageIndex" />
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmCancelBooking(this)">
+                                                        <i class="bi bi-trash"></i> Hủy vé
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Server-Side Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center" data-bs-theme="dark">
+                        <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                            <a class="page-link" href="/Admin/Bookings?cinemaId=@ViewBag.CinemaId&roomId=@ViewBag.RoomId&movieId=@ViewBag.MovieId&status=@ViewBag.Status&search=@ViewBag.Search&pageNumber=@(Model.PageIndex - 1)">Trước</a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link" href="/Admin/Bookings?cinemaId=@ViewBag.CinemaId&roomId=@ViewBag.RoomId&movieId=@ViewBag.MovieId&status=@ViewBag.Status&search=@ViewBag.Search&pageNumber=@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                            <a class="page-link" href="/Admin/Bookings?cinemaId=@ViewBag.CinemaId&roomId=@ViewBag.RoomId&movieId=@ViewBag.MovieId&status=@ViewBag.Status&search=@ViewBag.Search&pageNumber=@(Model.PageIndex + 1)">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function clearFilters() {
+            document.querySelectorAll('#filterForm select').forEach(select => {
+                select.value = "";
+            });
+            document.querySelector('#filterForm input[name="search"]').value = "";
+            document.getElementById('filterForm').submit();
+        }
+
+        function confirmCancelBooking(btn) {
+            var form = btn.closest('form');
+            Swal.fire({
+                title: 'Xác nhận hủy đơn vé',
+                html: 'Bạn có chắc chắn muốn <strong style="color:#ef4444">hủy</strong> đơn vé này không?<br><span style="font-size:0.85rem;color:#aaa">Toàn bộ ghế đặt sẽ được giải phóng lại.</span>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-x-circle me-1"></i> Hủy vé',
+                cancelButtonText: 'Giữ lại',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: { popup: 'cinemax-toast-popup' }
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
+        }
+    </script>
+}

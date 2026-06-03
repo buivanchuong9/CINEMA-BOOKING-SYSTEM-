@@ -339,10 +339,10 @@ async function proceedToPayment(useTestPayment = false) {
         useTestPayment: useTestPayment // TEST MODE
     };
 
-    // Submit form POST to /Booking/Create
+    // Submit form POST to /Booking/Checkout
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/Booking/Create';
+    form.action = '/Booking/Checkout';
 
     // Add CSRF token
     const csrf = document.querySelector('input[name="__RequestVerificationToken"]');

@@ -11,6 +11,7 @@ using BE.Core.Entities.Business;
 using Microsoft.AspNetCore.Identity;
 using BE.Application.Helpers;
 using BE.Core.Entities.Bookings;
+using BE.Core.Entities.Movies;
 
 namespace BE.Areas.Staff.Controllers;
 
@@ -39,24 +40,52 @@ public class BookingController : Controller
     }
 
     // GET: /Staff/Booking
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int? cinemaId, int? movieId, string? date, int pageNumber = 1)
     {
-        var showtimes = (await _unitOfWork.Showtimes.GetAllAsync())
-            .Where(s => s.IsActive && s.StartTime >= DateTime.Now.AddHours(-1)) // Show showtimes that started recently too
-            .OrderBy(s => s.StartTime)
-            .ToList();
+        int pageSize = 20;
 
-        foreach (var st in showtimes)
+        var query = _context.Showtimes
+            .Include(s => s.Movie)
+            .Include(s => s.Room)
+                .ThenInclude(r => r.Cinema)
+            .Where(s => s.IsActive && s.StartTime >= DateTime.Now.AddHours(-1))
+            .AsQueryable();
+
+        // Apply filters
+        if (cinemaId.HasValue && cinemaId.Value > 0)
         {
-            st.Movie = (await _unitOfWork.Movies.GetByIdAsync(st.MovieId))!;
-            st.Room = (await _unitOfWork.Rooms.GetByIdAsync(st.RoomId))!;
-            if (st.Room != null)
+            query = query.Where(s => s.Room != null && s.Room.CinemaId == cinemaId.Value);
+        }
+
+        if (movieId.HasValue && movieId.Value > 0)
+        {
+            query = query.Where(s => s.MovieId == movieId.Value);
+        }
+
+        if (!string.IsNullOrEmpty(date))
+        {
+            if (DateTime.TryParse(date, out var selectedDate))
             {
-                st.Room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(st.Room.CinemaId))!;
+                var startDate = selectedDate.Date;
+                var endDate = startDate.AddDays(1);
+                query = query.Where(s => s.StartTime >= startDate && s.StartTime < endDate);
             }
         }
 
-        return View(showtimes);
+        query = query.OrderBy(s => s.StartTime);
+
+        var paginatedShowtimes = await PaginatedList<Showtime>.CreateAsync(query.AsNoTracking(), pageNumber, pageSize);
+
+        // Fetch lookup lists for filters
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
+        ViewBag.Movies = await _context.Movies.OrderBy(m => m.Title).ToListAsync();
+        
+        // Active filter values
+        ViewBag.CinemaId = cinemaId;
+        ViewBag.MovieId = movieId;
+        ViewBag.Date = date;
+
+        return View(paginatedShowtimes);
     }
 
     // GET: /Staff/Booking/SelectSeats?showtimeId=1
@@ -150,26 +179,137 @@ public class BookingController : Controller
     }
 
     // GET: /Staff/Booking/ManageBookings
-    public async Task<IActionResult> ManageBookings(int pageNumber = 1)
+    public async Task<IActionResult> ManageBookings(
+        int? cinemaId, 
+        int? roomId, 
+        int? movieId, 
+        BookingStatus? status, 
+        string? search, 
+        int pageNumber = 1)
     {
         int pageSize = 20;
-        var bookingsQuery = _context.Bookings
+
+        var query = _context.Bookings
             .Include(b => b.User)
-            .OrderByDescending(b => b.BookingDate);
-            
-        var paginatedBookings = await PaginatedList<Booking>.CreateAsync(bookingsQuery.AsNoTracking(), pageNumber, pageSize);
-            
-        // Load showtime and movie for each booking manually to avoid complex includes if needed
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s.Movie)
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s.Room)
+                    .ThenInclude(r => r.Cinema)
+            .AsQueryable();
+
+        // Apply filters
+        if (cinemaId.HasValue && cinemaId.Value > 0)
+        {
+            query = query.Where(b => b.Showtime != null && b.Showtime.Room != null && b.Showtime.Room.CinemaId == cinemaId.Value);
+        }
+
+        if (roomId.HasValue && roomId.Value > 0)
+        {
+            query = query.Where(b => b.Showtime != null && b.Showtime.RoomId == roomId.Value);
+        }
+
+        if (movieId.HasValue && movieId.Value > 0)
+        {
+            query = query.Where(b => b.Showtime != null && b.Showtime.MovieId == movieId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(b => b.Status == status.Value);
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            search = search.Trim().ToLower();
+            query = query.Where(b => 
+                b.Id.ToString() == search || 
+                (b.TransactionId != null && b.TransactionId.ToLower().Contains(search)) ||
+                (b.User != null && b.User.FullName != null && b.User.FullName.ToLower().Contains(search)) ||
+                (b.User != null && b.User.Email != null && b.User.Email.ToLower().Contains(search)) ||
+                (b.User != null && b.User.PhoneNumber != null && b.User.PhoneNumber.Contains(search))
+            );
+        }
+
+        query = query.OrderByDescending(b => b.BookingDate);
+
+        var paginatedBookings = await PaginatedList<Booking>.CreateAsync(query.AsNoTracking(), pageNumber, pageSize);
+
+        // Load movie titles explicitly (Notes field reuse is kept for backward compatibility just in case)
         foreach (var b in paginatedBookings)
         {
-            if (b.ShowtimeId.HasValue)
+            if (b.Showtime?.Movie != null)
             {
-                var st = await _context.Showtimes.Include(s => s.Movie).FirstOrDefaultAsync(s => s.Id == b.ShowtimeId);
-                b.Notes = st?.Movie?.Title ?? "Unknown Movie"; // Temporary reuse Notes for display if model doesn't have it
+                b.Notes = b.Showtime.Movie.Title;
             }
         }
-            
+
+        // Fetch lookup lists for search filters
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
+        ViewBag.Rooms = await _context.Rooms.OrderBy(r => r.Name).ToListAsync();
+        ViewBag.Movies = await _context.Movies.OrderBy(m => m.Title).ToListAsync();
+        ViewBag.Statuses = Enum.GetValues(typeof(BookingStatus)).Cast<BookingStatus>().ToList();
+
+        // Store active filter values
+        ViewBag.CinemaId = cinemaId;
+        ViewBag.RoomId = roomId;
+        ViewBag.MovieId = movieId;
+        ViewBag.Status = status;
+        ViewBag.Search = search;
+
         return View(paginatedBookings);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmCashPayment(int id)
+    {
+        var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Staff";
+        var success = await _bookingService.ConfirmCounterPaymentAsync(id, staffId);
+        
+        if (success)
+        {
+            TempData["Success"] = "Đã xác nhận thanh toán tiền mặt thành công!";
+        }
+        else
+        {
+            TempData["Error"] = "Xác nhận thanh toán tiền mặt thất bại!";
+        }
+
+        return RedirectToAction(nameof(ManageBookings), new {
+            cinemaId = Request.Form["cinemaId"],
+            roomId = Request.Form["roomId"],
+            movieId = Request.Form["movieId"],
+            status = Request.Form["status"],
+            search = Request.Form["search"],
+            pageNumber = Request.Form["pageNumber"]
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        _logger.LogInformation($"Staff cancelling booking: {id}");
+        var success = await _bookingService.CancelBookingAsync(id);
+        
+        if (success)
+        {
+            TempData["Success"] = "Đã hủy đơn đặt vé tại quầy và giải phóng ghế thành công!";
+        }
+        else
+        {
+            TempData["Error"] = "Hủy đơn đặt vé thất bại!";
+        }
+
+        return RedirectToAction(nameof(ManageBookings), new {
+            cinemaId = Request.Form["cinemaId"],
+            roomId = Request.Form["roomId"],
+            movieId = Request.Form["movieId"],
+            status = Request.Form["status"],
+            search = Request.Form["search"],
+            pageNumber = Request.Form["pageNumber"]
+        });
     }
 
     // GET: /Staff/Booking/PrintTicket/5

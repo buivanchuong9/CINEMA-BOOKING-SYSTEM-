@@ -49,6 +49,23 @@ public class FoodsController : Controller // danh sách món ăn
                 return View(food);
             }
 
+            // 1. Kiểm tra trùng tên món ăn/combo
+            var duplicateFood = await _unitOfWork.Foods.FirstOrDefaultAsync(f => 
+                f.Name.Trim().ToLower() == food.Name.Trim().ToLower()
+            );
+            if (duplicateFood != null)
+            {
+                TempData["Error"] = $"Sản phẩm '{food.Name}' đã tồn tại trong hệ thống!";
+                return View(food);
+            }
+
+            // 2. Ràng buộc giá cả không âm
+            if (food.Price < 0)
+            {
+                TempData["Error"] = "Giá tiền sản phẩm không được nhỏ hơn 0 VNĐ!";
+                return View(food);
+            }
+
             food.CreatedAt = DateTime.Now;
             food.IsAvailable = true;
             await _unitOfWork.Foods.AddAsync(food);
@@ -95,7 +112,40 @@ public class FoodsController : Controller // danh sách món ăn
                 return View(food);
             }
 
-            _unitOfWork.Foods.Update(food);
+            // 1. Kiểm tra sản phẩm tồn tại
+            var existingFood = await _unitOfWork.Foods.GetByIdAsync(id);
+            if (existingFood == null)
+            {
+                return NotFound();
+            }
+
+            // 2. Kiểm tra trùng tên món ăn/combo (trừ chính nó)
+            var duplicateFood = await _unitOfWork.Foods.FirstOrDefaultAsync(f => 
+                f.Id != id &&
+                f.Name.Trim().ToLower() == food.Name.Trim().ToLower()
+            );
+            if (duplicateFood != null)
+            {
+                TempData["Error"] = $"Sản phẩm '{food.Name}' đã tồn tại trong hệ thống!";
+                return View(food);
+            }
+
+            // 3. Ràng buộc giá cả không âm
+            if (food.Price < 0)
+            {
+                TempData["Error"] = "Giá tiền sản phẩm không được nhỏ hơn 0 VNĐ!";
+                return View(food);
+            }
+
+            existingFood.Name = food.Name;
+            existingFood.Description = food.Description;
+            existingFood.Price = food.Price;
+            existingFood.ImageUrl = food.ImageUrl;
+            existingFood.IsCombo = food.IsCombo;
+            existingFood.IsAvailable = food.IsAvailable;
+            existingFood.DisplayOrder = food.DisplayOrder;
+
+            _unitOfWork.Foods.Update(existingFood);
             await _unitOfWork.SaveChangesAsync();
 
             TempData["Success"] = $"Đã cập nhật món '{food.Name}' thành công!";
@@ -117,6 +167,14 @@ public class FoodsController : Controller // danh sách món ăn
         if (food == null)
         {
             return NotFound();
+        }
+
+        // Kiểm tra xem món ăn này có liên kết với đơn đặt vé nào không
+        var hasOrders = await _unitOfWork.BookingFoods.ExistsAsync(bf => bf.FoodId == id);
+        if (hasOrders)
+        {
+            TempData["Error"] = "Không thể xóa sản phẩm này vì đã có khách hàng đặt trong đơn hàng!";
+            return RedirectToAction(nameof(Index));
         }
 
         _unitOfWork.Foods.Delete(food);

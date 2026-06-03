@@ -76,6 +76,8 @@ namespace BE.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ShowtimeId");
+
                     b.HasIndex("Status");
 
                     b.HasIndex("UserId");
@@ -152,6 +154,48 @@ namespace BE.Migrations
                         .IsUnique();
 
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("BE.Core.Entities.Business.ChatHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BotReply")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserMessage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChatHistories");
                 });
 
             modelBuilder.Entity("BE.Core.Entities.Business.Transaction", b =>
@@ -857,6 +901,10 @@ namespace BE.Migrations
 
             modelBuilder.Entity("BE.Core.Entities.Bookings.Booking", b =>
                 {
+                    b.HasOne("BE.Core.Entities.Movies.Showtime", "Showtime")
+                        .WithMany()
+                        .HasForeignKey("ShowtimeId");
+
                     b.HasOne("BE.Core.Entities.Business.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -866,6 +914,8 @@ namespace BE.Migrations
                     b.HasOne("BE.Core.Entities.Business.Voucher", "Voucher")
                         .WithMany()
                         .HasForeignKey("VoucherId");
+
+                    b.Navigation("Showtime");
 
                     b.Navigation("User");
 
@@ -900,6 +950,15 @@ namespace BE.Migrations
                         .IsRequired();
 
                     b.Navigation("BookingDetail");
+                });
+
+            modelBuilder.Entity("BE.Core.Entities.Business.ChatHistory", b =>
+                {
+                    b.HasOne("BE.Core.Entities.Business.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BE.Core.Entities.Business.Transaction", b =>

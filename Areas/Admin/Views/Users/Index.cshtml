@@ -1,0 +1,154 @@
+@model IEnumerable<BE.Core.Entities.Business.User>
+@{
+    ViewData["Title"] = "Quản lý Tài Khoản";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/Admin/Dashboard" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+            <h2 class="h3 mb-0 text-white d-inline-block">Quản lý Tài Khoản Người Dùng</h2>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Thêm Tài Khoản Mới
+        </a>
+    </div>
+
+
+
+    <!-- Search Form -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body">
+            <form method="get" action="/Admin/Users" class="d-flex align-items-center">
+                <input type="hidden" name="role" value="@ViewBag.CurrentRole" />
+                <div class="input-group">
+                    <input type="text" name="search" value="@ViewBag.CurrentSearch" class="form-control bg-black text-white border-secondary" placeholder="Tìm kiếm theo Tên, Email hoặc Số điện thoại...">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch as string))
+                    {
+                        <a href="/Admin/Users?role=@ViewBag.CurrentRole" class="btn btn-outline-secondary">Xóa tìm kiếm</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4 bg-dark text-white border-secondary">
+        <div class="card-header py-3 bg-black border-secondary">
+            <h6 class="m-0 font-weight-bold text-popcorn-gold">Danh sách tài khoản (Trực tiếp từ Database)</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-bordered table-hover align-middle" width="100%" cellspacing="0">
+                    <thead class="table-active">
+                        <tr>
+                            <th>Họ và Tên</th>
+                            <th>Email / Username</th>
+                            <th>Số Điện Thoại</th>
+                            <th>Hạng Thành Viên</th>
+                            <th>Điểm</th>
+                            <th>Ngày Tạo</th>
+                            <th class="text-center" style="width: 150px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@item.FullName</td>
+                                <td>@item.Email</td>
+                                <td>@item.PhoneNumber</td>
+                                <td><span class="badge bg-info text-dark">@item.MembershipLevel</span></td>
+                                <td>@item.Points</td>
+                                <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                        Sửa
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline delete-form">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa" onclick="confirmDelete(this)">
+                                            Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center" data-bs-theme="dark">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/Admin/Users?role=@ViewBag.CurrentRole&search=@ViewBag.CurrentSearch&page=@(ViewBag.CurrentPage - 1)">Trước</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
+                        }
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            if (i == ViewBag.CurrentPage)
+                            {
+                                <li class="page-item active"><a class="page-link" href="#">@i</a></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" href="/Admin/Users?role=@ViewBag.CurrentRole&search=@ViewBag.CurrentSearch&page=@i">@i</a></li>
+                            }
+                        }
+
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="/Admin/Users?role=@ViewBag.CurrentRole&search=@ViewBag.CurrentSearch&page=@(ViewBag.CurrentPage + 1)">Sau</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="page-item disabled"><a class="page-link" href="#">Sau</a></li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(btn) {
+            var form = btn.closest('form');
+            Swal.fire({
+                title: 'Xác nhận xóa tài khoản',
+                html: 'Bạn có chắc chắn muốn <strong style="color:#ef4444">xóa</strong> tài khoản này không?<br><span style="font-size:0.85rem;color:#aaa">Hành động này không thể hoàn tác.</span>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash me-1"></i> Xóa',
+                cancelButtonText: 'Hủy',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: {
+                    popup: 'cinemax-toast-popup'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}

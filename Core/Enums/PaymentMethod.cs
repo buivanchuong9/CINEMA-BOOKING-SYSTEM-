@@ -3,7 +3,7 @@ namespace BE.Core.Enums;
 /// <summary>
 /// Phương thức thanh toán
 /// </summary>
-public enum PaymentMethod // 0: Thanh toán tiền mặt tại quầy, 1: Thanh toán qua VNPAY, 2: Thanh toán qua MoMo, 3: Thanh toán qua ZaloPay
+public enum PaymentMethod
 {
     /// <summary>
     /// Thanh toán tiền mặt tại quầy
@@ -11,7 +11,7 @@ public enum PaymentMethod // 0: Thanh toán tiền mặt tại quầy, 1: Thanh 
     Cash = 0,
     
     /// <summary>
-    /// Thanh toán qua VNPAY
+    /// Thanh toán qua VNPAY (deprecated)
     /// </summary>
     VNPAY = 1,
     
@@ -23,5 +23,10 @@ public enum PaymentMethod // 0: Thanh toán tiền mặt tại quầy, 1: Thanh 
     /// <summary>
     /// Thanh toán qua ZaloPay
     /// </summary>
-    ZaloPay = 3
+    ZaloPay = 3,
+
+    /// <summary>
+    /// Thanh toán qua VietQR (chuyển khoản ngân hàng)
+    /// </summary>
+    VietQR = 4
 }

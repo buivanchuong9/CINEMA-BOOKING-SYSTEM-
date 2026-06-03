@@ -17,20 +17,20 @@ public class BookingController : Controller
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBookingService _bookingService;
     private readonly ILogger<BookingController> _logger;
-    private readonly VNPayHelper _vnPayHelper;
+    private readonly VietQRHelper _vietQRHelper;
     private readonly AppDbContext _context;
 
     public BookingController(
         IUnitOfWork unitOfWork, 
         IBookingService bookingService, 
         ILogger<BookingController> logger,
-        VNPayHelper vnPayHelper,
+        VietQRHelper vietQRHelper,
         AppDbContext context)
     {
         _unitOfWork = unitOfWork;
         _bookingService = bookingService;
         _logger = logger;
-        _vnPayHelper = vnPayHelper;
+        _vietQRHelper = vietQRHelper;
         _context = context;
     }
 
@@ -125,9 +125,9 @@ public class BookingController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateBookingDto dto, bool useTestPayment = false)
+    public async Task<IActionResult> Create(CreateBookingDto dto)
     {
-        _logger.LogInformation($"Create booking called with ShowtimeId: {dto.ShowtimeId}, SeatIds count: {dto.SeatIds?.Count ?? 0}, UseTestPayment: {useTestPayment}");
+        _logger.LogInformation($"Create booking called with ShowtimeId: {dto.ShowtimeId}, SeatIds count: {dto.SeatIds?.Count ?? 0}");
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // lấy Id của người dùng đang đăng nhập.
         if (string.IsNullOrEmpty(userId))
@@ -141,7 +141,6 @@ public class BookingController : Controller
 
         if (result.Success) // nếu tạo booking thành công
         {
-            // Tạo booking thành công -> Redirect đến VNPay
             try
             {
                 if (!result.BookingId.HasValue) // nếu không có bookingId thì trả về lỗi
@@ -150,39 +149,12 @@ public class BookingController : Controller
                     return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
                 }
 
-                var booking = await _unitOfWork.Bookings.GetByIdAsync(result.BookingId.Value); // lấy booking
-                if (booking == null) // nếu không tìm thấy booking
-                {
-                    TempData["Error"] = "Không tìm thấy đơn đặt vé!";
-                    return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
-                }
-
-                // dev Vượt qua VNPay nếu useTestPayment = true
-                if (useTestPayment)
-                {
-                    _logger.LogInformation($"Using TEST PAYMENT for Booking ID={booking.Id}");
-                    return RedirectToAction("TestPayment", "Payment", new { bookingId = booking.Id });
-                }
-
-                // Lấy IP của client
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-                
-                // Tạo URL thanh toán VNPay
-                var paymentUrl = _vnPayHelper.CreatePaymentUrl(
-                    orderId: booking.Id.ToString(),
-                    amount: booking.TotalAmount,
-                    orderInfo: $"Thanh toan ve xem phim - Ma don: {booking.Id}",
-                    ipAddress: ipAddress
-                );
-
-                _logger.LogInformation($"Redirecting to VNPay: {paymentUrl}");
-                
-                // Redirect to VNPay 
-                return Redirect(paymentUrl);
+                _logger.LogInformation($"Booking ID={result.BookingId.Value} created. Redirecting to VietQR payment.");
+                return RedirectToAction("VietQRPayment", "Payment", new { bookingId = result.BookingId.Value });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating VNPay payment URL");
+                _logger.LogError(ex, "Error redirecting to VietQR payment page");
                 TempData["Error"] = "Có lỗi khi chuyển đến trang thanh toán!";
                 return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
             }
@@ -190,6 +162,72 @@ public class BookingController : Controller
 
         TempData["Error"] = result.Message;
         return RedirectToAction("SelectSeats", new { showtimeId = dto.ShowtimeId });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Checkout(CreateBookingDto dto, bool useTestPayment = false)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            TempData["Error"] = "Vui lòng đăng nhập!";
+            return RedirectToAction("Login", "Account");
+        }
+
+        var showtime = await _unitOfWork.Showtimes.GetByIdAsync(dto.ShowtimeId);
+        if (showtime == null) return RedirectToAction("Index", "Movies");
+
+        var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+        var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+        if (room != null) room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId))!;
+
+        var selectedSeats = new List<BE.Core.Entities.CinemaInfrastructure.Seat>();
+        foreach(var seatId in dto.SeatIds)
+        {
+            var seat = await _unitOfWork.Seats.GetByIdAsync(seatId);
+            if (seat != null)
+            {
+                seat.SeatType = (await _unitOfWork.SeatTypes.GetByIdAsync(seat.SeatTypeId))!;
+                selectedSeats.Add(seat);
+            }
+        }
+
+        var selectedFoods = new List<(BE.Core.Entities.Concessions.Food food, int quantity)>();
+        if (dto.Foods != null)
+        {
+            foreach(var f in dto.Foods)
+            {
+                var food = await _unitOfWork.Foods.GetByIdAsync(f.FoodId);
+                if (food != null) selectedFoods.Add((food, f.Quantity));
+            }
+        }
+
+        decimal subtotal = 0;
+        foreach (var seat in selectedSeats)
+        {
+            subtotal += showtime.BasePrice * (seat.SeatType?.SurchargeRatio ?? 1.0m);
+        }
+        foreach (var item in selectedFoods)
+        {
+            subtotal += item.food.Price * item.quantity;
+        }
+
+        var vouchers = (await _unitOfWork.Vouchers.GetAllAsync())
+            .Where(v => v.IsActive && v.StartDate <= DateTime.Now && v.ExpiryDate >= DateTime.Now && (v.UsageLimit == null || v.UsedCount < v.UsageLimit) && (string.IsNullOrEmpty(v.UserId) || v.UserId == userId) && v.MinOrderAmount <= subtotal)
+            .ToList();
+
+        ViewBag.Showtime = showtime;
+        ViewBag.Movie = movie;
+        ViewBag.Room = room;
+        ViewBag.SelectedSeats = selectedSeats;
+        ViewBag.SelectedFoods = selectedFoods;
+        ViewBag.Subtotal = subtotal;
+        ViewBag.Vouchers = vouchers;
+        ViewBag.UseTestPayment = useTestPayment;
+
+        return View(dto);
     }
 
     [Authorize]
@@ -288,17 +326,87 @@ public class BookingController : Controller
         return View(PaginatedList<Booking>.Create(sortedBookings, pageNumber, pageSize));
     }
 
+    // GET: /Booking/CancelPayment?id=5
+    [Authorize]
+    public async Task<IActionResult> CancelPayment(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Account");
+
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+        if (booking == null || booking.UserId != userId)
+        {
+            TempData["Error"] = "Không tìm thấy đơn đặt vé!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.Status == BE.Core.Enums.BookingStatus.Paid)
+        {
+            TempData["Error"] = "Không thể hủy vé đã thanh toán từ trang này!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.Status == BE.Core.Enums.BookingStatus.Cancelled)
+        {
+            TempData["Info"] = "Đơn hàng này đã được hủy trước đó.";
+            return RedirectToAction("MyBookings");
+        }
+
+        // Load thêm thông tin để hiển thị trang confirm
+        BE.Core.Entities.Movies.Showtime? showtime = null;
+        BE.Core.Entities.Movies.Movie? movie = null;
+        BE.Core.Entities.CinemaInfrastructure.Room? room = null;
+
+        if (booking.ShowtimeId.HasValue)
+        {
+            showtime = await _unitOfWork.Showtimes.GetByIdAsync(booking.ShowtimeId.Value);
+            if (showtime != null)
+            {
+                movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+                room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+                if (room != null)
+                    room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId))!;
+            }
+        }
+
+        // Tính thời gian còn lại
+        var expiryTime = booking.BookingDate.AddMinutes(10);
+        var timeLeft = expiryTime - DateTime.Now;
+        bool isExpired = timeLeft.TotalSeconds <= 0;
+
+        ViewBag.Booking = booking;
+        ViewBag.Showtime = showtime;
+        ViewBag.Movie = movie;
+        ViewBag.Room = room;
+        ViewBag.ExpiryTime = expiryTime;
+        ViewBag.SecondsLeft = isExpired ? 0 : (int)timeLeft.TotalSeconds;
+        ViewBag.IsExpired = isExpired;
+
+        return View();
+    }
+
     // POST: /Booking/Cancel/5
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+
+        // Chỉ cho phép hủy nếu là owner
+        if (booking != null && !string.IsNullOrEmpty(userId) && booking.UserId != userId)
+        {
+            TempData["Error"] = "Bạn không có quyền hủy đơn hàng này!";
+            return RedirectToAction("MyBookings");
+        }
+
         var success = await _bookingService.CancelBookingAsync(id);
         
         if (success)
         {
-            TempData["Success"] = "Đã hủy đơn đặt vé thành công!";
+            TempData["Success"] = "Đã hủy đơn đặt vé thành công! Ghế đã được giải phóng.";
         }
         else
         {
