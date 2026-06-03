@@ -167,6 +167,9 @@
                             <button type="button" onclick="checkStatusManually()" class="btn btn-cinema-red rounded-pill py-2 px-4 fw-bold flex-fill">
                                 <i class="bi bi-arrow-clockwise me-1"></i> Tôi Đã Thanh Toán (Kiểm tra lại)
                             </button>
+                            <button type="button" onclick="triggerTestPayment()" class="btn btn-outline-warning rounded-pill py-2 px-4 fw-bold">
+                                <i class="bi bi-bug me-1"></i> Thanh Toán (Test)
+                            </button>
                             <a href="@Url.Action("CancelPayment", "Booking", new { id = booking?.Id })" class="btn btn-outline-light rounded-pill py-2 px-4">
                                 <i class="bi bi-x-circle me-1"></i> Hủy Giao Dịch
                             </a>
@@ -340,6 +343,78 @@
                     statusBox.innerHTML = originalContent;
                     console.error(err);
                 });
+        }
+
+        function triggerTestPayment() {
+            Swal.fire({
+                title: 'Thanh toán thử nghiệm (Test)?',
+                html: 'Hệ thống sẽ giả lập giao dịch chuyển khoản thành công <strong class="text-warning">@(booking?.TotalAmount.ToString("N0") ?? "0") ₫</strong> cho đơn hàng này.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Xác nhận',
+                cancelButtonText: 'Đóng',
+                background: 'linear-gradient(135deg, #181c26 0%, #0e1118 100%)',
+                color: '#ffffff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        background: 'linear-gradient(135deg, #181c26 0%, #0e1118 100%)',
+                        color: '#ffffff'
+                    });
+                    
+                    fetch('/Payment/TestPayBooking', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'bookingId=' + bookingId
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            clearInterval(checkInterval);
+                            clearInterval(timerInterval);
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: data.message,
+                                timer: 1500,
+                                showConfirmButton: false,
+                                background: 'linear-gradient(135deg, #181c26 0%, #0e1118 100%)',
+                                color: '#ffffff'
+                            }).then(() => {
+                                window.location.href = '/Booking/Details/' + bookingId;
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Thất bại!',
+                                text: data.message,
+                                background: 'linear-gradient(135deg, #181c26 0%, #0e1118 100%)',
+                                color: '#ffffff'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi kết nối!',
+                            text: 'Không thể kết nối đến máy chủ.',
+                            background: 'linear-gradient(135deg, #181c26 0%, #0e1118 100%)',
+                            color: '#ffffff'
+                        });
+                    });
+                }
+            });
         }
     </script>
 }

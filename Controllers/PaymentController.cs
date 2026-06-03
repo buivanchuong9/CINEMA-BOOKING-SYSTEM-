@@ -122,6 +122,41 @@ public class PaymentController : Controller
         }
     }
 
+    // POST: /Payment/TestPayBooking
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> TestPayBooking(int bookingId)
+    {
+        try
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var booking = await _unitOfWork.Bookings.GetByIdAsync(bookingId);
+            
+            if (booking == null || booking.UserId != userId)
+            {
+                return Json(new { success = false, message = "Không tìm thấy đơn đặt vé!" });
+            }
+
+            if (booking.Status == BookingStatus.Paid)
+            {
+                return Json(new { success = true, message = "Đơn đặt vé đã thanh toán!" });
+            }
+
+            bool success = await _bookingService.ConfirmPaymentAsync(booking.Id, "TEST_PAYMENT_" + Guid.NewGuid().ToString().Substring(0, 8));
+            if (success)
+            {
+                return Json(new { success = true, message = "Thanh toán thử nghiệm thành công!" });
+            }
+
+            return Json(new { success = false, message = "Không thể xác nhận thanh toán." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error testing payment: bookingId={bookingId}");
+            return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+        }
+    }
+
     // API Get Token for VietQR
     // POST: /vqr/api/token_generate
     [HttpPost]
