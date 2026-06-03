@@ -132,8 +132,18 @@ public class AccountController : Controller
 
                 TempData["Success"] = $"Chào mừng {user.FullName}!";
 
+                var isStaff = await _userManager.IsInRoleAsync(user, "Staff");
+
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) // kiểm tra returnUrl có hợp lệ không
                 {
+                    if (isStaff)
+                    {
+                        if (returnUrl.StartsWith("/Staff/Booking", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        return Redirect("/Staff/Booking");
+                    }
                     return Redirect(returnUrl); // chuyển hướng đến returnUrl
                 }
 
@@ -141,6 +151,11 @@ public class AccountController : Controller
                 if (isAdmin) // nếu là admin
                 {
                     return RedirectToAction("Index", "Dashboard", new { area = "Admin" }); // chuyển hướng đến trang admin
+                }
+
+                if (isStaff)
+                {
+                    return Redirect("/Staff/Booking");
                 }
 
                 return RedirectToAction("Index", "Home");

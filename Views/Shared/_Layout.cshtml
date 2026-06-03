@@ -46,29 +46,48 @@
             <!-- Navigation Items -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item">
-                        <a class="nav-link px-3" asp-area="" asp-controller="Home" asp-action="Index">
-                            <i class="bi bi-house-door me-1"></i> Trang Chủ
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" asp-area="" asp-controller="Movies" asp-action="Index">
-                            <i class="bi bi-film me-1"></i> Phim
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" asp-area="" asp-controller="Cinemas" asp-action="Index">
-                            <i class="bi bi-building me-1"></i> Rạp Chiếu
-                        </a>
-                    </li>
+                    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Staff") && !User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="/Staff/Booking">
+                                <i class="bi bi-shop me-1"></i> Quầy Bán Vé
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="/Staff/Booking/ManageBookings">
+                                <i class="bi bi-list-ul me-1"></i> Lịch Sử Bán Vé
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door me-1"></i> Trang Chủ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-controller="Movies" asp-action="Index">
+                                <i class="bi bi-film me-1"></i> Phim
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3" asp-area="" asp-controller="Cinemas" asp-action="Index">
+                                <i class="bi bi-building me-1"></i> Rạp Chiếu
+                            </a>
+                        </li>
+                    }
                 </ul>
                 
                 <!-- Search & Auth -->
                 <div class="d-flex align-items-center gap-3">
                     <!-- Search Icon -->
-                    <button class="btn btn-link text-white p-0" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
-                        <i class="bi bi-search fs-5"></i>
-                    </button>
+                    @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Staff") && !User.IsInRole("Admin")))
+                    {
+                        <button class="btn btn-link text-white p-0" type="button" data-bs-toggle="modal" data-bs-target="#searchModal">
+                            <i class="bi bi-search fs-5"></i>
+                        </button>
+                    }
                     
                     @if (User.Identity?.IsAuthenticated == true)
                     {
@@ -79,18 +98,21 @@
                                 @User.Identity.Name
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="/Account/Profile">
-                                        <i class="bi bi-person me-2"></i>
-                                        Hồ Sơ Cá Nhân
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/Booking/MyBookings">
-                                        <i class="bi bi-ticket-perforated me-2"></i>
-                                        Vé Của Tôi
-                                    </a>
-                                </li>
+                                @if (!(User.IsInRole("Staff") && !User.IsInRole("Admin")))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/Account/Profile">
+                                            <i class="bi bi-person me-2"></i>
+                                            Hồ Sơ Cá Nhân
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/Booking/MyBookings">
+                                            <i class="bi bi-ticket-perforated me-2"></i>
+                                            Vé Của Tôi
+                                        </a>
+                                    </li>
+                                }
                                 @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
                                 {
                                     <li>
@@ -248,22 +270,25 @@
     </footer>
 
     <!-- Floating Chatbot -->
-    <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý AI" onclick="toggleChatPopup()">
-        <i class="bi bi-chat-dots-fill"></i>
-    </button>
+    @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Staff") && !User.IsInRole("Admin")))
+    {
+        <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý AI" onclick="toggleChatPopup()">
+            <i class="bi bi-chat-dots-fill"></i>
+        </button>
 
-    <div id="chatPopup" class="chat-popup" aria-hidden="true">
-        <div class="chat-popup-header">
-            <div class="chat-popup-title">
-                <span class="mini-badge"></span>
-                Trợ lý CineMax AI
+        <div id="chatPopup" class="chat-popup" aria-hidden="true">
+            <div class="chat-popup-header">
+                <div class="chat-popup-title">
+                    <span class="mini-badge"></span>
+                    Trợ lý CineMax AI
+                </div>
+                <button class="chat-popup-close" type="button" aria-label="Đóng chatbot" onclick="toggleChatPopup()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
-            <button class="chat-popup-close" type="button" aria-label="Đóng chatbot" onclick="toggleChatPopup()">
-                <i class="bi bi-x-lg"></i>
-            </button>
+            <iframe class="chat-popup-frame" src="/Chat?popup=1" title="Chatbot CineMax"></iframe>
         </div>
-        <iframe class="chat-popup-frame" src="/Chat?popup=1" title="Chatbot CineMax"></iframe>
-    </div>
+    }
 
     <!-- Search Modal -->
     <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">

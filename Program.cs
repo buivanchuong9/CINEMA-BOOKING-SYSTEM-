@@ -121,6 +121,31 @@ app.UseAuthorization();
 
 app.UseSession();
 
+// Custom Middleware to restrict Staff users to only /Staff/Booking area
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true && context.User.IsInRole("Staff") && !context.User.IsInRole("Admin"))
+    {
+        var path = context.Request.Path.Value ?? "";
+        
+        bool isAllowed = path.StartsWith("/Staff/Booking", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/Account/Logout", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/Identity/Account/Logout", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/seatHub", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
+                          path.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
+                          path.Contains(".");
+                          
+        if (!isAllowed)
+        {
+            context.Response.Redirect("/Staff/Booking");
+            return;
+        }
+    }
+    await next();
+});
+
 // ===== ROUTE CONFIGURATION =====
 app.MapControllerRoute(
     name: "areas",
