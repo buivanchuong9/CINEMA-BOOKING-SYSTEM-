@@ -157,7 +157,14 @@
                                 <td>
                                     @if (b.Status == BookingStatus.Paid)
                                     {
-                                        <span class="badge bg-success">Đã Thanh Toán</span>
+                                        if (b.RefundStatus == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">Chờ Hoàn Tiền</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Đã Thanh Toán</span>
+                                        }
                                     }
                                     else if (b.Status == BookingStatus.Pending)
                                     {
@@ -202,7 +209,7 @@
                                                 </button>
                                             </form>
                                         }
-                                        @if (b.Status == BookingStatus.Paid || b.Status == BookingStatus.Pending)
+                                        @if (b.Status == BookingStatus.Pending || (b.Status == BookingStatus.Paid && b.RefundStatus == "None"))
                                         {
                                             <form asp-action="Cancel" asp-route-id="@b.Id" method="post" class="d-inline cancel-booking-form">
                                                 @Html.AntiForgeryToken()

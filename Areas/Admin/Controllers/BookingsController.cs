@@ -144,15 +144,28 @@ public class BookingsController : Controller
     public async Task<IActionResult> Cancel(int id)
     {
         _logger.LogInformation($"Admin cancelling booking: {id}");
-        var success = await _bookingService.CancelBookingAsync(id);
-        
-        if (success)
+        var booking = await _context.Bookings.FindAsync(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status == BookingStatus.Paid)
         {
-            TempData["Success"] = "Đã hủy đơn hàng và giải phóng ghế thành công!";
+            booking.RefundStatus = "Pending";
+            booking.UpdatedAt = DateTime.Now;
+            _context.Bookings.Update(booking);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Đã chuyển đơn vé sang trạng thái chờ hoàn tiền!";
         }
         else
         {
-            TempData["Error"] = "Hủy đơn hàng thất bại!";
+            var success = await _bookingService.CancelBookingAsync(id);
+            if (success)
+            {
+                TempData["Success"] = "Đã hủy đơn hàng và giải phóng ghế thành công!";
+            }
+            else
+            {
+                TempData["Error"] = "Hủy đơn hàng thất bại!";
+            }
         }
 
         return RedirectToAction(nameof(Index), new {
@@ -213,7 +226,7 @@ public class BookingsController : Controller
             .Include(b => b.Showtime)
                 .ThenInclude(s => s!.Room)
                     .ThenInclude(r => r!.Cinema)
-            .Where(b => b.Status == BookingStatus.Cancelled && b.RefundStatus != "None")
+            .Where(b => (b.Status == BookingStatus.Cancelled || b.Status == BookingStatus.Paid) && b.RefundStatus != "None")
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(refundStatus))
@@ -292,17 +305,36 @@ public class BookingsController : Controller
                 await proofImage.CopyToAsync(stream);
             }
 
+            // Cancel booking and release seats
+            var cancelSuccess = await _bookingService.CancelBookingAsync(id);
+            if (!cancelSuccess)
+            {
+                TempData["Error"] = "Không thể giải phóng ghế cho đơn vé này!";
+                return RedirectToAction(nameof(ProcessRefund), new { id });
+            }
+
+            // Re-fetch booking to update refund status
+            booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound();
+
             booking.RefundProofUrl = $"/uploads/refunds/{fileName}";
             booking.RefundStatus = "Refunded";
             booking.UpdatedAt = DateTime.Now;
 
-            TempData["Success"] = $"Đã xác nhận hoàn tiền cho đơn #{id.ToString("D6")}!";
+            TempData["Success"] = $"Đã xác nhận hoàn tiền cho đơn #{id.ToString("D6")}! Đơn vé đã được hủy và giải phóng ghế.";
         }
         else if (action == "Rejected")
         {
-            booking.RefundStatus = "Rejected";
+            booking.RefundStatus = "None";
             booking.UpdatedAt = DateTime.Now;
-            TempData["Success"] = $"Đã từ chối yêu cầu hoàn tiền cho đơn #{id.ToString("D6")}!";
+            TempData["Success"] = $"Đã từ chối hoàn tiền cho đơn #{id.ToString("D6")}! Vé vẫn giữ trạng thái Đã Thanh Toán và nút Hủy vé đã hiển thị lại.";
+        }
+        else if (action == "Restore")
+        {
+            booking.Status = BookingStatus.Paid;
+            booking.RefundStatus = "None";
+            booking.UpdatedAt = DateTime.Now;
+            TempData["Success"] = $"Đã khôi phục vé #{id.ToString("D6")} về trạng thái Đã Thanh Toán!";
         }
         else
         {

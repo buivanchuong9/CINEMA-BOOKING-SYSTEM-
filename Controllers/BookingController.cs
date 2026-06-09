@@ -526,7 +526,7 @@ public class BookingController : Controller
             return RedirectToAction("Login", "Account");
 
         var cancelledBookings = await _context.Bookings
-            .Where(b => b.UserId == userId && b.Status == BE.Core.Enums.BookingStatus.Cancelled)
+            .Where(b => b.UserId == userId && (b.Status == BE.Core.Enums.BookingStatus.Cancelled || b.RefundStatus != "None"))
             .OrderByDescending(b => b.UpdatedAt ?? b.BookingDate)
             .ToListAsync();
 

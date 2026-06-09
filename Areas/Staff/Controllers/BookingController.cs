@@ -291,15 +291,28 @@ public class BookingController : Controller
     public async Task<IActionResult> Cancel(int id)
     {
         _logger.LogInformation($"Staff cancelling booking: {id}");
-        var success = await _bookingService.CancelBookingAsync(id);
-        
-        if (success)
+        var booking = await _context.Bookings.FindAsync(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status == BookingStatus.Paid)
         {
-            TempData["Success"] = "Đã hủy đơn đặt vé tại quầy và giải phóng ghế thành công!";
+            booking.RefundStatus = "Pending";
+            booking.UpdatedAt = DateTime.Now;
+            _context.Bookings.Update(booking);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Đã chuyển đơn vé sang trạng thái chờ hoàn tiền!";
         }
         else
         {
-            TempData["Error"] = "Hủy đơn đặt vé thất bại!";
+            var success = await _bookingService.CancelBookingAsync(id);
+            if (success)
+            {
+                TempData["Success"] = "Đã hủy đơn đặt vé tại quầy và giải phóng ghế thành công!";
+            }
+            else
+            {
+                TempData["Error"] = "Hủy đơn đặt vé thất bại!";
+            }
         }
 
         return RedirectToAction(nameof(ManageBookings), new {
