@@ -1,9 +1,13 @@
+@using BE.Core.Entities.Business
+@{
+    var __s = ViewData["SiteSettings"] as SiteSettings ?? new SiteSettings();
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - CineMax</title>
+    <title>@ViewData["Title"] - @__s.SiteName</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -27,6 +31,37 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/typography-fix.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true"/>
+    <!-- Google Font from SiteSettings -->
+    @if (!string.IsNullOrWhiteSpace(__s.FontFamily))
+    {
+        var fontUrl = __s.FontFamily.Replace(" ", "+");
+        <link href="https://fonts.googleapis.com/css2?family=@fontUrl:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    }
+    <!-- Dynamic Theme CSS Variables -->
+    <style>
+        :root {
+            --cinema-red: @__s.PrimaryColor;
+            --cinema-red-hover: @__s.PrimaryColor;
+            --popcorn-gold: @__s.SecondaryColor;
+            --bg-primary: @__s.BgPrimaryColor;
+            --bg-secondary: @__s.BgSecondaryColor;
+            --bg-tertiary: color-mix(in srgb, @__s.BgSecondaryColor 70%, white 30%);
+            --shadow-cinema: 0 10px 40px rgba(0,0,0,0.3);
+            --cinema-dark: @__s.BgPrimaryColor;
+        }
+        @if (!string.IsNullOrWhiteSpace(__s.FontFamily)) {
+            <text>body { font-family: '@__s.FontFamily', 'Segoe UI', system-ui, sans-serif !important; }</text>
+        }
+        .btn-cinema-red { background: linear-gradient(135deg, @__s.PrimaryColor 0%, @__s.PrimaryColor 100%) !important; }
+        .text-cinema-red { color: @__s.PrimaryColor !important; }
+        .text-popcorn-gold { color: @__s.SecondaryColor !important; }
+        .accent-text { background: linear-gradient(135deg, @__s.PrimaryColor, @__s.SecondaryColor); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cinema-navbar .nav-link::after { background: @__s.PrimaryColor; }
+        .form-control:focus, .form-select:focus { border-color: @__s.PrimaryColor; box-shadow: 0 0 0 0.2rem @(__s.PrimaryColor)40; }
+        .heroSwiper { height: @(__s.HeroSliderHeight)vh; }
+        .heroBannerSwiper .hero-banner-nav { background: @(__s.PrimaryColor)99 !important; }
+        .heroBannerSwiper .hero-banner-nav:hover { background: @__s.PrimaryColor !important; }
+    </style>
 </head>
 <body>
     <!-- Sticky Navigation Bar -->
@@ -34,8 +69,15 @@
         <div class="container-fluid px-4">
             <!-- Logo -->
             <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                <i class="bi bi-camera-reels-fill fs-3 me-2 accent-text"></i>
-                <span class="fw-bold fs-4">CineMax</span>
+                @if (!string.IsNullOrEmpty(__s.LogoUrl))
+                {
+                    <img src="@__s.LogoUrl" alt="@__s.SiteName" style="height:36px;" class="me-2" />
+                }
+                else
+                {
+                    <i class="bi @__s.LogoIcon fs-3 me-2 accent-text"></i>
+                }
+                <span class="fw-bold fs-4">@__s.SiteName</span>
             </a>
             
             <!-- Mobile Toggle -->
@@ -210,13 +252,17 @@
                 <!-- Company Info -->
                 <div class="col-lg-4">
                     <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-camera-reels-fill fs-3 me-2 accent-text"></i>
-                        <h5 class="mb-0 fw-bold">CineMax</h5>
+                        @if (!string.IsNullOrEmpty(__s.LogoUrl))
+                        {
+                            <img src="@__s.LogoUrl" alt="@__s.SiteName" style="height:32px;" class="me-2" />
+                        }
+                        else
+                        {
+                            <i class="bi @__s.LogoIcon fs-3 me-2 accent-text"></i>
+                        }
+                        <h5 class="mb-0 fw-bold">@__s.SiteName</h5>
                     </div>
-                    <p class="text-muted">
-                        Trải nghiệm sự kỳ diệu của rạp phim với sự thoải mái cao cấp,
-                        công nghệ tiên tiến và những khoảnh khắc khó quên.
-                    </p>
+                    <p class="text-muted">@__s.SiteSlogan</p>
                     <div class="d-flex gap-3 mt-3">
                         <a href="#" class="social-link">
                             <i class="bi bi-facebook"></i>
@@ -261,15 +307,15 @@
                     <ul class="list-unstyled footer-contact">
                         <li class="mb-2">
                             <i class="bi bi-geo-alt-fill me-2 accent-text"></i>
-                            <span>Đống Đa, Hà Nội</span>
+                            <span>@__s.ContactAddress</span>
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-telephone-fill me-2 accent-text"></i>
-                            <span>0369062042</span>
+                            <span>@__s.ContactPhone</span>
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-envelope-fill me-2 accent-text"></i>
-                            <span>support@cinemax.com</span>
+                            <span>@__s.ContactEmail</span>
                         </li>
                     </ul>
                 </div>

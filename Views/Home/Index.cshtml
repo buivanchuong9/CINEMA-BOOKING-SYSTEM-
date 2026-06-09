@@ -1,22 +1,25 @@
 @using BE.Core.Entities.Movies
+@using BE.Core.Entities.Business
 @{
-    ViewData["Title"] = "Trang Chủ - CineMax";
+    ViewData["Title"] = "Trang Chủ - " + (ViewData["SiteSettings"] is SiteSettings ss0 ? ss0.SiteName : "CineMax");
     var nowShowing = ViewBag.NowShowing as List<Movie> ?? new List<Movie>();
     var comingSoon = ViewBag.ComingSoon as List<Movie> ?? new List<Movie>();
+    var cfg = ViewBag.Settings as SiteSettings ?? (ViewData["SiteSettings"] as SiteSettings) ?? new SiteSettings();
+    var colClass = cfg.MovieGridColumns switch { 2 => "col-lg-6 col-md-6", 3 => "col-lg-4 col-md-6", 6 => "col-lg-2 col-md-4 col-sm-6", _ => "col-lg-3 col-md-4 col-sm-6" };
 }
 
-<!-- Hero Banner với Nhiều Posters Chạy (Style Beta/CGV) -->
-@if (nowShowing.Any())
+
+@if (cfg.EnableHeroSlider && nowShowing.Any())
 {
     <section class="hero-banner-section">
         <div class="swiper heroBannerSwiper">
             <div class="swiper-wrapper">
                 @foreach (var movie in nowShowing)
                 {
-                    var posterUrl = !string.IsNullOrEmpty(movie.PosterUrl) 
-                        ? movie.PosterUrl 
+                    var posterUrl = !string.IsNullOrEmpty(movie.PosterUrl)
+                        ? movie.PosterUrl
                         : "https://picsum.photos/800/450?random=" + movie.Id;
-                    
+
                     <div class="swiper-slide">
                         <a href="/Movies/Details/@movie.Id" class="hero-banner-item">
                             <div class="banner-image-wrapper">
@@ -24,7 +27,7 @@
                                 <div class="banner-overlay">
                                     <div class="banner-info">
                                         <h3 class="banner-title">@movie.Title</h3>
-                                        @if (movie.Rating.HasValue)
+                                        @if (cfg.ShowMovieRating && movie.Rating.HasValue)
                                         {
                                             <div class="banner-rating">
                                                 <i class="bi bi-star-fill text-warning"></i>
@@ -42,7 +45,7 @@
                     </div>
                 }
             </div>
-            
+
             <!-- Navigation -->
             <div class="swiper-button-next hero-banner-nav"></div>
             <div class="swiper-button-prev hero-banner-nav"></div>
@@ -66,7 +69,7 @@
             <div class="row g-4">
                 @foreach (var movie in nowShowing)
                 {
-                    <div class="col-lg-3 col-md-4 col-sm-6" data-aos="zoom-in" data-aos-delay="@(nowShowing.IndexOf(movie) * 100)">
+                    <div class="@colClass" data-aos="zoom-in" data-aos-delay="@(nowShowing.IndexOf(movie) * 80)">
                         <div class="movie-card-premium">
                             <div class="movie-poster-wrapper">
                                 @if (!string.IsNullOrEmpty(movie.PosterUrl))
@@ -79,10 +82,10 @@
                                         <i class="bi bi-film display-1"></i>
                                     </div>
                                 }
-                                
+
                                 <div class="movie-overlay">
                                     <div class="overlay-content">
-                                        @if (movie.Rating.HasValue)
+                                        @if (cfg.ShowMovieRating && movie.Rating.HasValue)
                                         {
                                             <div class="rating-badge mb-3">
                                                 <i class="bi bi-star-fill"></i>
@@ -112,11 +115,14 @@
                             <div class="movie-info">
                                 <h6 class="movie-title">@movie.Title</h6>
                                 <div class="movie-meta">
-                                    <span class="me-3">
-                                        <i class="bi bi-clock text-cinema-red"></i>
-                                        @movie.Duration'
-                                    </span>
-                                    @if (movie.Rating.HasValue)
+                                    @if (cfg.ShowMovieDuration)
+                                    {
+                                        <span class="me-3">
+                                            <i class="bi bi-clock text-cinema-red"></i>
+                                            @movie.Duration'
+                                        </span>
+                                    }
+                                    @if (cfg.ShowMovieRating && movie.Rating.HasValue)
                                     {
                                         <span>
                                             <i class="bi bi-star-fill text-warning"></i>

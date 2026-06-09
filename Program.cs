@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using BE.Data;
 using BE.Core.Entities.Business;
+using BE.Application.Services;
+using BE.Infrastructure.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +28,14 @@ builder.Services.AddScoped<BE.Services.GeminiChatService>(sp =>
     return new BE.Services.GeminiChatService(httpClient, config, db, cinemaData, logger);
 });
 
-builder.Services.AddControllersWithViews();
+// ===== SITE SETTINGS SERVICE =====
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ISiteSettingsService, SiteSettingsService>();
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<SiteSettingsFilter>();
+});
 
 // ===== 2. IDENTITY CONFIGURATION =====
 builder.Services.AddIdentity<User, IdentityRole>(options => // 
@@ -100,7 +109,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddControllersWithViews();
+// (already registered above with filters)
 
 var app = builder.Build();
 
