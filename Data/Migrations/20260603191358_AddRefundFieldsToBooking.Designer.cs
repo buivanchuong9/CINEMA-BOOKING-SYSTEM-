@@ -4,16 +4,19 @@ using BE.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BE.Migrations
+namespace BE.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603191358_AddRefundFieldsToBooking")]
+    partial class AddRefundFieldsToBooking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -217,104 +220,6 @@ namespace BE.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ChatHistories");
-                });
-
-            modelBuilder.Entity("BE.Core.Entities.Business.SiteSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BgPrimaryColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BgSecondaryColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ComingSoonCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ContactAddress")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContactEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContactPhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("EnableHeroSlider")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("FontFamily")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HeroSliderHeight")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HomeMoviesCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LogoIcon")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MovieDisplayMode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MovieGridColumns")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PrimaryColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SecondaryColor")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("ShowComingSoon")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ShowMovieDuration")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ShowMovieGenre")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ShowMovieRating")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SiteName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SiteSlogan")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SiteSettings");
                 });
 
             modelBuilder.Entity("BE.Core.Entities.Business.Transaction", b =>

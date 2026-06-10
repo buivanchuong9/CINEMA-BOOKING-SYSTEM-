@@ -19,14 +19,25 @@ public class RoomsController : Controller
     }
 
     // GET: /Admin/Rooms
-    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách phòng
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null) // danh sách phòng
     {
         int pageSize = 20;
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
-        var sortedRooms = rooms.OrderBy(r => r.CinemaId).ThenBy(r => r.Name);
         var cinemas = await _unitOfWork.Cinemas.GetAllAsync();
         
+        var query = rooms.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(r => 
+                (r.Name != null && r.Name.ToLower().Contains(s)) ||
+                (cinemas.FirstOrDefault(c => c.Id == r.CinemaId)?.Name != null && cinemas.FirstOrDefault(c => c.Id == r.CinemaId).Name.ToLower().Contains(s))
+            );
+        }
+
+        var sortedRooms = query.OrderBy(r => r.CinemaId).ThenBy(r => r.Name);
         ViewBag.Cinemas = cinemas.ToDictionary(c => c.Id, c => c.Name); // danh sách rạp
+        ViewBag.Search = search;
         
         return View(PaginatedList<Room>.Create(sortedRooms, pageNumber, pageSize)); // sắp xếp theo rạp và tên phòng và phân trang
     }

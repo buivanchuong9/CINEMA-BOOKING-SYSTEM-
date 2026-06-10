@@ -1,0 +1,387 @@
+@model BE.Core.Entities.Business.SiteSettings
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản Lý Giao Diện";
+}
+
+<style>
+    .section-card { border-radius: 12px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-bottom: 1.5rem; overflow: hidden; }
+    .section-card .card-header { padding: 14px 20px; font-weight: 700; font-size: .95rem; letter-spacing: .3px; }
+    .color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .color-swatch { width: 38px; height: 38px; border-radius: 8px; border: 2px solid rgba(0,0,0,.1); cursor: pointer; flex-shrink: 0; }
+    .color-input-text { font-family: monospace; font-size: .88rem; }
+    .preview-box { border-radius: 10px; padding: 14px 18px; font-weight: 700; text-align: center; font-size: .9rem; margin-top: 6px; transition: background .3s; }
+    .live-preview-bar { background: linear-gradient(135deg,#1e293b,#0f172a); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+    .live-preview-bar .lp-logo { font-size: 1.1rem; font-weight: 800; }
+    .live-preview-bar .lp-btn { padding: 6px 18px; border-radius: 20px; border: none; font-weight: 700; font-size: .85rem; cursor: default; }
+    .font-preview { font-size: 1.1rem; padding: 10px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; min-height: 52px; transition: font-family .3s; }
+    .toggle-switch-lg .form-check-input { width: 3em; height: 1.5em; }
+    .preset-btn { width: 36px; height: 36px; border-radius: 8px; border: 3px solid transparent; cursor: pointer; transition: transform .15s, border-color .15s; }
+    .preset-btn:hover { transform: scale(1.15); border-color: #64748b; }
+    .grid-preview { display: grid; gap: 4px; margin-top: 8px; }
+    .grid-preview-cell { background: linear-gradient(135deg,#e2e8f0,#cbd5e1); border-radius: 4px; height: 30px; }
+    .sticky-save { position: sticky; top: 80px; }
+    .info-chip { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border-radius: 20px; padding: 5px 12px; font-size: .8rem; color: #475569; }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-palette2 me-2" style="color:#6366f1"></i>Quản Lý Giao Diện</h2>
+            <p class="text-muted mb-0 small">Tùy chỉnh giao diện website — thay đổi sẽ áp dụng ngay sau khi lưu</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="info-chip"><i class="bi bi-clock-history"></i> @Model.UpdatedAt.ToString("dd/MM HH:mm") · @Model.UpdatedBy</span>
+            <form asp-action="Reset" method="post" id="resetForm">@Html.AntiForgeryToken()
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="confirmReset()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Mặc định
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <form asp-action="Save" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="row g-4">
+
+            <!-- ===== LEFT ===== -->
+            <div class="col-xl-8 col-lg-7">
+
+                <!-- BRANDING -->
+                <div class="card section-card">
+                    <div class="card-header" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff">
+                        <i class="bi bi-building me-2"></i>Thương Hiệu & Tên Website
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Tên website <span class="text-danger">*</span></label>
+                                <input type="text" name="SiteName" value="@Model.SiteName" class="form-control" required />
+                                <small class="text-muted">Hiển thị trên tab trình duyệt, navbar, footer</small>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold">Slogan (footer)</label>
+                                <input type="text" name="SiteSlogan" value="@Model.SiteSlogan" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Icon Logo <small class="text-muted">(Bootstrap Icons)</small></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fs-5"><i id="logoIconPreview" class="bi @Model.LogoIcon"></i></span>
+                                    <input type="text" name="LogoIcon" id="logoIconInput" value="@Model.LogoIcon" class="form-control" oninput="document.getElementById('logoIconPreview').className='bi '+this.value" placeholder="bi-camera-reels-fill" />
+                                </div>
+                                <small><a href="https://icons.getbootstrap.com" target="_blank" class="text-decoration-none"><i class="bi bi-box-arrow-up-right me-1"></i>Xem tất cả icon</a></small>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold">Upload Logo Ảnh <small class="text-muted">(jpg/png/svg — thay thế icon)</small></label>
+                                <input type="file" name="logoFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.svg" />
+                                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                                {
+                                    <div class="mt-2 d-flex align-items-center gap-2">
+                                        <img src="@Model.LogoUrl" style="height:40px;border-radius:6px;border:1px solid #e2e8f0" />
+                                        <small class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Logo hiện tại</small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <hr class="my-3"/>
+                        <h6 class="fw-bold text-muted small text-uppercase mb-3">Thông Tin Liên Hệ (Hiển thị ở Footer)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small">Địa chỉ</label>
+                                <div class="input-group input-group-sm"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                    <input type="text" name="ContactAddress" value="@Model.ContactAddress" class="form-control" /></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Điện thoại</label>
+                                <div class="input-group input-group-sm"><span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" name="ContactPhone" value="@Model.ContactPhone" class="form-control" /></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Email</label>
+                                <div class="input-group input-group-sm"><span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" name="ContactEmail" value="@Model.ContactEmail" class="form-control" /></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOVIE DISPLAY -->
+                <div class="card section-card">
+                    <div class="card-header" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff">
+                        <i class="bi bi-film me-2"></i>Hiển Thị Phim Cho Người Dùng
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Số phim đang chiếu</label>
+                                <input type="number" name="HomeMoviesCount" value="@Model.HomeMoviesCount" class="form-control" min="4" max="24" />
+                                <small class="text-muted">Trang chủ (4–24)</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Số phim sắp chiếu</label>
+                                <input type="number" name="ComingSoonCount" value="@Model.ComingSoonCount" class="form-control" min="2" max="12" />
+                                <small class="text-muted">Trang chủ (2–12)</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Chế độ hiển thị</label>
+                                <select name="MovieDisplayMode" class="form-select">
+                                    <option value="Grid" selected="@(Model.MovieDisplayMode == "Grid")">🔲 Dạng lưới (Grid)</option>
+                                    <option value="List" selected="@(Model.MovieDisplayMode == "List")">📋 Danh sách (List)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Số cột mỗi hàng</label>
+                                <select name="MovieGridColumns" id="colSelect" class="form-select" onchange="updateGridPreview(this.value)">
+                                    <option value="2" selected="@(Model.MovieGridColumns == 2)">2 cột — rất to</option>
+                                    <option value="3" selected="@(Model.MovieGridColumns == 3)">3 cột — to</option>
+                                    <option value="4" selected="@(Model.MovieGridColumns == 4)">4 cột — vừa ✓</option>
+                                    <option value="6" selected="@(Model.MovieGridColumns == 6)">6 cột — nhỏ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Grid preview -->
+                        <div class="p-3 rounded" style="background:#f8fafc;border:1px dashed #cbd5e1">
+                            <small class="text-muted fw-semibold d-block mb-2">Xem trước bố cục (<span id="gridPreviewLabel">@Model.MovieGridColumns</span> cột):</small>
+                            <div id="gridPreview" class="grid-preview" style="grid-template-columns: repeat(@Model.MovieGridColumns, 1fr)">
+                                @for (int i = 0; i < 12; i++) { <div class="grid-preview-cell"></div> }
+                            </div>
+                        </div>
+
+                        <hr class="my-3"/>
+                        <h6 class="fw-bold text-muted small text-uppercase mb-3">Thông Tin Hiển Thị Trên Thẻ Phim</h6>
+                        <div class="row g-3">
+                            @{
+                                var toggles = new[] {
+                                    ("ShowComingSoon", Model.ShowComingSoon, "bi-calendar-event text-warning", "Mục Phim Sắp Chiếu"),
+                                    ("ShowMovieRating", Model.ShowMovieRating, "bi-star-fill text-warning", "Điểm Đánh Giá ⭐"),
+                                    ("ShowMovieGenre", Model.ShowMovieGenre, "bi-tag text-info", "Thể Loại Phim"),
+                                    ("ShowMovieDuration", Model.ShowMovieDuration, "bi-clock text-success", "Thời Lượng Phim"),
+                                };
+                            }
+                            @foreach (var (name, val, icon, label) in toggles)
+                            {
+                                <div class="col-md-3">
+                                    <div class="p-3 rounded border text-center" style="background:@(val?"#f0fdf4":"#fff")">
+                                        <i class="bi @icon fs-4 d-block mb-2"></i>
+                                        <div class="form-check form-switch d-flex justify-content-center gap-2 align-items-center m-0">
+                                            <input class="form-check-input toggle-switch-lg" type="checkbox" name="@name" value="true" id="@name" @(val?"checked":"") role="switch" />
+                                            <label class="form-check-label fw-semibold small" for="@name">@label</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HERO SLIDER -->
+                <div class="card section-card">
+                    <div class="card-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff">
+                        <i class="bi bi-images me-2"></i>Hero Slider (Banner Trang Chủ)
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <div class="p-3 rounded border text-center" style="background:#fffbeb">
+                                    <div class="form-check form-switch d-flex justify-content-center gap-2 align-items-center m-0">
+                                        <input class="form-check-input toggle-switch-lg" type="checkbox" name="EnableHeroSlider" value="true" id="enableHero" @(Model.EnableHeroSlider?"checked":"") />
+                                        <label class="form-check-label fw-bold" for="enableHero">Bật Hero Slider 3D</label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Carousel poster phim nổi bật</small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Chiều cao slider: <strong id="heroHeightVal">@Model.HeroSliderHeight</strong>vh</label>
+                                <input type="range" name="HeroSliderHeight" id="heroHeight" value="@Model.HeroSliderHeight" min="40" max="100" class="form-range" oninput="document.getElementById('heroHeightVal').textContent=this.value" />
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">40vh (nhỏ)</small>
+                                    <small class="text-muted">85vh (mặc định)</small>
+                                    <small class="text-muted">100vh (toàn màn hình)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end left col -->
+
+            <!-- ===== RIGHT ===== -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="sticky-save">
+
+                    <!-- LIVE PREVIEW -->
+                    <div class="card section-card mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <i class="bi bi-eye me-2"></i>Xem Trước Navbar
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="live-preview-bar" id="livePreviewBar">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2 text-white">
+                                        <i class="bi bi-camera-reels-fill fs-4" id="lpIcon" style="color:#e11d48"></i>
+                                        <span class="lp-logo" id="lpName">@Model.SiteName</span>
+                                    </div>
+                                    <button class="lp-btn text-white" id="lpBtn" style="background:#e11d48">Đặt Vé</button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Font hiện tại:</small>
+                                <div class="font-preview mt-1" id="fontPreview" style="font-family:'@Model.FontFamily',sans-serif">
+                                    Phim hay · Rạp đẹp · Trải nghiệm tuyệt vời
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLORS -->
+                    <div class="card section-card mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <i class="bi bi-palette2 me-2"></i>Màu Sắc Chủ Đạo
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Color presets -->
+                            <label class="form-label fw-semibold small text-uppercase text-muted">Chủ đề có sẵn</label>
+                            <div class="d-flex gap-2 flex-wrap mb-3">
+                                @{
+                                    var presets = new[] {
+                                        ("#e11d48","#f59e0b","#0f172a","#1e293b","Cinema Đỏ"),
+                                        ("#7c3aed","#f59e0b","#0f172a","#1e293b","Tím Hoàng Gia"),
+                                        ("#0ea5e9","#f59e0b","#0c1a2e","#0f2847","Xanh Dương"),
+                                        ("#10b981","#f59e0b","#0f172a","#1e293b","Xanh Lá"),
+                                        ("#f97316","#3b82f6","#1c1917","#292524","Cam Nóng"),
+                                        ("#ec4899","#a855f7","#0f172a","#1e293b","Hồng Tím"),
+                                    };
+                                }
+                                @foreach (var (p,s,bg,bg2,name) in presets)
+                                {
+                                    <button type="button" class="preset-btn" title="@name" style="background:linear-gradient(135deg,@p,@s)"
+                                            onclick="applyPreset('@p','@s','@bg','@bg2')"></button>
+                                }
+                            </div>
+
+                            <!-- Primary Color -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Màu chủ đạo (nút, accent)</label>
+                                <div class="color-row">
+                                    <input type="color" name="PrimaryColor" id="primaryColor" value="@Model.PrimaryColor" class="color-swatch border-0 p-0" oninput="onPrimaryChange(this.value)" />
+                                    <input type="text" id="primaryColorText" value="@Model.PrimaryColor" class="form-control color-input-text" oninput="syncPicker('primaryColor',this.value);onPrimaryChange(this.value)" />
+                                </div>
+                                <div class="preview-box text-white" id="primaryPreview" style="background:@Model.PrimaryColor">Màu Chủ Đạo — Nút Đặt Vé</div>
+                            </div>
+
+                            <!-- Secondary Color -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Màu phụ (gold, badge)</label>
+                                <div class="color-row">
+                                    <input type="color" name="SecondaryColor" id="secondaryColor" value="@Model.SecondaryColor" class="color-swatch border-0 p-0" oninput="onSecondaryChange(this.value)" />
+                                    <input type="text" id="secondaryColorText" value="@Model.SecondaryColor" class="form-control color-input-text" oninput="syncPicker('secondaryColor',this.value);onSecondaryChange(this.value)" />
+                                </div>
+                                <div class="preview-box text-dark fw-bold" id="secondaryPreview" style="background:@Model.SecondaryColor">Màu Phụ — Rating, Badge</div>
+                            </div>
+
+                            <!-- Background Colors -->
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold small">Nền chính</label>
+                                    <div class="color-row">
+                                        <input type="color" name="BgPrimaryColor" id="bgPrimary" value="@Model.BgPrimaryColor" class="color-swatch border-0 p-0" />
+                                        <input type="text" value="@Model.BgPrimaryColor" class="form-control color-input-text" oninput="syncPicker('bgPrimary',this.value)" />
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold small">Nền phụ</label>
+                                    <div class="color-row">
+                                        <input type="color" name="BgSecondaryColor" id="bgSecondary" value="@Model.BgSecondaryColor" class="color-swatch border-0 p-0" />
+                                        <input type="text" value="@Model.BgSecondaryColor" class="form-control color-input-text" oninput="syncPicker('bgSecondary',this.value)" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FONT -->
+                    <div class="card section-card mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <i class="bi bi-type me-2"></i>Font Chữ
+                        </div>
+                        <div class="card-body p-3">
+                            <select name="FontFamily" id="fontSelect" class="form-select mb-2" onchange="onFontChange(this.value)">
+                                @foreach (var f in new[]{"Inter","Roboto","Nunito","Poppins","Montserrat","Open Sans","Raleway","Lato","Be Vietnam Pro"})
+                                {
+                                    <option value="@f" selected="@(Model.FontFamily == f)">@f</option>
+                                }
+                            </select>
+                            <div class="font-preview" id="fontPreview2" style="font-family:'@Model.FontFamily',sans-serif">
+                                Xin chào! Đây là font <strong>@Model.FontFamily</strong> — Áp dụng toàn trang người dùng.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SAVE BUTTON -->
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 rounded-3 shadow">
+                        <i class="bi bi-floppy-disk me-2"></i>Lưu Cài Đặt Giao Diện
+                    </button>
+                    <p class="text-muted text-center small mt-2">Thay đổi áp dụng ngay sau khi lưu cho tất cả người dùng</p>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    // Color pickers sync
+    function syncPicker(id, val) {
+        const el = document.getElementById(id);
+        if (el && /^#[0-9a-fA-F]{6}$/.test(val)) el.value = val;
+    }
+    function onPrimaryChange(val) {
+        document.getElementById('primaryColorText').value = val;
+        document.getElementById('primaryPreview').style.background = val;
+        document.getElementById('lpBtn').style.background = val;
+        document.getElementById('lpIcon').style.color = val;
+    }
+    function onSecondaryChange(val) {
+        document.getElementById('secondaryColorText').value = val;
+        document.getElementById('secondaryPreview').style.background = val;
+    }
+    function onFontChange(font) {
+        const url = 'https://fonts.googleapis.com/css2?family=' + font.replace(/ /g,'+') + ':wght@400;700&display=swap';
+        const link = document.createElement('link'); link.rel='stylesheet'; link.href=url;
+        document.head.appendChild(link);
+        const style = "font-family:'" + font + "',sans-serif";
+        document.getElementById('fontPreview').style.cssText = style;
+        document.getElementById('fontPreview2').style.cssText = style;
+        document.getElementById('fontPreview2').innerHTML = 'Xin chào! Đây là font <strong>'+font+'</strong> — Áp dụng toàn trang người dùng.';
+    }
+    function applyPreset(p, s, bg, bg2) {
+        document.getElementById('primaryColor').value = p;
+        document.getElementById('primaryColorText').value = p;
+        document.getElementById('secondaryColor').value = s;
+        document.getElementById('secondaryColorText').value = s;
+        document.getElementById('bgPrimary').value = bg;
+        document.getElementById('bgSecondary').value = bg2;
+        onPrimaryChange(p); onSecondaryChange(s);
+    }
+    function updateGridPreview(cols) {
+        document.getElementById('gridPreviewLabel').textContent = cols;
+        document.getElementById('gridPreview').style.gridTemplateColumns = 'repeat('+cols+',1fr)';
+    }
+    // Sync site name to live preview
+    document.querySelector('[name="SiteName"]').addEventListener('input', function(){
+        document.getElementById('lpName').textContent = this.value || 'CineMax';
+    });
+    function confirmReset() {
+        Swal.fire({
+            title:'Khôi phục mặc định?', text:'Toàn bộ cài đặt sẽ về ban đầu!',
+            icon:'warning', showCancelButton:true,
+            confirmButtonColor:'#dc3545', cancelButtonColor:'#6c757d',
+            confirmButtonText:'Khôi phục', cancelButtonText:'Hủy'
+        }).then(r => { if (r.isConfirmed) document.getElementById('resetForm').submit(); });
+    }
+</script>
+}

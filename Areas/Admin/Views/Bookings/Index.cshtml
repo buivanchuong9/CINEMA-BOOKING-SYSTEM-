@@ -181,7 +181,14 @@
                                     <td>
                                         @if (item.Status == BookingStatus.Paid)
                                         {
-                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã Thanh Toán</span>
+                                            if (item.RefundStatus == "Pending")
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ Hoàn Tiền</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã Thanh Toán</span>
+                                            }
                                         }
                                         else if (item.Status == BookingStatus.Pending)
                                         {
@@ -232,7 +239,7 @@
                                                 </form>
                                             }
 
-                                            @if (item.Status == BookingStatus.Paid || item.Status == BookingStatus.Pending)
+                                            @if (item.Status == BookingStatus.Pending || (item.Status == BookingStatus.Paid && item.RefundStatus == "None"))
                                             {
                                                 <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline cancel-booking-form">
                                                     @Html.AntiForgeryToken()
@@ -246,6 +253,13 @@
                                                         <i class="bi bi-trash"></i> Hủy vé
                                                     </button>
                                                 </form>
+                                            }
+
+                                            @if ((item.Status == BookingStatus.Cancelled || item.Status == BookingStatus.Paid) && item.RefundStatus == "Pending")
+                                            {
+                                                <button type="button" class="btn btn-sm btn-warning text-dark fw-bold" onclick="confirmGoToRefund('@Url.Action("ProcessRefund", "Bookings", new { area = "Admin", id = item.Id })')">
+                                                    <i class="bi bi-arrow-repeat"></i> Hoàn tiền
+                                                </button>
                                             }
                                         </div>
                                     </td>
@@ -308,6 +322,26 @@
                 customClass: { popup: 'cinemax-toast-popup' }
             }).then((result) => {
                 if (result.isConfirmed) form.submit();
+            });
+        }
+
+        function confirmGoToRefund(url) {
+            Swal.fire({
+                title: 'Xác nhận hoàn tiền',
+                html: 'Bạn có muốn đi tới giao diện <strong style="color:#fbbf24">xử lý hoàn tiền</strong> cho đơn vé này không?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<span style="color:#000"><i class="bi bi-arrow-repeat me-1"></i> Có, đi tới</span>',
+                cancelButtonText: 'Không, giữ nguyên',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%)',
+                color: '#ffffff',
+                customClass: { popup: 'cinemax-toast-popup' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
             });
         }
     </script>

@@ -18,11 +18,23 @@ public class FoodsController : Controller // danh sách món ăn
     }
 
     // GET: /Admin/Foods
-    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách món ăn
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null) // danh sách món ăn
     {
         int pageSize = 20;
         var foods = await _unitOfWork.Foods.GetAllAsync();
-        var sortedFoods = foods.OrderBy(f => f.Name);
+        var query = foods.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(f => 
+                (f.Name != null && f.Name.ToLower().Contains(s)) ||
+                (f.Description != null && f.Description.ToLower().Contains(s))
+            );
+        }
+
+        ViewBag.Search = search;
+        var sortedFoods = query.OrderBy(f => f.Name);
         return View(PaginatedList<Food>.Create(sortedFoods, pageNumber, pageSize)); // sắp xếp theo tên món ăn và phân trang
     }
 

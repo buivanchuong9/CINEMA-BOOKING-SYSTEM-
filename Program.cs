@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using BE.Data;
 using BE.Core.Entities.Business;
+using BE.Application.Services;
+using BE.Infrastructure.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +28,14 @@ builder.Services.AddScoped<BE.Services.GeminiChatService>(sp =>
     return new BE.Services.GeminiChatService(httpClient, config, db, cinemaData, logger);
 });
 
-builder.Services.AddControllersWithViews();
+// ===== SITE SETTINGS SERVICE =====
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ISiteSettingsService, SiteSettingsService>();
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<SiteSettingsFilter>();
+});
 
 // ===== 2. IDENTITY CONFIGURATION =====
 builder.Services.AddIdentity<User, IdentityRole>(options => // 
@@ -100,7 +109,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddControllersWithViews();
+// (already registered above with filters)
 
 var app = builder.Build();
 
@@ -120,6 +129,52 @@ app.UseAuthentication(); // QUAN TRỌNG: Phải đặt trước UseAuthorizatio
 app.UseAuthorization();
 
 app.UseSession();
+
+// Custom Middleware to restrict Staff and Admin users to their respective areas
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var path = context.Request.Path.Value ?? "";
+        bool isAdmin = context.User.IsInRole("Admin");
+        bool isStaff = context.User.IsInRole("Staff") && !isAdmin; // Admin has priority
+
+        // Allow basic system/logout operations, API calls, and static files/assets
+        bool isSystemAllowed = path.StartsWith("/Account/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Identity/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/seatHub", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Home/Error", StringComparison.OrdinalIgnoreCase) ||
+                               path.StartsWith("/Error", StringComparison.OrdinalIgnoreCase) ||
+                               path.Contains(".");
+
+        if (!isSystemAllowed)
+        {
+            if (isAdmin)
+            {
+                // Admin must stay in /Admin
+                if (!path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/Admin/Dashboard");
+                    return;
+                }
+            }
+            else if (isStaff)
+            {
+                // Staff must stay in /Staff/Booking
+                if (!path.StartsWith("/Staff/Booking", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/Staff/Booking");
+                    return;
+                }
+            }
+        }
+    }
+    await next();
+});
 
 // ===== ROUTE CONFIGURATION =====
 app.MapControllerRoute(

@@ -18,11 +18,23 @@ public class GenresController : Controller // danh sách thể loại
     }
 
     // GET: /Admin/Genres
-    public async Task<IActionResult> Index(int pageNumber = 1) // danh sách thể loại
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null) // danh sách thể loại
     { 
         int pageSize = 20;
         var genres = await _unitOfWork.Genres.GetAllAsync();
-        var sortedGenres = genres.OrderBy(g => g.Name);
+        var query = genres.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(g => 
+                (g.Name != null && g.Name.ToLower().Contains(s)) ||
+                (g.Slug != null && g.Slug.ToLower().Contains(s))
+            );
+        }
+
+        ViewBag.Search = search;
+        var sortedGenres = query.OrderBy(g => g.Name);
         return View(PaginatedList<Genre>.Create(sortedGenres, pageNumber, pageSize)); // sắp xếp theo tên thể loại và phân trang
     }
 

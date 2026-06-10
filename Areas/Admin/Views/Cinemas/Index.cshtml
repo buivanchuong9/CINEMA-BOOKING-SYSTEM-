@@ -19,6 +19,25 @@
         </a>
     </div>
 
+    <!-- Search Bar -->
+    <div class="glass-card p-3 mb-4">
+        <form method="get" action="/Admin/Cinemas" class="d-flex gap-2">
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control bg-dark text-white border-secondary" placeholder="Tìm kiếm theo tên rạp, địa chỉ, số điện thoại...">
+                <button class="btn btn-cinema-red" type="submit">
+                    <i class="bi bi-search me-1"></i> Tìm
+                </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                {
+                    <a href="/Admin/Cinemas" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Xóa
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+
     <div class="glass-card p-4">
         @if (!Model.Any())
         {
@@ -84,7 +103,7 @@
                 <nav>
                     <ul class="pagination">
                         <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Cinemas?pageNumber=@(Model.PageIndex - 1)">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Cinemas?pageNumber=@(Model.PageIndex - 1)&search=@ViewBag.Search">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -93,12 +112,12 @@
                         {
                             <li class="page-item @(i == Model.PageIndex ? "active" : "")">
                                 <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")" 
-                                   href="/Admin/Cinemas?pageNumber=@i">@i</a>
+                                   href="/Admin/Cinemas?pageNumber=@i&search=@ViewBag.Search">@i</a>
                             </li>
                         }
 
                         <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Cinemas?pageNumber=@(Model.PageIndex + 1)">
+                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Cinemas?pageNumber=@(Model.PageIndex + 1)&search=@ViewBag.Search">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>

@@ -20,19 +20,31 @@ public class ShowtimesController : Controller
     }
 
     // GET: /Admin/Showtimes
-    public async Task<IActionResult> Index(int pageNumber = 1)
+    public async Task<IActionResult> Index(int pageNumber = 1, string? search = null)
     {
         int pageSize = 20;
         var allShowtimes = await _unitOfWork.Showtimes.GetAllAsync();
-        var sortedShowtimes = allShowtimes.OrderByDescending(s => s.StartTime);
-        
-        var paginatedShowtimes = PaginatedList<Showtime>.Create(sortedShowtimes, pageNumber, pageSize);
-
         var movies = await _unitOfWork.Movies.GetAllAsync();
         var rooms = await _unitOfWork.Rooms.GetAllAsync();
+
+        var query = allShowtimes.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(sh => 
+                (movies.FirstOrDefault(m => m.Id == sh.MovieId)?.Title != null && movies.FirstOrDefault(m => m.Id == sh.MovieId).Title.ToLower().Contains(s)) ||
+                (rooms.FirstOrDefault(r => r.Id == sh.RoomId)?.Name != null && rooms.FirstOrDefault(r => r.Id == sh.RoomId).Name.ToLower().Contains(s))
+            );
+        }
+
+        var sortedShowtimes = query.OrderByDescending(s => s.StartTime);
+        
+        var paginatedShowtimes = PaginatedList<Showtime>.Create(sortedShowtimes, pageNumber, pageSize);
         
         ViewBag.Movies = movies.ToDictionary(m => m.Id, m => m.Title); // danh sách phim theo id và tên
         ViewBag.Rooms = rooms.ToDictionary(r => r.Id, r => r.Name); // danh sách phòng theo id và tên
+        ViewBag.Search = search;
         
         // Tạo ViewModel để truyền dữ liệu tính toán
         var showtimeViewModels = new List<dynamic>();

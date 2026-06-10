@@ -19,17 +19,20 @@ public class BookingsController : Controller
     private readonly IBookingService _bookingService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<BookingsController> _logger;
+    private readonly IWebHostEnvironment _env;
 
     public BookingsController(
         AppDbContext context, 
         IBookingService bookingService,
         IUnitOfWork unitOfWork,
-        ILogger<BookingsController> logger)
+        ILogger<BookingsController> logger,
+        IWebHostEnvironment env)
     {
         _context = context;
         _bookingService = bookingService;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _env = env;
     }
 
     // GET: Admin/Bookings
@@ -141,15 +144,28 @@ public class BookingsController : Controller
     public async Task<IActionResult> Cancel(int id)
     {
         _logger.LogInformation($"Admin cancelling booking: {id}");
-        var success = await _bookingService.CancelBookingAsync(id);
-        
-        if (success)
+        var booking = await _context.Bookings.FindAsync(id);
+        if (booking == null) return NotFound();
+
+        if (booking.Status == BookingStatus.Paid)
         {
-            TempData["Success"] = "Đã hủy đơn hàng và giải phóng ghế thành công!";
+            booking.RefundStatus = "Pending";
+            booking.UpdatedAt = DateTime.Now;
+            _context.Bookings.Update(booking);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Đã chuyển đơn vé sang trạng thái chờ hoàn tiền!";
         }
         else
         {
-            TempData["Error"] = "Hủy đơn hàng thất bại!";
+            var success = await _bookingService.CancelBookingAsync(id);
+            if (success)
+            {
+                TempData["Success"] = "Đã hủy đơn hàng và giải phóng ghế thành công!";
+            }
+            else
+            {
+                TempData["Error"] = "Hủy đơn hàng thất bại!";
+            }
         }
 
         return RedirectToAction(nameof(Index), new {
@@ -196,5 +212,139 @@ public class BookingsController : Controller
         ViewBag.FoodsList = foods;
 
         return View(booking);
+    }
+
+    // GET: Admin/Bookings/RefundRequests
+    public async Task<IActionResult> RefundRequests(string? refundStatus, string? search, int pageNumber = 1)
+    {
+        int pageSize = 20;
+
+        var query = _context.Bookings
+            .Include(b => b.User)
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s!.Movie)
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s!.Room)
+                    .ThenInclude(r => r!.Cinema)
+            .Where(b => (b.Status == BookingStatus.Cancelled || b.Status == BookingStatus.Paid) && b.RefundStatus != "None")
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(refundStatus))
+            query = query.Where(b => b.RefundStatus == refundStatus);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(b =>
+                b.Id.ToString() == s ||
+                (b.User != null && b.User.FullName != null && b.User.FullName.ToLower().Contains(s)) ||
+                (b.User != null && b.User.Email != null && b.User.Email.ToLower().Contains(s)) ||
+                (b.RefundAccountNumber != null && b.RefundAccountNumber.Contains(s)) ||
+                (b.RefundAccountName  != null && b.RefundAccountName.ToLower().Contains(s))
+            );
+        }
+
+        query = query.OrderByDescending(b => b.UpdatedAt ?? b.BookingDate);
+
+        var paginated = await PaginatedList<Booking>.CreateAsync(query.AsNoTracking(), pageNumber, pageSize);
+
+        ViewBag.RefundStatus = refundStatus;
+        ViewBag.Search = search;
+        ViewBag.PendingCount  = await _context.Bookings.CountAsync(b => b.RefundStatus == "Pending");
+        ViewBag.RefundedCount = await _context.Bookings.CountAsync(b => b.RefundStatus == "Refunded");
+        ViewBag.RejectedCount = await _context.Bookings.CountAsync(b => b.RefundStatus == "Rejected");
+
+        return View(paginated);
+    }
+
+    // GET: Admin/Bookings/ProcessRefund/5
+    public async Task<IActionResult> ProcessRefund(int id)
+    {
+        var booking = await _context.Bookings
+            .Include(b => b.User)
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s!.Movie)
+            .FirstOrDefaultAsync(b => b.Id == id);
+
+        if (booking == null) return NotFound();
+        return View(booking);
+    }
+
+    // POST: Admin/Bookings/ProcessRefund
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProcessRefund(int id, string action, IFormFile? proofImage)
+    {
+        var booking = await _context.Bookings.FindAsync(id);
+        if (booking == null) return NotFound();
+
+        if (action == "Refunded")
+        {
+            if (proofImage == null || proofImage.Length == 0)
+            {
+                TempData["Error"] = "Vui lòng upload ảnh bằng chứng chuyển khoản!";
+                return RedirectToAction(nameof(ProcessRefund), new { id });
+            }
+
+            // Save image to wwwroot/uploads/refunds/
+            var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "refunds");
+            Directory.CreateDirectory(uploadsDir);
+
+            var ext = Path.GetExtension(proofImage.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            if (!allowed.Contains(ext))
+            {
+                TempData["Error"] = "Chỉ chấp nhận file ảnh (jpg, png, webp, gif)!";
+                return RedirectToAction(nameof(ProcessRefund), new { id });
+            }
+
+            var fileName = $"refund_{id}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await proofImage.CopyToAsync(stream);
+            }
+
+            // Cancel booking and release seats
+            var cancelSuccess = await _bookingService.CancelBookingAsync(id);
+            if (!cancelSuccess)
+            {
+                TempData["Error"] = "Không thể giải phóng ghế cho đơn vé này!";
+                return RedirectToAction(nameof(ProcessRefund), new { id });
+            }
+
+            // Re-fetch booking to update refund status
+            booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound();
+
+            booking.RefundProofUrl = $"/uploads/refunds/{fileName}";
+            booking.RefundStatus = "Refunded";
+            booking.UpdatedAt = DateTime.Now;
+
+            TempData["Success"] = $"Đã xác nhận hoàn tiền cho đơn #{id.ToString("D6")}! Đơn vé đã được hủy và giải phóng ghế.";
+        }
+        else if (action == "Rejected")
+        {
+            booking.RefundStatus = "None";
+            booking.UpdatedAt = DateTime.Now;
+            TempData["Success"] = $"Đã từ chối hoàn tiền cho đơn #{id.ToString("D6")}! Vé vẫn giữ trạng thái Đã Thanh Toán và nút Hủy vé đã hiển thị lại.";
+        }
+        else if (action == "Restore")
+        {
+            booking.Status = BookingStatus.Paid;
+            booking.RefundStatus = "None";
+            booking.UpdatedAt = DateTime.Now;
+            TempData["Success"] = $"Đã khôi phục vé #{id.ToString("D6")} về trạng thái Đã Thanh Toán!";
+        }
+        else
+        {
+            TempData["Error"] = "Hành động không hợp lệ!";
+            return RedirectToAction(nameof(ProcessRefund), new { id });
+        }
+
+        _context.Bookings.Update(booking);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(RefundRequests));
     }
 }

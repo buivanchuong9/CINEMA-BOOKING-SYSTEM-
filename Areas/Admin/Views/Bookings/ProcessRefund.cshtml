@@ -1,0 +1,381 @@
+@model BE.Core.Entities.Bookings.Booking
+@{
+    ViewData["Title"] = $"Xử Lý Hoàn Tiền #{Model.Id.ToString("D6")} - Admin";
+    Layout = "_Layout";
+    bool isPending  = Model.RefundStatus == "Pending";
+    bool isRefunded = Model.RefundStatus == "Refunded";
+    bool isRejected = Model.RefundStatus == "Rejected";
+}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="@Url.Action("RefundRequests", "Bookings", new { area = "Admin" })"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+    <div>
+        <h4 class="fw-bold mb-0">
+            <i class="bi bi-arrow-repeat me-2 text-warning"></i>
+            Xử Lý Hoàn Tiền <span class="text-muted font-monospace">#@Model.Id.ToString("D6")</span>
+        </h4>
+    </div>
+</div>
+
+<div class="row g-4">
+    @* ── LEFT: Booking & Customer Info ── *@
+    <div class="col-lg-5">
+
+        @* Customer Info *@
+        <div class="process-card rounded-3 p-4 mb-4">
+            <h6 class="fw-bold text-white mb-3"><i class="bi bi-person-circle me-2 text-cinema-red"></i>Thông Tin Khách Hàng</h6>
+            <div class="info-row">
+                <span class="label">Họ tên</span>
+                <span class="value fw-semibold">@(Model.User?.FullName ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Email</span>
+                <span class="value">@(Model.User?.Email ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">SĐT</span>
+                <span class="value">@(Model.User?.PhoneNumber ?? "—")</span>
+            </div>
+        </div>
+
+        @* Booking Info *@
+        <div class="process-card rounded-3 p-4 mb-4">
+            <h6 class="fw-bold text-white mb-3"><i class="bi bi-ticket-perforated me-2 text-cinema-red"></i>Thông Tin Đặt Vé</h6>
+            <div class="info-row">
+                <span class="label">Mã đơn</span>
+                <span class="value font-monospace fw-bold">#@Model.Id.ToString("D6")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phim</span>
+                <span class="value fw-semibold">@(Model.Showtime?.Movie?.Title ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Suất chiếu</span>
+                <span class="value">@Model.Showtime?.StartTime.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Ngày đặt</span>
+                <span class="value">@Model.BookingDate.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Ngày hủy</span>
+                <span class="value">@(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "—")</span>
+            </div>
+            <div class="info-row border-0 pt-2 mt-2" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
+                <span class="label fw-bold text-white">Số tiền hoàn</span>
+                <span class="value fw-bold text-warning fs-5">@Model.TotalAmount.ToString("N0") ₫</span>
+            </div>
+        </div>
+
+        @* Bank Account Info *@
+        <div class="process-card rounded-3 p-4">
+            <h6 class="fw-bold text-white mb-3"><i class="bi bi-bank me-2 text-cinema-red"></i>Tài Khoản Nhận Tiền</h6>
+            @if (!string.IsNullOrEmpty(Model.RefundAccountNumber))
+            {
+                <div class="bank-highlight rounded-3 p-3 mb-2">
+                    <div class="text-muted small mb-1">Ngân hàng</div>
+                    <div class="fw-bold text-white fs-5">@Model.RefundBankName</div>
+                </div>
+                <div class="bank-highlight rounded-3 p-3 mb-2">
+                    <div class="text-muted small mb-1">Số tài khoản</div>
+                    <div class="fw-bold text-white fs-4 font-monospace">@Model.RefundAccountNumber</div>
+                    <button class="btn btn-sm btn-outline-light mt-1 copy-btn"
+                            onclick="copyText('@Model.RefundAccountNumber', this)">
+                        <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                </div>
+                <div class="bank-highlight rounded-3 p-3">
+                    <div class="text-muted small mb-1">Tên tài khoản</div>
+                    <div class="fw-bold text-white fs-5">@Model.RefundAccountName</div>
+                    <button class="btn btn-sm btn-outline-light mt-1 copy-btn"
+                            onclick="copyText('@Model.RefundAccountName', this)">
+                        <i class="bi bi-clipboard me-1"></i>Copy
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="text-muted text-center py-3">
+                    <i class="bi bi-dash-circle me-2"></i>Khách hàng không điền thông tin tài khoản
+                </div>
+            }
+        </div>
+
+    </div>
+
+    @* ── RIGHT: Process Action ── *@
+    <div class="col-lg-7">
+
+        @* Current Status *@
+        <div class="process-card rounded-3 p-4 mb-4">
+            <h6 class="fw-bold text-white mb-3"><i class="bi bi-info-circle me-2"></i>Trạng Thái Hiện Tại</h6>
+            @{
+                var (sClass, sText, sIcon) = Model.RefundStatus switch
+                {
+                    "Pending"  => ("warning",  "Chờ xử lý",    "bi-hourglass-split"),
+                    "Refunded" => ("success",  "Đã hoàn tiền", "bi-check-circle-fill"),
+                    "Rejected" => ("danger",   "Từ chối",      "bi-x-circle-fill"),
+                    _          => ("secondary","—",            "bi-dash")
+                };
+            }
+            <span class="badge bg-@sClass py-2 px-4 fs-6">
+                <i class="bi @sIcon me-2"></i>@sText
+            </span>
+        </div>
+
+        @if (isPending)
+        {
+            @* ── PROCESS FORM (only for Pending) ── *@
+            <div class="process-card rounded-3 p-4 mb-4">
+                <h6 class="fw-bold text-white mb-4">
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>Xử Lý Yêu Cầu Hoàn Tiền
+                </h6>
+
+                <form id="processRefundForm" asp-action="ProcessRefund" asp-controller="Bookings"
+                      asp-area="Admin" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" id="actionInput" name="action" value="" />
+
+                    @* Image upload *@
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-white">
+                            <i class="bi bi-image me-1 text-cinema-red"></i>
+                            Ảnh Bằng Chứng Chuyển Khoản <span class="text-danger">*</span>
+                            <span class="text-muted fw-normal small">(bắt buộc khi xác nhận đã hoàn)</span>
+                        </label>
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('proofImage').click()">
+                            <div id="uploadPlaceholder">
+                                <i class="bi bi-cloud-upload fs-1 text-muted mb-2"></i>
+                                <p class="text-muted mb-1">Kéo thả ảnh vào đây hoặc <span class="text-warning">click để chọn</span></p>
+                                <p class="text-muted small">JPG, PNG, WebP — tối đa 5MB</p>
+                            </div>
+                            <div id="imagePreviewContainer" class="d-none text-center">
+                                <img id="imagePreview" src="" alt="Preview" class="proof-preview rounded-3 mb-2">
+                                <p class="text-success small mb-0"><i class="bi bi-check-circle me-1"></i>Ảnh đã chọn</p>
+                            </div>
+                        </div>
+                        <input type="file" id="proofImage" name="proofImage"
+                               accept="image/*" class="d-none">
+                    </div>
+
+                    @* Action Buttons *@
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-success w-100 py-3 fw-bold rounded-pill"
+                                    onclick="submitAction('Refunded')">
+                                <i class="bi bi-check-circle me-2"></i>Xác Nhận Đã Hoàn Tiền
+                            </button>
+                        </div>
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-danger w-100 py-3 fw-bold rounded-pill"
+                                    onclick="submitAction('Rejected')">
+                                <i class="bi bi-x-circle me-2"></i>Từ Chối Hoàn Tiền
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-outline-info w-100 py-3 fw-bold rounded-pill"
+                                    onclick="submitAction('Restore')">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Không Hủy Vé Nữa (Khôi Phục Vé)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        }
+        else if (isRefunded && !string.IsNullOrEmpty(Model.RefundProofUrl))
+        {
+            @* Show proof image *@
+            <div class="process-card rounded-3 p-4">
+                <h6 class="fw-bold text-white mb-3">
+                    <i class="bi bi-image me-2 text-success"></i>Bằng Chứng Chuyển Khoản
+                </h6>
+                <a href="@Model.RefundProofUrl" target="_blank">
+                    <img src="@Model.RefundProofUrl" alt="Bằng chứng hoàn tiền"
+                         class="img-fluid rounded-3" style="max-height: 400px; object-fit: contain;">
+                </a>
+                <p class="text-success mt-2 small">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Đã hoàn tiền thành công. Click vào ảnh để xem full.
+                </p>
+            </div>
+        }
+        else if (isRejected)
+        {
+            <div class="process-card rounded-3 p-4">
+                <div class="text-center py-4">
+                    <i class="bi bi-x-circle-fill display-3 text-danger mb-3"></i>
+                    <h5 class="text-danger">Đã từ chối yêu cầu hoàn tiền</h5>
+                    <p class="text-muted">Yêu cầu hoàn tiền cho đơn này đã bị từ chối.</p>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput  = document.getElementById('proofImage');
+
+        fileInput?.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                showPreview(this.files[0]);
+            }
+        });
+
+        uploadZone?.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone?.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                showPreview(file);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('uploadPlaceholder').classList.add('d-none');
+                document.getElementById('imagePreviewContainer').classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function submitAction(action) {
+            const hasImage = fileInput?.files?.length > 0;
+
+            if (action === 'Refunded' && !hasImage) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu bằng chứng!',
+                    text: 'Vui lòng upload ảnh bằng chứng chuyển khoản trước khi xác nhận!',
+                    confirmButtonColor: '#dc2626',
+                    background: '#1e293b',
+                    color: '#f8fafc'
+                });
+                return;
+            }
+
+            let msg = '';
+            let confirmColor = '#dc2626';
+            let iconType = 'warning';
+            let confirmText = '';
+            let htmlText = '';
+
+            if (action === 'Refunded') {
+                msg = 'Xác nhận đã chuyển tiền hoàn cho khách?';
+                confirmColor = '#16a34a';
+                iconType = 'success';
+                confirmText = 'Xác nhận hoàn tiền';
+                htmlText = `<span class="text-muted small">Đơn <strong style="color:#fbbf24">#@Model.Id.ToString("D6")</strong> • <strong style="color:#4ade80">✅ Hoàn tiền</strong></span>`;
+            } else if (action === 'Rejected') {
+                msg = 'Xác nhận TỪ CHỐI hoàn tiền cho khách hàng này?';
+                confirmColor = '#dc2626';
+                iconType = 'warning';
+                confirmText = 'Xác nhận từ chối';
+                htmlText = `<span class="text-muted small">Đơn <strong style="color:#fbbf24">#@Model.Id.ToString("D6")</strong> • <strong style="color:#f87171">❌ Từ chối hoàn</strong></span>`;
+            } else if (action === 'Restore') {
+                msg = 'Không hủy vé nữa và khôi phục đơn vé?';
+                confirmColor = '#0ea5e9';
+                iconType = 'question';
+                confirmText = 'Khôi phục vé';
+                htmlText = `<span class="text-muted small">Đơn <strong style="color:#fbbf24">#@Model.Id.ToString("D6")</strong> • <strong style="color:#38bdf8">🔄 Khôi phục trạng thái Đã Thanh Toán</strong></span>`;
+            }
+
+            Swal.fire({
+                title: msg,
+                html: htmlText,
+                icon: iconType,
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Hủy bỏ',
+                background: '#1e293b',
+                color: '#ffffff'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    document.getElementById('actionInput').value = action;
+                    document.getElementById('processRefundForm').submit();
+                }
+            });
+        }
+
+        function copyText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.innerHTML = '<i class="bi bi-check me-1"></i>Đã copy!';
+                btn.classList.replace('btn-outline-light', 'btn-success');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy';
+                    btn.classList.replace('btn-success', 'btn-outline-light');
+                }, 2000);
+            });
+        }
+    </script>
+}
+
+<style>
+    .process-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        gap: 16px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label {
+        color: #94a3b8;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    .info-row .value {
+        color: #e2e8f0;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+    .bank-highlight {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .upload-zone {
+        border: 2px dashed rgba(255,255,255,0.2);
+        border-radius: 12px;
+        padding: 32px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        background: rgba(255,255,255,0.03);
+        min-height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+        border-color: rgba(245,158,11,0.5);
+        background: rgba(245,158,11,0.05);
+    }
+    .proof-preview {
+        max-height: 250px;
+        max-width: 100%;
+        object-fit: contain;
+    }
+</style>

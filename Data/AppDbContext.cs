@@ -42,6 +42,7 @@ public class AppDbContext : IdentityDbContext<User>
     // User được kế thừa từ IdentityUser, không cần DbSet riêng
     public DbSet<Voucher> Vouchers { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
+    public DbSet<SiteSettings> SiteSettings { get; set; } = null!;
 
     // ===== GROUP 6: CHATBOT (1 table) =====
     public DbSet<BE.Core.Entities.Business.ChatHistory> ChatHistories { get; set; } = null!;

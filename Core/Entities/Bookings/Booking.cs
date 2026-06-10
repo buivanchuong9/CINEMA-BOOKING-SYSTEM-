@@ -79,6 +79,21 @@ public class Booking
     [Timestamp]
     public byte[]? RowVersion { get; set; } // token để phát hiện conflict
     
+    [MaxLength(50)]
+    public string? RefundAccountNumber { get; set; }
+    
+    [MaxLength(100)]
+    public string? RefundAccountName { get; set; }
+    
+    [MaxLength(100)]
+    public string? RefundBankName { get; set; }
+    
+    [MaxLength(500)]
+    public string? RefundProofUrl { get; set; }
+    
+    [MaxLength(20)]
+    public string RefundStatus { get; set; } = "None"; // None, Pending, Refunded, Rejected
+    
     public DateTime CreatedAt { get; set; } = DateTime.Now; // thời gian tạo đơn
     public DateTime? UpdatedAt { get; set; } // thời gian cập nhật
     

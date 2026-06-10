@@ -102,8 +102,11 @@
                 <a href="/Admin/Showtimes" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Showtimes" ? "active" : "")">
                     <i class="bi bi-calendar-event me-2"></i> Lịch Chiếu
                 </a>
-                <a href="/Admin/Bookings" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" ? "active" : "")">
+                <a href="/Admin/Bookings" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bookings" && ViewContext.RouteData.Values["action"]?.ToString() != "RefundRequests" && ViewContext.RouteData.Values["action"]?.ToString() != "ProcessRefund" ? "active" : "")">
                     <i class="bi bi-ticket-detailed me-2"></i> Quản Lý Vé Đã Đặt
+                </a>
+                <a href="/Admin/Bookings/RefundRequests" class="admin-nav-link @(ViewContext.RouteData.Values["action"]?.ToString() is "RefundRequests" or "ProcessRefund" ? "active" : "")">
+                    <i class="bi bi-arrow-repeat me-2 text-warning"></i> Xử Lý Hoàn Tiền
                 </a>
                 <a href="/Admin/Cinemas" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Cinemas" ? "active" : "")">
                     <i class="bi bi-building me-2"></i> Rạp Chiếu
@@ -116,6 +119,9 @@
                 </a>
                 <a href="/Admin/Foods" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Foods" ? "active" : "")">
                     <i class="bi bi-cup-straw me-2"></i> Đồ Ăn
+                </a>
+                <a href="/Admin/Appearance" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Appearance" ? "active" : "")">
+                    <i class="bi bi-palette me-2"></i> Chỉnh Giao Diện
                 </a>
                 <hr class="border-secondary mx-3">
                 <small class="text-muted px-3 text-uppercase" style="font-size: 0.75rem;">Người Dùng</small>
@@ -130,11 +136,6 @@
                     <i class="bi bi-shield-lock me-2"></i> Quản Trị Viên
                 </a>
                 
-                <hr class="border-secondary mx-3">
-                
-                <a href="/" class="admin-nav-link">
-                    <i class="bi bi-house-door me-2"></i> Về Trang Chủ
-                </a>
                 <form method="post" action="/Account/Logout" class="m-0">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="admin-nav-link w-100 text-start border-0 bg-transparent">

@@ -386,7 +386,7 @@ public class BookingController : Controller
         return View();
     }
 
-    // POST: /Booking/Cancel/5
+    // POST: /Booking/Cancel/5  (chỉ dùng cho Pending/Holding)
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -395,11 +395,23 @@ public class BookingController : Controller
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
 
+        if (booking == null || string.IsNullOrEmpty(userId))
+        {
+            TempData["Error"] = "Không tìm thấy đơn đặt vé!";
+            return RedirectToAction("MyBookings");
+        }
+
         // Chỉ cho phép hủy nếu là owner
-        if (booking != null && !string.IsNullOrEmpty(userId) && booking.UserId != userId)
+        if (booking.UserId != userId)
         {
             TempData["Error"] = "Bạn không có quyền hủy đơn hàng này!";
             return RedirectToAction("MyBookings");
+        }
+
+        // Vé đã thanh toán → chuyển đến form nhập TK hoàn tiền
+        if (booking.Status == BE.Core.Enums.BookingStatus.Paid)
+        {
+            return RedirectToAction("CancelTicket", new { id });
         }
 
         var success = await _bookingService.CancelBookingAsync(id);
@@ -414,6 +426,127 @@ public class BookingController : Controller
         }
 
         return RedirectToAction("MyBookings");
+    }
+
+    // GET: /Booking/CancelTicket/5  (hủy vé đã thanh toán - nhập TK hoàn tiền)
+    [Authorize]
+    public async Task<IActionResult> CancelTicket(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Account");
+
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+        if (booking == null || booking.UserId != userId)
+        {
+            TempData["Error"] = "Không tìm thấy đơn đặt vé!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.Status != BE.Core.Enums.BookingStatus.Paid)
+        {
+            TempData["Error"] = "Chỉ có thể yêu cầu hoàn tiền cho vé đã thanh toán!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (booking.RefundStatus != "None")
+        {
+            TempData["Info"] = "Yêu cầu hoàn tiền cho đơn này đã được gửi trước đó.";
+            return RedirectToAction("CancelledTickets");
+        }
+
+        BE.Core.Entities.Movies.Showtime? showtime = null;
+        BE.Core.Entities.Movies.Movie? movie = null;
+        BE.Core.Entities.CinemaInfrastructure.Room? room = null;
+
+        if (booking.ShowtimeId.HasValue)
+        {
+            showtime = await _unitOfWork.Showtimes.GetByIdAsync(booking.ShowtimeId.Value);
+            if (showtime != null)
+            {
+                movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+                room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
+                if (room != null)
+                    room.Cinema = (await _unitOfWork.Cinemas.GetByIdAsync(room.CinemaId))!;
+            }
+        }
+
+        ViewBag.Booking = booking;
+        ViewBag.Showtime = showtime;
+        ViewBag.Movie = movie;
+        ViewBag.Room = room;
+
+        return View();
+    }
+
+    // POST: /Booking/CancelTicket
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelTicket(int id, string accountNumber, string accountName, string bankName)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Account");
+
+        var booking = await _unitOfWork.Bookings.GetByIdAsync(id);
+        if (booking == null || booking.UserId != userId || booking.Status != BE.Core.Enums.BookingStatus.Paid)
+        {
+            TempData["Error"] = "Không thể xử lý yêu cầu này!";
+            return RedirectToAction("MyBookings");
+        }
+
+        if (string.IsNullOrWhiteSpace(accountNumber) || string.IsNullOrWhiteSpace(accountName) || string.IsNullOrWhiteSpace(bankName))
+        {
+            TempData["Error"] = "Vui lòng điền đầy đủ thông tin tài khoản ngân hàng!";
+            return RedirectToAction("CancelTicket", new { id });
+        }
+
+        // Lưu thông tin TK hoàn tiền, chuyển trạng thái sang Cancelled + RefundStatus = Pending
+        booking.RefundAccountNumber = accountNumber.Trim();
+        booking.RefundAccountName = accountName.Trim();
+        booking.RefundBankName = bankName.Trim();
+        booking.RefundStatus = "Pending";
+        booking.Status = BE.Core.Enums.BookingStatus.Cancelled;
+        booking.UpdatedAt = DateTime.Now;
+
+        _context.Bookings.Update(booking);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Yêu cầu hủy vé và hoàn tiền đã được gửi! Admin sẽ xử lý và chuyển tiền cho bạn trong thời gian sớm nhất.";
+        return RedirectToAction("CancelledTickets");
+    }
+
+    // GET: /Booking/CancelledTickets  (xem vé đã hủy + trạng thái hoàn tiền)
+    [Authorize]
+    public async Task<IActionResult> CancelledTickets()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Account");
+
+        var cancelledBookings = await _context.Bookings
+            .Where(b => b.UserId == userId && (b.Status == BE.Core.Enums.BookingStatus.Cancelled || b.RefundStatus != "None"))
+            .OrderByDescending(b => b.UpdatedAt ?? b.BookingDate)
+            .ToListAsync();
+
+        // Load showtime/movie info
+        var bookingInfos = new List<(BE.Core.Entities.Bookings.Booking booking, BE.Core.Entities.Movies.Movie? movie, BE.Core.Entities.Movies.Showtime? showtime)>();
+        foreach (var b in cancelledBookings)
+        {
+            BE.Core.Entities.Movies.Movie? movie = null;
+            BE.Core.Entities.Movies.Showtime? showtime = null;
+            if (b.ShowtimeId.HasValue)
+            {
+                showtime = await _unitOfWork.Showtimes.GetByIdAsync(b.ShowtimeId.Value);
+                if (showtime != null)
+                    movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
+            }
+            bookingInfos.Add((b, movie, showtime));
+        }
+
+        ViewBag.BookingInfos = bookingInfos;
+        return View();
     }
 
     // ADMIN/DEV HELPER: Generate seats if missing
