@@ -531,7 +531,7 @@ public class BookingService : IBookingService
         // Get sold seats for this showtime from Bookings table
         // CRITICAL FIX: Only check Paid bookings. 'Confirmed' does not exist in enum.
         var bookedSeatIds = await _context.Bookings
-            .Where(b => b.ShowtimeId == showtimeId && b.Status == BookingStatus.Paid)
+            .Where(b => b.ShowtimeId == showtimeId && (b.Status == BookingStatus.Paid || (b.Status == BookingStatus.Cancelled && b.RefundStatus == "Pending")))
             .Join(_context.BookingDetails,
                 booking => booking.Id,
                 detail => detail.BookingId,

@@ -132,8 +132,8 @@
                 <a href="/Admin/Users?role=Staff" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && Context.Request.Query["role"] == "Staff" ? "active" : "")">
                     <i class="bi bi-person-badge me-2"></i> Nhân Viên Bán Hàng
                 </a>
-                <a href="/Admin/Users?role=Admin" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && Context.Request.Query["role"] == "Admin" ? "active" : "")">
-                    <i class="bi bi-shield-lock me-2"></i> Quản Trị Viên
+                <a href="/Admin/Users/Profile" class="admin-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" && ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")">
+                    <i class="bi bi-person-bounding-box me-2 text-warning"></i> Hồ Sơ Admin
                 </a>
                 
                 <form method="post" action="/Account/Logout" class="m-0">

@@ -1,0 +1,181 @@
+@model BE.Core.Entities.Business.User
+@{
+    ViewData["Title"] = "Hồ Sơ Admin";
+}
+
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- Header Section -->
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom border-secondary">
+                <div>
+                    <h2 class="h3 text-white fw-bold mb-1">
+                        <i class="bi bi-person-bounding-box text-warning me-2"></i> Hồ Sơ Cá Nhân Admin
+                    </h2>
+                    <p class="text-muted mb-0">Quản lý và cập nhật thông tin tài khoản quản trị của bạn</p>
+                </div>
+                <a href="/Admin/Dashboard" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-short me-1"></i> Quay lại Dashboard
+                </a>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="card bg-dark border-secondary shadow-lg overflow-hidden">
+                <!-- Card Header Decoration -->
+                <div class="profile-header-bg py-4 px-4 d-flex align-items-center gap-3" style="background: linear-gradient(135deg, #1f1f2e 0%, #11111e 100%); border-bottom: 1px solid #333;">
+                    <div class="avatar-wrapper bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-lg" style="width: 70px; height: 70px;">
+                        <i class="bi bi-shield-lock-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white fw-bold mb-1">@Model.FullName</h4>
+                        <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">Quản Trị Viên</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger mb-4 shake-animation rounded-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Có lỗi xảy ra:</strong>
+                            <div asp-validation-summary="All" class="mt-2 small"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Profile" method="post" class="needs-validation">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row g-4">
+                            <!-- Information Section -->
+                            <div class="col-12">
+                                <h5 class="text-popcorn-gold fw-bold mb-3 pb-2 border-bottom border-dark">
+                                    <i class="bi bi-info-circle me-2"></i> Thông Tin Cá Nhân
+                                </h5>
+                            </div>
+
+                            <!-- Email / Username (Read-only) -->
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">EMAIL / TÊN ĐĂNG NHẬP (KHÔNG THỂ THAY ĐỔI)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-secondary"><i class="bi bi-envelope"></i></span>
+                                    <input type="text" class="form-control bg-black text-secondary border-secondary" value="@Model.Email" readonly />
+                                </div>
+                            </div>
+
+                            <!-- Member Level (Read-only) -->
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">NGÀY TẠO TÀI KHOẢN</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-secondary"><i class="bi bi-calendar-check"></i></span>
+                                    <input type="text" class="form-control bg-black text-secondary border-secondary" value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" readonly />
+                                </div>
+                            </div>
+
+                            <!-- FullName -->
+                            <div class="col-md-6">
+                                <label for="FullName" class="form-label text-white small fw-bold">HỌ VÀ TÊN</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-person"></i></span>
+                                    <input type="text" id="FullName" name="FullName" value="@Model.FullName" class="form-control bg-black text-white border-secondary focus-warning" required placeholder="Nhập họ và tên" />
+                                </div>
+                            </div>
+
+                            <!-- PhoneNumber -->
+                            <div class="col-md-6">
+                                <label for="PhoneNumber" class="form-label text-white small fw-bold">SỐ ĐIỆN THOẠI</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" id="PhoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" class="form-control bg-black text-white border-secondary focus-warning" required placeholder="Nhập số điện thoại" />
+                                </div>
+                            </div>
+
+                            <!-- Password Section -->
+                            <div class="col-12 mt-5">
+                                <h5 class="text-popcorn-gold fw-bold mb-3 pb-2 border-bottom border-dark">
+                                    <i class="bi bi-key me-2"></i> Thay Đổi Mật Khẩu
+                                </h5>
+                                <p class="text-muted small mb-4">Nhập thông tin bên dưới nếu bạn muốn đổi mật khẩu mới. Nếu không đổi, vui lòng để trống.</p>
+                            </div>
+
+                            <!-- CurrentPassword -->
+                            <div class="col-md-4">
+                                <label for="CurrentPassword" class="form-label text-white small fw-bold">MẬT KHẨU HIỆN TẠI</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-shield-lock"></i></span>
+                                    <input type="password" id="CurrentPassword" name="CurrentPassword" class="form-control bg-black text-white border-secondary focus-warning" placeholder="Nhập mật khẩu hiện tại" />
+                                </div>
+                            </div>
+
+                            <!-- NewPassword -->
+                            <div class="col-md-4">
+                                <label for="NewPassword" class="form-label text-white small fw-bold">MẬT KHẨU MỚI</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-key-fill"></i></span>
+                                    <input type="password" id="NewPassword" name="NewPassword" class="form-control bg-black text-white border-secondary focus-warning" placeholder="Mật khẩu mới" />
+                                </div>
+                            </div>
+
+                            <!-- ConfirmPassword -->
+                            <div class="col-md-4">
+                                <label for="ConfirmPassword" class="form-label text-white small fw-bold">XÁC NHẬN MẬT KHẨU MỚI</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-key-fill"></i></span>
+                                    <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control bg-black text-white border-secondary focus-warning" placeholder="Nhập lại mật khẩu mới" />
+                                </div>
+                            </div>
+
+                            <!-- Forgot Password Link -->
+                            <div class="col-12 mt-2">
+                                <a href="/Account/ForgotPassword" class="text-muted small text-decoration-none hover-warning">
+                                    <i class="bi bi-question-circle-fill me-1 text-warning"></i> Bạn quên mật khẩu hiện tại? Nhấp vào đây để đổi mật khẩu qua email.
+                                </a>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="col-12 mt-5">
+                                <div class="d-flex justify-content-end gap-3">
+                                    <button type="reset" class="btn btn-outline-secondary px-4">
+                                        <i class="bi bi-x-circle me-1"></i> Hủy thay đổi
+                                    </button>
+                                    <button type="submit" class="btn btn-warning text-dark fw-bold px-5">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling elements specific to Profile Page */
+    .focus-warning:focus {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25) !important;
+    }
+    .text-popcorn-gold {
+        color: #ffc107 !important;
+    }
+    .hover-warning:hover {
+        color: #ffc107 !important;
+        transition: color 0.2s ease;
+    }
+    .input-group-text {
+        border-right: none;
+    }
+    .form-control {
+        border-left: none;
+    }
+    .shake-animation {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @@keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+</style>
