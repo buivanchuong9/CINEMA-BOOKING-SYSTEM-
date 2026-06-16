@@ -73,13 +73,10 @@
                                 }
                                 
                                 <!-- Rating Badge -->
-                                @if (movie.Rating.HasValue)
-                                {
-                                    <div class="rating-badge">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        @movie.Rating.Value.ToString("0.0")
-                                    </div>
-                                }
+                                <div class="rating-badge">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    @(movie.Rating.HasValue ? movie.Rating.Value.ToString("0.0") : "0.0")
+                                </div>
                                 
                                 <!-- Age Rating Badge -->
                                 @if (!string.IsNullOrEmpty(movie.AgeRating))

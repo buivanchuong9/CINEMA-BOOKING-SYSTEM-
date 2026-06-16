@@ -27,11 +27,11 @@
                                 <div class="banner-overlay">
                                     <div class="banner-info">
                                         <h3 class="banner-title">@movie.Title</h3>
-                                        @if (cfg.ShowMovieRating && movie.Rating.HasValue)
+                                        @if (cfg.ShowMovieRating)
                                         {
                                             <div class="banner-rating">
                                                 <i class="bi bi-star-fill text-warning"></i>
-                                                @movie.Rating.Value.ToString("0.0")
+                                                @(movie.Rating.HasValue ? movie.Rating.Value.ToString("0.0") : "0.0")
                                             </div>
                                         }
                                         <button class="btn btn-cinema-red btn-sm mt-2">
@@ -85,11 +85,11 @@
 
                                 <div class="movie-overlay">
                                     <div class="overlay-content">
-                                        @if (cfg.ShowMovieRating && movie.Rating.HasValue)
+                                        @if (cfg.ShowMovieRating)
                                         {
                                             <div class="rating-badge mb-3">
-                                                <i class="bi bi-star-fill"></i>
-                                                @movie.Rating.Value.ToString("0.0")
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                @(movie.Rating.HasValue ? movie.Rating.Value.ToString("0.0") : "0.0")
                                             </div>
                                         }
                                         <h5 class="movie-title-overlay mb-3">@movie.Title</h5>
@@ -122,11 +122,11 @@
                                             @movie.Duration'
                                         </span>
                                     }
-                                    @if (cfg.ShowMovieRating && movie.Rating.HasValue)
+                                    @if (cfg.ShowMovieRating)
                                     {
                                         <span>
                                             <i class="bi bi-star-fill text-warning"></i>
-                                            @movie.Rating.Value.ToString("0.0")
+                                            @(movie.Rating.HasValue ? movie.Rating.Value.ToString("0.0") : "0.0")
                                         </span>
                                     }
                                 </div>

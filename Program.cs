@@ -204,6 +204,23 @@ using (var scope = app.Services.CreateScope())
         // Seed sample data (movies, cinemas, showtimes, etc.)
         var context = services.GetRequiredService<AppDbContext>();
         await BE.Data.DbInitializer.SeedAsync(context);
+
+        // Đồng bộ điểm đánh giá thật từ review, xóa hết điểm ảo/mock data cũ
+        var allMovies = await context.Movies.ToListAsync();
+        foreach (var m in allMovies)
+        {
+            var reviews = await context.MovieReviews.Where(r => r.MovieId == m.Id).ToListAsync();
+            if (reviews.Any())
+            {
+                double avgStars = reviews.Average(r => r.Rating);
+                m.Rating = (decimal)Math.Round(avgStars, 1);
+            }
+            else
+            {
+                m.Rating = null; // Trả về null (0.0 ở view) nếu chưa có đánh giá nào
+            }
+        }
+        await context.SaveChangesAsync();
         
         // Cập nhật showtimes cũ sang tương lai
         await BE.Infrastructure.Data.DbSeeder.UpdateShowtimesToFutureAsync(context);

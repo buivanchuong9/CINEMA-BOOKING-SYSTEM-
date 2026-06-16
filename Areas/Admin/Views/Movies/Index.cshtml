@@ -104,17 +104,10 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (movie.Rating.HasValue)
-                                    {
-                                        <span>
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                            @movie.Rating.Value.ToString("0.0")
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
+                                    <span>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        @(movie.Rating.HasValue ? movie.Rating.Value.ToString("0.0") : "0.0")
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
