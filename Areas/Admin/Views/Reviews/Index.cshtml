@@ -3,6 +3,10 @@
 @model PaginatedList<BE.Core.Entities.Movies.MovieReview>
 @{
     ViewData["Title"] = "Quản Lý Đánh Giá - Admin";
+    int? filterStar = ViewBag.FilterStar as int?;
+    string? filterReply = ViewBag.FilterReply as string;
+    string? search = ViewBag.Search as string;
+    string baseQs = $"search={Uri.EscapeDataString(search ?? "")}&filterStar={filterStar}&filterReply={Uri.EscapeDataString(filterReply ?? "")}";
 }
 
 <div class="container-fluid py-4">
@@ -12,27 +16,64 @@
                 <i class="bi bi-chat-left-text me-2 text-cinema-red"></i>
                 Quản Lý Đánh Giá
             </h2>
-            <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages</p>
+            <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages • @Model.TotalCount đánh giá</p>
         </div>
     </div>
 
     <!-- Search Bar -->
-    <div class="glass-card p-3 mb-4">
-        <form method="get" action="/Admin/Reviews" class="d-flex gap-2">
-            <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
-                <input type="text" name="search" value="@ViewBag.Search" class="form-control bg-dark text-white border-secondary" placeholder="Tìm kiếm theo tên phim, tên khách hàng, nội dung đánh giá...">
-                <button class="btn btn-cinema-red" type="submit">
-                    <i class="bi bi-search me-1"></i> Tìm
-                </button>
-                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                {
-                    <a href="/Admin/Reviews" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle"></i> Xóa
-                    </a>
-                }
+    <div class="glass-card p-3 mb-3">
+        <form method="get" action="/Admin/Reviews">
+            <div class="d-flex gap-2 flex-wrap">
+                <div class="input-group flex-grow-1" style="min-width: 240px;">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" value="@search"
+                           class="form-control bg-dark text-white border-secondary"
+                           placeholder="Tìm theo tên phim, khách hàng, nội dung...">
+                    <input type="hidden" name="filterStar" value="@filterStar" />
+                    <input type="hidden" name="filterReply" value="@filterReply" />
+                    <button class="btn btn-cinema-red" type="submit">
+                        <i class="bi bi-search me-1"></i> Tìm
+                    </button>
+                    @if (!string.IsNullOrEmpty(search) || filterStar.HasValue || !string.IsNullOrEmpty(filterReply))
+                    {
+                        <a href="/Admin/Reviews" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Xóa lọc
+                        </a>
+                    }
+                </div>
             </div>
         </form>
+    </div>
+
+    <!-- Filter Chips -->
+    @{
+        string BuildUrl(int? star, string? reply) =>
+            $"/Admin/Reviews?search={Uri.EscapeDataString(search ?? "")}&filterStar={star}&filterReply={Uri.EscapeDataString(reply ?? "")}";
+    }
+    <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+        <span class="text-muted small me-1"><i class="bi bi-funnel me-1"></i>Lọc sao:</span>
+        <a href="@BuildUrl(null, filterReply)"
+           class="btn btn-sm @(!filterStar.HasValue ? "btn-warning text-dark" : "btn-outline-secondary")">Tất cả</a>
+        @for (int s = 5; s >= 1; s--)
+        {
+            int star = s;
+            <a href="@BuildUrl(star, filterReply)"
+               class="btn btn-sm @(filterStar == star ? "btn-warning text-dark" : "btn-outline-secondary")">
+                @star <i class="bi bi-star-fill ms-1 text-warning"></i>
+            </a>
+        }
+
+        <span class="text-muted small ms-3 me-1"><i class="bi bi-chat-dots me-1"></i>Phản hồi:</span>
+        <a href="@BuildUrl(filterStar, null)"
+           class="btn btn-sm @(string.IsNullOrEmpty(filterReply) ? "btn-primary" : "btn-outline-secondary")">Tất cả</a>
+        <a href="@BuildUrl(filterStar, "pending")"
+           class="btn btn-sm @(filterReply == "pending" ? "btn-danger" : "btn-outline-secondary")">
+            <i class="bi bi-hourglass-split me-1"></i>Chưa phản hồi
+        </a>
+        <a href="@BuildUrl(filterStar, "replied")"
+           class="btn btn-sm @(filterReply == "replied" ? "btn-success" : "btn-outline-secondary")">
+            <i class="bi bi-check2-circle me-1"></i>Đã phản hồi
+        </a>
     </div>
 
     <div class="glass-card p-4">
@@ -40,8 +81,8 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-chat-square-text display-1 text-muted mb-3"></i>
-                <h4 class="text-muted">Chưa có đánh giá nào</h4>
-                <p class="text-muted">Đánh giá từ khách hàng sẽ xuất hiện tại đây.</p>
+                <h4 class="text-muted">Không có đánh giá nào</h4>
+                <p class="text-muted">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
             </div>
         }
         else
@@ -52,36 +93,24 @@
                         <tr>
                             <th style="width: 18%">Phim</th>
                             <th style="width: 15%">Khách Hàng</th>
-                            <th style="width: 10%">Số Sao</th>
-                            <th style="width: 25%">Đánh Giá</th>
-                            <th style="width: 22%">Phản Hồi</th>
-                            <th style="width: 10%">Thao Tác</th>
+                            <th style="width: 8%">Sao</th>
+                            <th style="width: 27%">Đánh Giá</th>
+                            <th style="width: 25%">Phản Hồi Admin</th>
+                            <th style="width: 7%">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var review in Model)
                         {
                             <tr>
+                                <td><strong>@(review.Movie?.Title ?? "Phim đã xóa")</strong></td>
                                 <td>
-                                    <strong>@(review.Movie?.Title ?? "Phim đã xóa")</strong>
-                                </td>
-                                <td>
-                                    <div>@review.User?.FullName</div>
+                                    <div class="fw-semibold">@review.User?.FullName</div>
                                     <small class="text-muted">@review.User?.Email</small>
                                 </td>
                                 <td>
-                                    <span class="text-warning">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= review.Rating)
-                                            {
-                                                <i class="bi bi-star-fill me-1"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-star me-1"></i>
-                                            }
-                                        }
+                                    <span class="badge @(review.Rating >= 4 ? "bg-success" : review.Rating == 3 ? "bg-warning text-dark" : "bg-danger") px-2 py-1">
+                                        @review.Rating <i class="bi bi-star-fill ms-1"></i>
                                     </span>
                                 </td>
                                 <td>
@@ -91,7 +120,7 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(review.Response))
                                     {
-                                        <div class="response-text text-popcorn-gold border-start border-warning ps-2 py-1">
+                                        <div class="response-text text-warning border-start border-warning ps-2 py-1">
                                             @review.Response
                                         </div>
                                         <small class="text-muted">
@@ -100,19 +129,14 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted small"><em>Chưa phản hồi</em></span>
+                                        <span class="badge bg-secondary"><i class="bi bi-hourglass-split me-1"></i>Chưa phản hồi</span>
                                     }
                                 </td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                onclick="openReplyModal(@review.Id, '@Html.Raw(JavaScriptEncoder.Default.Encode(review.Comment))', '@Html.Raw(JavaScriptEncoder.Default.Encode(review.Response ?? ""))')">
-                                            <i class="bi bi-reply-fill"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@review.Id)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-warning w-100"
+                                            onclick="openReplyModal(@review.Id, '@Html.Raw(JavaScriptEncoder.Default.Encode(review.Comment))', '@Html.Raw(JavaScriptEncoder.Default.Encode(review.Response ?? ""))')">
+                                        <i class="bi bi-reply-fill me-1"></i>@(string.IsNullOrEmpty(review.Response) ? "Phản hồi" : "Sửa")
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -125,21 +149,21 @@
                 <nav>
                     <ul class="pagination">
                         <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Reviews?pageNumber=@(Model.PageIndex - 1)&search=@ViewBag.Search">
+                            <a class="page-link bg-dark border-secondary text-white"
+                               href="/Admin/Reviews?pageNumber=@(Model.PageIndex - 1)&@baseQs">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
-
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
                             <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")" 
-                                   href="/Admin/Reviews?pageNumber=@i&search=@ViewBag.Search">@i</a>
+                                <a class="page-link @(i == Model.PageIndex ? "bg-cinema-red border-cinema-red" : "bg-dark border-secondary text-white")"
+                                   href="/Admin/Reviews?pageNumber=@i&@baseQs">@i</a>
                             </li>
                         }
-
                         <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                            <a class="page-link bg-dark border-secondary text-white" href="/Admin/Reviews?pageNumber=@(Model.PageIndex + 1)&search=@ViewBag.Search">
+                            <a class="page-link bg-dark border-secondary text-white"
+                               href="/Admin/Reviews?pageNumber=@(Model.PageIndex + 1)&@baseQs">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -166,32 +190,30 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label text-muted">Đánh giá của khách hàng:</label>
-                        <blockquote class="blockquote bg-dark-subtle p-3 rounded border-start border-danger" id="customerComment" style="font-size: 0.95rem;">
-                        </blockquote>
+                        <blockquote class="bg-dark-subtle p-3 rounded border-start border-danger" id="customerComment" style="font-size: 0.9rem;"></blockquote>
                     </div>
                     <div class="mb-3">
                         <label for="responseText" class="form-label required">Nội dung phản hồi:</label>
-                        <textarea class="form-control bg-dark text-white border-secondary" id="responseText" name="responseText" rows="4" required placeholder="Nhập câu trả lời của bạn..."></textarea>
+                        <textarea class="form-control bg-dark text-white border-secondary" id="responseText"
+                                  name="responseText" rows="4" required
+                                  placeholder="Nhập câu trả lời của bạn..."></textarea>
                     </div>
                 </div>
-                <div class="modal-header border-secondary d-flex justify-content-end gap-2 p-3">
+                <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-cinema-red">Gửi Phản Hồi</button>
+                    <button type="submit" class="btn btn-cinema-red">
+                        <i class="bi bi-send-fill me-1"></i>Gửi Phản Hồi
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Form -->
-<form id="deleteForm" method="post" style="display: none;">
-    @Html.AntiForgeryToken()
-</form>
-
 @section Scripts {
     <script>
         var replyModal;
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             replyModal = new bootstrap.Modal(document.getElementById('replyModal'));
         });
 
@@ -201,36 +223,19 @@
             document.getElementById('responseText').value = currentResponse;
             replyModal.show();
         }
-
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'Xác nhận xóa?',
-                text: 'Bạn có chắc chắn muốn xóa đánh giá này? Hành động này sẽ thay đổi điểm trung bình của phim.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Xóa',
-                cancelButtonText: 'Hủy'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('deleteForm');
-                    form.action = `/Admin/Reviews/Delete/${id}`;
-                    form.submit();
-                }
-            });
-        }
     </script>
 }
 
 <style>
     .comment-text, .response-text {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         word-break: break-word;
         white-space: pre-line;
-    }
-    .text-popcorn-gold {
-        color: #f59e0b;
+        max-height: 80px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
     }
     .bg-dark-subtle {
         background-color: rgba(255, 255, 255, 0.05) !important;
