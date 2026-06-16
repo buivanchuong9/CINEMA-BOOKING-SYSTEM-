@@ -28,6 +28,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Genre> Genres { get; set; } = null!;
     public DbSet<MovieGenre> MovieGenres { get; set; } = null!;
     public DbSet<Showtime> Showtimes { get; set; } = null!;
+    public DbSet<MovieReview> MovieReviews { get; set; } = null!;
 
     // ===== GROUP 3: BOOKING & SALES (3 tables) =====
     public DbSet<Booking> Bookings { get; set; } = null!;

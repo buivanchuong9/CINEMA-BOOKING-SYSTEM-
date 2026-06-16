@@ -14,6 +14,13 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(AppDbContext context)
     {
+        // Clean up manual leftovers of MovieReviews table if the migration hasn't run yet
+        var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+        if (!appliedMigrations.Contains("20260616220818_AddMovieReviews"))
+        {
+            await context.Database.ExecuteSqlRawAsync("IF OBJECT_ID('dbo.MovieReviews', 'U') IS NOT NULL DROP TABLE dbo.MovieReviews;");
+        }
+
         // Ensure database is created
         await context.Database.MigrateAsync();
 

@@ -3,6 +3,10 @@ using BE.Core.Interfaces;
 using BE.Core.Entities.Movies;
 using BE.Core.Enums;
 using BE.Application.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using BE.Data;
+using BE.Core.Entities.Business;
 
 namespace BE.Controllers;
 
@@ -12,10 +16,14 @@ namespace BE.Controllers;
 public class MoviesController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly AppDbContext _context;
+    private readonly UserManager<User> _userManager;
 
-    public MoviesController(IUnitOfWork unitOfWork)
+    public MoviesController(IUnitOfWork unitOfWork, AppDbContext context, UserManager<User> userManager)
     {
         _unitOfWork = unitOfWork;
+        _context = context;
+        _userManager = userManager;
     }
 
     // GET: /Movies
@@ -63,8 +71,28 @@ public class MoviesController : Controller
 
         // Load showtimes với thông tin Room và Cinema (sử dụng Include)
         var showtimes = await _unitOfWork.Showtimes.GetShowtimesWithDetailsAsync(id);
-
         ViewBag.Showtimes = showtimes.ToList();
+
+        // Load reviews và thông tin User
+        var reviews = await _context.MovieReviews
+            .Include(r => r.User)
+            .Where(r => r.MovieId == id)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+        ViewBag.Reviews = reviews;
+
+        // Kiểm tra xem user hiện tại đã đánh giá chưa
+        bool hasReviewed = false;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                hasReviewed = await _context.MovieReviews.AnyAsync(r => r.MovieId == id && r.UserId == userId);
+            }
+        }
+        ViewBag.HasReviewed = hasReviewed;
+
         return View(movie);
     }
 

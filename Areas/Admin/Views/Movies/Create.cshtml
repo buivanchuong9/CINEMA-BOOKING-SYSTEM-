@@ -84,8 +84,15 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="PosterUrl" class="form-label">URL Poster</label>
-                            <input asp-for="PosterUrl" class="form-control" placeholder="https://..." />
+                            <label asp-for="PosterUrl" class="form-label">Poster Phim</label>
+                            <div class="input-group mb-2">
+                                <input asp-for="PosterUrl" class="form-control" placeholder="https://... hoặc upload ảnh bên dưới" id="posterUrlInput" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('posterFileInput').click()">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i> Upload
+                                </button>
+                            </div>
+                            <input type="file" id="posterFileInput" accept="image/*" class="d-none" onchange="uploadImage(this, 'posterUrlInput', 'posterPreview', 'movies')" />
+                            <div id="posterPreview" class="upload-preview mt-2"></div>
                         </div>
 
                         <div class="col-md-6">
@@ -239,4 +246,79 @@
         content: " *";
         color: #dc2626;
     }
+    .upload-preview img {
+        max-height: 120px;
+        border-radius: 8px;
+        border: 2px solid #333;
+        object-fit: cover;
+    }
+    .upload-progress {
+        height: 4px;
+        background: #333;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    .upload-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #e50914, #ff6b6b);
+        width: 0%;
+        transition: width 0.3s;
+    }
 </style>
+
+<script>
+    function uploadImage(fileInput, urlInputId, previewId, folder) {
+        var file = fileInput.files[0];
+        if (!file) return;
+
+        var maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            Swal.fire({ icon: 'error', title: 'File quá lớn', text: 'File ảnh không được vượt quá 5MB.', background: '#1a1a2e', color: '#fff' });
+            fileInput.value = '';
+            return;
+        }
+
+        var preview = document.getElementById(previewId);
+        preview.innerHTML = '<div class="upload-progress"><div class="upload-progress-bar" id="prog_' + urlInputId + '"></div></div><small class="text-muted mt-1 d-block">Đang upload...</small>';
+
+        var formData = new FormData();
+        formData.append('file', file);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/Admin/Upload/Image?folder=' + encodeURIComponent(folder), true);
+
+        // Add antiforgery token
+        var token = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (token) formData.append('__RequestVerificationToken', token.value);
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var pct = (e.loaded / e.total) * 100;
+                var bar = document.getElementById('prog_' + urlInputId);
+                if (bar) bar.style.width = pct + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var result = JSON.parse(xhr.responseText);
+                if (result.success) {
+                    document.getElementById(urlInputId).value = result.url;
+                    preview.innerHTML = '<img src="' + result.url + '" alt="Preview" /><br><small class="text-success mt-1 d-block"><i class="bi bi-check-circle me-1"></i>Upload thành công!</small>';
+                } else {
+                    preview.innerHTML = '<small class="text-danger"><i class="bi bi-x-circle me-1"></i>' + result.message + '</small>';
+                }
+            } else {
+                preview.innerHTML = '<small class="text-danger"><i class="bi bi-x-circle me-1"></i>Lỗi upload.</small>';
+            }
+        };
+
+        xhr.onerror = function() {
+            preview.innerHTML = '<small class="text-danger"><i class="bi bi-x-circle me-1"></i>Lỗi kết nối.</small>';
+        };
+
+        xhr.send(formData);
+        fileInput.value = '';
+    }
+</script>

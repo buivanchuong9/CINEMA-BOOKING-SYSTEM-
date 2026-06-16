@@ -22,6 +22,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Genre> Genres { get; } // Lấy danh sách genres
     IRepository<MovieGenre> MovieGenres { get; } // Lấy danh sách movie genres
     IShowtimeRepository Showtimes { get; } // Lấy danh sách showtimes
+    IRepository<MovieReview> MovieReviews { get; } // Lấy danh sách movie reviews
     
     // Booking Repositories
     IRepository<Booking> Bookings { get; } // Lấy danh sách bookings
