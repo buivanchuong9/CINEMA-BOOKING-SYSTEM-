@@ -78,7 +78,7 @@ public class ReviewsController : Controller
         await _context.MovieReviews.AddAsync(review);
         await _context.SaveChangesAsync();
 
-        // Recalculate average rating of the movie
+        // Recalculate average rating (1-5 star scale)
         var allReviews = await _context.MovieReviews
             .Where(r => r.MovieId == movieId)
             .ToListAsync();
@@ -86,12 +86,11 @@ public class ReviewsController : Controller
         if (allReviews.Any())
         {
             double avgStars = allReviews.Average(r => r.Rating);
-            // Convert to 10-point scale (since our system has Rating out of 10)
-            movie.Rating = (decimal)(avgStars * 2.0);
+            movie.Rating = (decimal)Math.Round(avgStars, 1);
         }
         else
         {
-            movie.Rating = 0;
+            movie.Rating = null;
         }
 
         _context.Movies.Update(movie);

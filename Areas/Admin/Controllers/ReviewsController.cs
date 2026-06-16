@@ -104,7 +104,7 @@ public class ReviewsController : Controller
             if (remainingReviews.Any())
             {
                 double avgStars = remainingReviews.Average(r => r.Rating);
-                movie.Rating = (decimal)(avgStars * 2.0);
+                movie.Rating = (decimal)Math.Round(avgStars, 1);
             }
             else
             {

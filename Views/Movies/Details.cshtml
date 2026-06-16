@@ -30,13 +30,14 @@
                     <h1 class="fw-bold display-4 mb-3">@Model.Title</h1>
                     
                     <div class="movie-meta mb-4">
-                        @if (Model.Rating.HasValue)
-                        {
-                            <span class="me-4">
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <strong>@Model.Rating.Value.ToString("0.0")</strong>/10
-                            </span>
+                        @{
+                            var heroReviews = ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview>;
+                            double heroAvg = heroReviews?.Count > 0 ? heroReviews.Average(r => r.Rating) : 0;
                         }
+                        <span class="me-4">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <strong>@heroAvg.ToString("0.0")</strong>/5
+                        </span>
                         <span class="me-4">
                             <i class="bi bi-clock text-cinema-red"></i>
                             @Model.Duration phút
@@ -180,40 +181,76 @@
                 <!-- Summary Card -->
                 <div class="review-summary-card mb-4 p-4 rounded text-center" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                     <h5 class="text-uppercase text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Điểm số phim</h5>
-                    @if (Model.Rating.HasValue && Model.Rating.Value > 0)
-                    {
-                        <div class="display-3 fw-bold text-warning mb-1">@Model.Rating.Value.ToString("0.0")</div>
-                        <div class="mb-2">
-                            @{
-                                double stars = (double)Model.Rating.Value / 2.0;
-                                int fullStars = (int)Math.Floor(stars);
-                                bool halfStar = (stars - fullStars) >= 0.25;
-                            }
-                            <span class="text-warning fs-5">
-                                @for (int s = 1; s <= 5; s++)
+                @{
+                    var rList = ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview> ?? new List<BE.Core.Entities.Movies.MovieReview>();
+                    int totalReviews = rList.Count;
+                    double avgRating = totalReviews > 0 ? rList.Average(r => r.Rating) : 0;
+                    int fullStarsAvg = (int)Math.Floor(avgRating);
+                    bool halfStarAvg = (avgRating - fullStarsAvg) >= 0.3;
+                    int[] starCounts = new int[6]; // index 1-5
+                    foreach (var rv in rList) if (rv.Rating >= 1 && rv.Rating <= 5) starCounts[rv.Rating]++;
+                }
+
+                <h5 class="text-uppercase text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Điểm đánh giá</h5>
+
+                @if (totalReviews > 0)
+                {
+                    <!-- Average score display -->
+                    <div class="display-3 fw-bold text-warning mb-1">@avgRating.ToString("0.0")</div>
+                    <div class="mb-1">
+                        <span class="text-warning fs-5">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                if (s <= fullStarsAvg)
                                 {
-                                    if (s <= fullStars)
-                                    {
-                                        <i class="bi bi-star-fill"></i>
-                                    }
-                                    else if (s == fullStars + 1 && halfStar)
-                                    {
-                                        <i class="bi bi-star-half"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-star"></i>
-                                    }
+                                    <i class="bi bi-star-fill"></i>
                                 }
-                            </span>
-                        </div>
-                        <p class="text-secondary mb-0">Dựa trên @((ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview>)?.Count ?? 0) lượt đánh giá</p>
-                    }
-                    else
-                    {
-                        <div class="display-4 fw-bold text-muted mb-2">- / 10</div>
-                        <p class="text-secondary mb-0">Chưa có lượt đánh giá nào cho phim này</p>
-                    }
+                                else if (s == fullStarsAvg + 1 && halfStarAvg)
+                                {
+                                    <i class="bi bi-star-half"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            }
+                        </span>
+                    </div>
+                    <p class="text-secondary mb-3" style="font-size: 0.85rem;">@totalReviews lượt đánh giá</p>
+
+                    <!-- Star breakdown bars -->
+                    <div class="text-start">
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            int count = starCounts[star];
+                            int pct = totalReviews > 0 ? (int)Math.Round((double)count / totalReviews * 100) : 0;
+                            <div class="d-flex align-items-center gap-2 mb-1" style="font-size: 0.82rem;">
+                                <span class="text-warning" style="width: 60px; white-space: nowrap;">
+                                    @star <i class="bi bi-star-fill ms-1"></i>
+                                </span>
+                                <div class="flex-grow-1 rounded" style="background: rgba(255,255,255,0.08); height: 8px; overflow: hidden;">
+                                    <div class="rounded" style="width: @pct%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); transition: width 0.5s;"></div>
+                                </div>
+                                <span class="text-muted" style="width: 28px; text-align: right;">@count</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- 0 stars for unreviewed -->
+                    <div class="display-3 fw-bold text-muted mb-1">0.0</div>
+                    <div class="mb-2">
+                        <span class="text-secondary fs-5">
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                        </span>
+                    </div>
+                    <p class="text-secondary mb-0" style="font-size: 0.85rem;">Chưa có lượt đánh giá nào</p>
+                }
                 </div>
 
                 <!-- Review Form -->
