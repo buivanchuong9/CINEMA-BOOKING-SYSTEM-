@@ -28,6 +28,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Genre> Genres { get; }
     public IRepository<MovieGenre> MovieGenres { get; }
     public IShowtimeRepository Showtimes { get; }
+    public IRepository<MovieReview> MovieReviews { get; }
 
     // Kho lưu trữ đặt vé
     public IRepository<Booking> Bookings { get; }
@@ -57,6 +58,7 @@ public class UnitOfWork : IUnitOfWork
         Genres = new GenericRepository<Genre>(_context);
         MovieGenres = new GenericRepository<MovieGenre>(_context);
         Showtimes = new ShowtimeRepository(_context);
+        MovieReviews = new GenericRepository<MovieReview>(_context);
 
         Bookings = new GenericRepository<Booking>(_context);
         BookingDetails = new GenericRepository<BookingDetail>(_context);

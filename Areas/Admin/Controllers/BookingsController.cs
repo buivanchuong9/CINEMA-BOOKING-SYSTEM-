@@ -325,9 +325,10 @@ public class BookingsController : Controller
         }
         else if (action == "Rejected")
         {
-            booking.RefundStatus = "None";
+            booking.RefundStatus = "Rejected";
+            booking.Status = BookingStatus.Paid;
             booking.UpdatedAt = DateTime.Now;
-            TempData["Success"] = $"Đã từ chối hoàn tiền cho đơn #{id.ToString("D6")}! Vé vẫn giữ trạng thái Đã Thanh Toán và nút Hủy vé đã hiển thị lại.";
+            TempData["Success"] = $"Đã từ chối hoàn tiền cho đơn #{id.ToString("D6")}! Vé đã quay lại trạng thái Đã Thanh Toán và yêu cầu hoàn tiền được ghi nhận là Từ Chối.";
         }
         else if (action == "Restore")
         {

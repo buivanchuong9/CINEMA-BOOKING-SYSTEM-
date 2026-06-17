@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Trợ Lý CineMax AI";
+    ViewData["Title"] = "Trợ Lý CineMax";
     var isPopup = Context.Request.Query["popup"].ToString() == "1";
     Layout = isPopup ? null : "~/Views/Shared/_Layout.cshtml";
 }
@@ -11,15 +11,15 @@
 
         <!-- HEADER -->
         <div class="chat-header">
-            <div class="bot-avatar-lg">🎬</div>
+            <div class="bot-avatar-lg">🤖</div>
             <div class="chat-header-info">
-                <h1>Trợ Lý CineMax AI</h1>
+                <h1>Trợ Lý CineMax</h1>
                 <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
                     <span class="status-badge">
                         <span class="status-dot"></span>
                         Trực tuyến
                     </span>
-                    <span style="font-size:0.78rem; color:var(--text-muted);">Hỗ trợ 24/7 · Powered by Gemini AI</span>
+                    <span style="font-size:0.78rem; color:var(--text-muted);">Hỗ trợ 24/7 · Hệ thống tự động</span>
                 </div>
             </div>
             <div class="chat-header-actions">
@@ -34,32 +34,41 @@
 
         <!-- QUICK SUGGESTIONS -->
         <div class="quick-suggestions">
-            <button class="quick-btn" onclick="askQuick('Phim đang chiếu hôm nay là gì?')">
-                🎦 Phim đang chiếu
+            <button class="quick-btn" onclick="askQuick('Phim đang chiếu')">
+                📽️ Phim đang chiếu
             </button>
-            <button class="quick-btn" onclick="askQuick('Có phim mới nào sắp ra mắt không?')">
-                🆕 Phim sắp chiếu
+            <button class="quick-btn" onclick="askQuick('Phim sắp chiếu')">
+                🎬 Phim sắp chiếu
             </button>
-            <button class="quick-btn" onclick="askQuick('Rạp CineMax ở đâu?')">
+            <button class="quick-btn" onclick="askQuick('Địa chỉ rạp')">
                 📍 Địa chỉ rạp
             </button>
-            <button class="quick-btn" onclick="askQuick('Giá vé như thế nào?')">
-                🎫 Giá vé
+            <button class="quick-btn" onclick="askQuick('Giá vé tham khảo')">
+                🎫 Giá vé & Loại ghế
             </button>
-            <button class="quick-btn" onclick="askQuick('Cách đặt vé online như thế nào?')">
+            <button class="quick-btn" onclick="askQuick('Danh sách combo bắp nước')">
+                🍿 Combo bắp nước
+            </button>
+            <button class="quick-btn" onclick="askQuick('Chương trình khuyến mãi và voucher')">
+                🎁 Khuyến mãi & Voucher
+            </button>
+            <button class="quick-btn" onclick="askQuick('Chính sách hủy vé hoàn tiền')">
+                📝 Hủy vé & Hoàn tiền
+            </button>
+            <button class="quick-btn" onclick="askQuick('Hướng dẫn đặt vé online')">
                 📱 Cách đặt vé
             </button>
-            <button class="quick-btn" onclick="askQuick('CineMax có ưu đãi thành viên không?')">
-                🎁 Ưu đãi
+            <button class="quick-btn" onclick="askQuick('Liên hệ hotline hỗ trợ')">
+                📞 Liên hệ & Hotline
             </button>
         </div>
 
         <!-- CHAT WINDOW -->
         <div class="chat-window" id="chatWindow">
             <div class="welcome-msg" id="welcomeMsg">
-                <span class="welcome-icon">🎬</span>
-                <h3>Xin chào! Tôi là trợ lý AI của CineMax</h3>
-                <p>Tôi có thể giúp bạn tìm hiểu về phim đang chiếu, lịch chiếu,<br>giá vé và nhiều thông tin hữu ích khác về rạp phim.</p>
+                <span class="welcome-icon">🤖</span>
+                <h3>Xin chào! Tôi là Trợ Lý Tự Động của CineMax</h3>
+                <p>Tôi hỗ trợ tra cứu thông tin nhanh chóng và hoàn toàn miễn phí.<br>Hãy nhấp chọn một trong các chủ đề định hướng nhanh ở trên hoặc nhập câu hỏi của bạn.</p>
             </div>
         </div>
 

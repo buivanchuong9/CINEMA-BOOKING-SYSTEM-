@@ -114,6 +114,7 @@ public class MoviesController : Controller
                 }
             }
 
+            movie.Rating = null; // Đánh giá phải được tính tự động từ review, không được tự ý nhập
             movie.CreatedAt = DateTime.Now; // gán ngày tạo phim 
             await _unitOfWork.Movies.AddAsync(movie); 
             await _unitOfWork.SaveChangesAsync();
@@ -203,8 +204,27 @@ public class MoviesController : Controller
                 return View(movie);
             }
 
-            // Update movie
-            _unitOfWork.Movies.Update(movie);
+            // Update movie by mapping properties to existing database record (preserving Rating)
+            var existingMovie = await _unitOfWork.Movies.GetByIdAsync(id);
+            if (existingMovie == null)
+            {
+                TempData["Error"] = "Không tìm thấy phim!";
+                return NotFound();
+            }
+
+            existingMovie.Title = movie.Title;
+            existingMovie.Description = movie.Description;
+            existingMovie.PosterUrl = movie.PosterUrl;
+            existingMovie.TrailerUrl = movie.TrailerUrl;
+            existingMovie.Duration = movie.Duration;
+            existingMovie.ReleaseDate = movie.ReleaseDate;
+            existingMovie.AgeRating = movie.AgeRating;
+            existingMovie.Director = movie.Director;
+            existingMovie.Cast = movie.Cast;
+            existingMovie.IsActive = movie.IsActive;
+            existingMovie.Status = movie.Status;
+
+            _unitOfWork.Movies.Update(existingMovie);
             await _unitOfWork.SaveChangesAsync();
 
             TempData["Success"] = $"Đã cập nhật phim '{movie.Title}' thành công!";

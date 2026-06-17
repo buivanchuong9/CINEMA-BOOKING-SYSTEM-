@@ -332,7 +332,7 @@
     <!-- Floating Chatbot -->
     @if (!(User.Identity?.IsAuthenticated == true && (User.IsInRole("Staff") || User.IsInRole("Admin"))))
     {
-        <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý AI" onclick="toggleChatPopup()">
+        <button id="chatFab" class="chat-fab" type="button" aria-label="Mở trợ lý" onclick="toggleChatPopup()">
             <i class="bi bi-chat-dots-fill"></i>
         </button>
 
@@ -340,7 +340,7 @@
             <div class="chat-popup-header">
                 <div class="chat-popup-title">
                     <span class="mini-badge"></span>
-                    Trợ lý CineMax AI
+                    Trợ lý CineMax
                 </div>
                 <button class="chat-popup-close" type="button" aria-label="Đóng chatbot" onclick="toggleChatPopup()">
                     <i class="bi bi-x-lg"></i>

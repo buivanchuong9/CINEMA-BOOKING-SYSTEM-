@@ -30,13 +30,14 @@
                     <h1 class="fw-bold display-4 mb-3">@Model.Title</h1>
                     
                     <div class="movie-meta mb-4">
-                        @if (Model.Rating.HasValue)
-                        {
-                            <span class="me-4">
-                                <i class="bi bi-star-fill text-warning"></i>
-                                <strong>@Model.Rating.Value.ToString("0.0")</strong>/10
-                            </span>
+                        @{
+                            var heroReviews = ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview>;
+                            double heroAvg = heroReviews?.Count > 0 ? heroReviews.Average(r => r.Rating) : 0;
                         }
+                        <span class="me-4">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <strong>@heroAvg.ToString("0.0")</strong>/5
+                        </span>
                         <span class="me-4">
                             <i class="bi bi-clock text-cinema-red"></i>
                             @Model.Duration phút
@@ -161,6 +162,228 @@
                 </div>
             </div>
         }
+</section>
+
+<!-- Reviews Section -->
+<section class="py-5" id="reviewsSection">
+    <div class="container">
+        <!-- Section Title -->
+        <div class="d-flex align-items-center mb-4 text-white">
+            <div class="showtime-header-icon me-3">
+                <i class="bi bi-chat-left-heart"></i>
+            </div>
+            <h3 class="fw-bold mb-0">Đánh Giá & Nhận Xét</h3>
+        </div>
+
+        <div class="row g-4">
+            <!-- Review Stats & Form -->
+            <div class="col-lg-5">
+                <!-- Summary Card -->
+                <div class="review-summary-card mb-4 p-4 rounded text-center" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <h5 class="text-uppercase text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Điểm số phim</h5>
+                @{
+                    var rList = ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview> ?? new List<BE.Core.Entities.Movies.MovieReview>();
+                    int totalReviews = rList.Count;
+                    double avgRating = totalReviews > 0 ? rList.Average(r => r.Rating) : 0;
+                    int fullStarsAvg = (int)Math.Floor(avgRating);
+                    bool halfStarAvg = (avgRating - fullStarsAvg) >= 0.3;
+                    int[] starCounts = new int[6]; // index 1-5
+                    foreach (var rv in rList) if (rv.Rating >= 1 && rv.Rating <= 5) starCounts[rv.Rating]++;
+                }
+
+                <h5 class="text-uppercase text-muted mb-2" style="font-size: 0.85rem; letter-spacing: 1px;">Điểm đánh giá</h5>
+
+                @if (totalReviews > 0)
+                {
+                    <!-- Average score display -->
+                    <div class="display-3 fw-bold text-warning mb-1">@avgRating.ToString("0.0")</div>
+                    <div class="mb-1">
+                        <span class="text-warning fs-5">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                if (s <= fullStarsAvg)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                else if (s == fullStarsAvg + 1 && halfStarAvg)
+                                {
+                                    <i class="bi bi-star-half"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            }
+                        </span>
+                    </div>
+                    <p class="text-secondary mb-3" style="font-size: 0.85rem;">@totalReviews lượt đánh giá</p>
+
+                    <!-- Star breakdown bars -->
+                    <div class="text-start">
+                        @for (int star = 5; star >= 1; star--)
+                        {
+                            int count = starCounts[star];
+                            int pct = totalReviews > 0 ? (int)Math.Round((double)count / totalReviews * 100) : 0;
+                            <div class="d-flex align-items-center gap-2 mb-1" style="font-size: 0.82rem;">
+                                <span class="text-warning" style="width: 60px; white-space: nowrap;">
+                                    @star <i class="bi bi-star-fill ms-1"></i>
+                                </span>
+                                <div class="flex-grow-1 rounded" style="background: rgba(255,255,255,0.08); height: 8px; overflow: hidden;">
+                                    <div class="rounded" style="width: @pct%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); transition: width 0.5s;"></div>
+                                </div>
+                                <span class="text-muted" style="width: 28px; text-align: right;">@count</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- 0 stars for unreviewed -->
+                    <div class="display-3 fw-bold text-muted mb-1">0.0</div>
+                    <div class="mb-2">
+                        <span class="text-secondary fs-5">
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                        </span>
+                    </div>
+                    <p class="text-secondary mb-0" style="font-size: 0.85rem;">Chưa có lượt đánh giá nào</p>
+                }
+                </div>
+
+                <!-- Review Form -->
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3 text-white">Viết đánh giá của bạn</h5>
+                    
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (ViewBag.HasReviewed == true)
+                        {
+                            <div class="alert alert-success d-flex align-items-center mb-0">
+                                <i class="bi bi-check-circle-fill me-3 fs-4 text-success"></i>
+                                <div>
+                                    <h6 class="alert-heading fw-bold mb-1">Bạn đã đánh giá phim này</h6>
+                                    <p class="mb-0 small text-secondary">Mỗi tài khoản chỉ được đánh giá một lần và không thể chỉnh sửa.</p>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <form action="/Reviews/Create" method="post" id="reviewForm">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="movieId" value="@Model.Id" />
+                                <input type="hidden" name="rating" id="ratingInput" value="5" />
+                                
+                                <div class="mb-3">
+                                    <label class="form-label d-block text-white">Chọn số sao của bạn:</label>
+                                    <div class="star-rating-selector fs-3 text-warning d-flex gap-2">
+                                        <i class="bi bi-star-fill rating-star" data-value="1" style="cursor: pointer;"></i>
+                                        <i class="bi bi-star-fill rating-star" data-value="2" style="cursor: pointer;"></i>
+                                        <i class="bi bi-star-fill rating-star" data-value="3" style="cursor: pointer;"></i>
+                                        <i class="bi bi-star-fill rating-star" data-value="4" style="cursor: pointer;"></i>
+                                        <i class="bi bi-star-fill rating-star" data-value="5" style="cursor: pointer;"></i>
+                                    </div>
+                                    <div class="small text-muted mt-1" id="starDescription">Tuyệt vời! (5/5)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="commentArea" class="form-label text-white">Ý kiến của bạn:</label>
+                                    <textarea class="form-control bg-dark text-white border-secondary" id="commentArea" name="comment" rows="4" required placeholder="Nhập cảm nhận của bạn về bộ phim..."></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-cinema-red w-100 rounded-pill py-2">
+                                    <i class="bi bi-send-fill me-2"></i> Gửi Đánh Giá
+                                </button>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="bi bi-lock display-6 text-muted mb-3"></i>
+                            <p class="text-secondary mb-3">Vui lòng đăng nhập để gửi đánh giá cho bộ phim này.</p>
+                            <a href="/Account/Login?returnUrl=@(Context.Request.Path + Context.Request.QueryString)" class="btn btn-outline-danger rounded-pill px-4">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Đăng Nhập Ngay
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="col-lg-7">
+                <div class="glass-card p-4 h-100" style="max-height: 600px; overflow-y: auto;">
+                    <h5 class="fw-bold mb-4 text-white">Nhận xét từ người xem</h5>
+                    
+                    @{
+                        var reviewsList = ViewBag.Reviews as List<BE.Core.Entities.Movies.MovieReview> ?? new List<BE.Core.Entities.Movies.MovieReview>();
+                    }
+
+                    @if (!reviewsList.Any())
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-chat-left-dots display-3 text-secondary mb-3"></i>
+                            <p class="mb-0">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ!</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-4">
+                            @foreach (var review in reviewsList)
+                            {
+                                <div class="review-item border-bottom border-secondary pb-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="d-flex align-items-center gap-3">
+                                            @if (!string.IsNullOrEmpty(review.User?.AvatarUrl))
+                                            {
+                                                <img src="@review.User.AvatarUrl" alt="@review.User.FullName" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 45px; height: 45px; font-size: 0.95rem;">
+                                                    @(review.User?.FullName?.Substring(0, Math.Min(1, review.User.FullName.Length)).ToUpper() ?? "?")
+                                                </div>
+                                            }
+                                            <div>
+                                                <h6 class="fw-semibold mb-0 text-white">@review.User?.FullName</h6>
+                                                <span class="text-warning small">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        if (i <= review.Rating)
+                                                        {
+                                                            <i class="bi bi-star-fill me-1"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="bi bi-star me-1"></i>
+                                                        }
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <small class="text-secondary"><i class="bi bi-clock me-1"></i>@review.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                    <p class="text-secondary mb-2 ms-5" style="white-space: pre-line;">@review.Comment</p>
+
+                                    @if (!string.IsNullOrEmpty(review.Response))
+                                    {
+                                        <div class="admin-response ms-5 p-3 rounded bg-dark border-start border-warning mt-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-shield-check me-1"></i>Phản hồi từ CineMax</span>
+                                                <small class="text-secondary">@review.RespondedAt?.ToString("dd/MM/yyyy")</small>
+                                            </div>
+                                            <p class="mb-0 text-light small" style="white-space: pre-line;">@review.Response</p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -321,6 +544,20 @@
     }
     
     
+    /* Reviews Styling */
+    .star-rating-selector .rating-star {
+        transition: transform 0.2s, color 0.2s;
+    }
+    .star-rating-selector .rating-star:hover {
+        transform: scale(1.2);
+    }
+    .review-item {
+        transition: background 0.3s;
+    }
+    .admin-response {
+        background: rgba(251, 191, 36, 0.05) !important;
+    }
+    
     /* Responsive adjustments */
     @@media (max-width: 768px) {
         .showtime-header-icon {
@@ -339,6 +576,7 @@
     }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function scrollToShowtimes() {
         const element = document.getElementById('showtimesSection');
@@ -346,4 +584,87 @@
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Interactive Star Rating
+        const stars = document.querySelectorAll('.rating-star');
+        const ratingInput = document.getElementById('ratingInput');
+        const starDescription = document.getElementById('starDescription');
+
+        if (stars.length > 0 && ratingInput) {
+            const descriptions = {
+                1: 'Tệ hại (1/5)',
+                2: 'Kém (2/5)',
+                3: 'Trung bình (3/5)',
+                4: 'Khá tốt (4/5)',
+                5: 'Tuyệt vời! (5/5)'
+            };
+
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    ratingInput.value = value;
+                    updateStars(value);
+                });
+
+                star.addEventListener('mouseenter', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    highlightStars(value);
+                });
+
+                star.addEventListener('mouseleave', function() {
+                    const currentValue = parseInt(ratingInput.value);
+                    updateStars(currentValue);
+                });
+            });
+
+            function highlightStars(count) {
+                stars.forEach(star => {
+                    const val = parseInt(star.getAttribute('data-value'));
+                    if (val <= count) {
+                        star.classList.remove('bi-star');
+                        star.classList.add('bi-star-fill');
+                    } else {
+                        star.classList.remove('bi-star-fill');
+                        star.classList.add('bi-star');
+                    }
+                });
+                starDescription.innerText = descriptions[count];
+            }
+
+            function updateStars(count) {
+                highlightStars(count);
+            }
+        }
+
+        // Show Toast Notifications if TempData has messages
+        @if (TempData["Success"] != null)
+        {
+            <text>
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: '@Html.Raw(TempData["Success"])',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+            });
+            </text>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <text>
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: '@Html.Raw(TempData["Error"])',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+            });
+            </text>
+        }
+    });
 </script>
