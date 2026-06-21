@@ -44,6 +44,17 @@ public class BookingController : Controller
     {
         int pageSize = 20;
 
+        // Check if the current user has a cinema assigned
+        var userId = _userManager.GetUserId(User);
+        var currentUser = await _userManager.FindByIdAsync(userId ?? "");
+        var assignedCinemaId = currentUser?.CinemaId;
+        
+        if (assignedCinemaId.HasValue)
+        {
+            cinemaId = assignedCinemaId.Value;
+            ViewBag.AssignedCinemaId = assignedCinemaId.Value;
+        }
+
         var query = _context.Showtimes
             .Include(s => s.Movie)
             .Include(s => s.Room)
@@ -96,6 +107,19 @@ public class BookingController : Controller
         var showtime = await _unitOfWork.Showtimes.GetByIdAsync(showtimeId);
         if (showtime == null) return RedirectToAction(nameof(Index));
 
+        // Check if user has permission for this showtime
+        var userId = _userManager.GetUserId(User);
+        var currentUser = await _userManager.FindByIdAsync(userId ?? "");
+        if (currentUser?.CinemaId != null)
+        {
+            var roomDetail = await _context.Rooms.FindAsync(showtime.RoomId);
+            if (roomDetail == null || roomDetail.CinemaId != currentUser.CinemaId)
+            {
+                TempData["Error"] = "Bạn không có quyền truy cập suất chiếu của rạp chiếu phim này!";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         var movie = await _unitOfWork.Movies.GetByIdAsync(showtime.MovieId);
         var room = await _unitOfWork.Rooms.GetByIdAsync(showtime.RoomId);
         if (room != null)
@@ -136,8 +160,21 @@ public class BookingController : Controller
     public async Task<IActionResult> Create(CreateBookingDto dto, string customerEmail)
     {
         _logger.LogInformation($"Staff Create booking for customer: {customerEmail}");
+
+        // Check if user has permission for this showtime
+        var userId = _userManager.GetUserId(User);
+        var currentUser = await _userManager.FindByIdAsync(userId ?? "");
+        if (currentUser?.CinemaId != null)
+        {
+            var showtime = await _context.Showtimes.Include(s => s.Room).FirstOrDefaultAsync(s => s.Id == dto.ShowtimeId);
+            if (showtime == null || showtime.Room?.CinemaId != currentUser.CinemaId)
+            {
+                TempData["Error"] = "Bạn không có quyền đặt vé cho rạp chiếu phim này!";
+                return RedirectToAction(nameof(Index));
+            }
+        }
         
-        string userId;
+        string targetUserId;
         if (string.IsNullOrEmpty(customerEmail))
         {
             // Default to a guest user or the staff themselves
@@ -148,7 +185,7 @@ public class BookingController : Controller
                 await _userManager.CreateAsync(guest, "Guest@123");
                 await _userManager.AddToRoleAsync(guest, "Customer");
             }
-            userId = guest.Id;
+            targetUserId = guest.Id;
         }
         else
         {
@@ -158,10 +195,10 @@ public class BookingController : Controller
                 TempData["Error"] = "Không tìm thấy khách hàng với email này!";
                 return RedirectToAction(nameof(SelectSeats), new { showtimeId = dto.ShowtimeId });
             }
-            userId = user.Id;
+            targetUserId = user.Id;
         }
 
-        dto.UserId = userId;
+        dto.UserId = targetUserId;
         dto.PaymentMethod = PaymentMethod.Cash; // Staff bookings are usually cash
         
         var result = await _bookingService.CreateBookingAsync(dto);
@@ -188,6 +225,17 @@ public class BookingController : Controller
         int pageNumber = 1)
     {
         int pageSize = 20;
+
+        // Check if the current user has a cinema assigned
+        var userId = _userManager.GetUserId(User);
+        var currentUser = await _userManager.FindByIdAsync(userId ?? "");
+        var assignedCinemaId = currentUser?.CinemaId;
+        
+        if (assignedCinemaId.HasValue)
+        {
+            cinemaId = assignedCinemaId.Value;
+            ViewBag.AssignedCinemaId = assignedCinemaId.Value;
+        }
 
         var query = _context.Bookings
             .Include(b => b.User)
@@ -365,4 +413,121 @@ public class BookingController : Controller
 
         return View(booking);
     }
+
+    // GET: /Staff/Booking/SalesDashboard
+    public async Task<IActionResult> SalesDashboard(string? startDate, string? endDate)
+    {
+        var userId = _userManager.GetUserId(User);
+        var currentUser = await _userManager.FindByIdAsync(userId ?? "");
+        var assignedCinemaId = currentUser?.CinemaId;
+
+        if (!assignedCinemaId.HasValue)
+        {
+            TempData["Error"] = "Tài khoản của bạn chưa được phân công quản lý rạp nào!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var cinema = await _context.Cinemas.FindAsync(assignedCinemaId.Value);
+        if (cinema == null)
+        {
+            TempData["Error"] = "Không tìm thấy rạp được phân công!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        ViewBag.CinemaName = cinema.Name;
+
+        // Parse dates
+        DateTime start = DateTime.Today.AddDays(-30);
+        DateTime end = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+        if (!string.IsNullOrEmpty(startDate) && DateTime.TryParse(startDate, out var parsedStart))
+        {
+            start = parsedStart.Date;
+        }
+        if (!string.IsNullOrEmpty(endDate) && DateTime.TryParse(endDate, out var parsedEnd))
+        {
+            end = parsedEnd.Date.AddDays(1).AddSeconds(-1);
+        }
+
+        ViewBag.StartDate = start.ToString("yyyy-MM-dd");
+        ViewBag.EndDate = end.ToString("yyyy-MM-dd");
+
+        // Query bookings for this cinema in date range
+        var bookings = await _context.Bookings
+            .Include(b => b.BookingDetails)
+            .Include(b => b.Showtime)
+                .ThenInclude(s => s.Movie)
+            .Where(b => b.Status == BookingStatus.Paid
+                        && b.Showtime != null 
+                        && b.Showtime.Room != null 
+                        && b.Showtime.Room.CinemaId == assignedCinemaId.Value
+                        && b.BookingDate >= start 
+                        && b.BookingDate <= end)
+            .ToListAsync();
+
+        // Calculate general statistics
+        var totalBookings = bookings.Count;
+        var totalTickets = bookings.Sum(b => b.BookingDetails.Count);
+        var totalRevenue = bookings.Sum(b => b.TotalAmount); // Combined total amount
+
+        // Concessions / Food revenue
+        var bookingIds = bookings.Select(b => b.Id).ToList();
+        var bookingFoods = await _context.BookingFoods
+            .Where(bf => bookingIds.Contains(bf.BookingId))
+            .ToListAsync();
+        
+        var totalFoodRevenue = bookingFoods.Sum(bf => bf.Quantity * bf.UnitPrice);
+        var totalTicketRevenue = totalRevenue - totalFoodRevenue;
+
+        // Movie performance stats
+        var movieStats = bookings
+            .Where(b => b.Showtime != null && b.Showtime.Movie != null)
+            .GroupBy(b => new { b.Showtime.MovieId, b.Showtime.Movie.Title, b.Showtime.Movie.PosterUrl })
+            .Select(g => new MovieSalesStatViewModel
+            {
+                MovieId = g.Key.MovieId,
+                Title = g.Key.Title,
+                PosterUrl = g.Key.PosterUrl,
+                TicketsSold = g.Sum(b => b.BookingDetails.Count),
+                Revenue = g.Sum(b => b.TotalAmount)
+            })
+            .OrderByDescending(m => m.Revenue)
+            .ToList();
+
+        // Calculate sales ratios
+        if (totalTickets > 0)
+        {
+            foreach (var stat in movieStats)
+            {
+                stat.SalesRatio = (double)stat.TicketsSold / totalTickets * 100;
+            }
+        }
+
+        // Recent sales table
+        var recentSales = bookings
+            .OrderByDescending(b => b.BookingDate)
+            .Take(10)
+            .ToList();
+
+        // View models / View Bags
+        ViewBag.TotalBookings = totalBookings;
+        ViewBag.TotalTickets = totalTickets;
+        ViewBag.TotalTicketRevenue = totalTicketRevenue;
+        ViewBag.TotalFoodRevenue = totalFoodRevenue;
+        ViewBag.TotalRevenue = totalRevenue;
+        ViewBag.MovieStats = movieStats;
+        ViewBag.RecentSales = recentSales;
+
+        return View();
+    }
+}
+
+public class MovieSalesStatViewModel
+{
+    public int MovieId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? PosterUrl { get; set; }
+    public int TicketsSold { get; set; }
+    public decimal Revenue { get; set; }
+    public double SalesRatio { get; set; }
 }

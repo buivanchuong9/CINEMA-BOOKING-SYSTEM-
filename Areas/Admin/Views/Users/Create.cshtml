@@ -38,9 +38,23 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Phân quyền (Role)</label>
-                        <select name="Role" class="form-select bg-black text-white border-secondary">
+                        <select name="Role" id="RoleSelect" class="form-select bg-black text-white border-secondary">
                             <option value="Customer">Customer</option>
                             <option value="Staff">Staff</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3" id="CinemaSelectionGroup" style="display: none;">
+                        <label class="form-label fw-bold">Rạp chiếu phim phân công</label>
+                        <select name="CinemaId" class="form-select bg-black text-white border-secondary">
+                            <option value="">-- Chọn rạp chiếu phim --</option>
+                            @if (ViewBag.Cinemas != null)
+                            {
+                                @foreach (var cinema in ViewBag.Cinemas)
+                                {
+                                    <option value="@cinema.Id">@cinema.Name</option>
+                                }
+                            }
                         </select>
                     </div>
                 </div>
@@ -53,3 +67,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var roleSelect = document.getElementById('RoleSelect');
+        var cinemaGroup = document.getElementById('CinemaSelectionGroup');
+
+        function toggleCinema() {
+            if (roleSelect.value === 'Staff') {
+                cinemaGroup.style.display = 'block';
+            } else {
+                cinemaGroup.style.display = 'none';
+            }
+        }
+
+        roleSelect.addEventListener('change', toggleCinema);
+        toggleCinema();
+    });
+</script>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BE.Core.Entities.Business;
 
@@ -47,6 +48,14 @@ public class User : IdentityUser
     /// </summary>
     [MaxLength(500)]
     public string? AvatarUrl { get; set; }
+    
+    /// <summary>
+    /// Rạp chiếu phim được phân công (Dành cho nhân viên bán hàng)
+    /// </summary>
+    public int? CinemaId { get; set; }
+    
+    [ForeignKey("CinemaId")]
+    public virtual BE.Core.Entities.CinemaInfrastructure.Cinema? Cinema { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? LastLoginAt { get; set; }

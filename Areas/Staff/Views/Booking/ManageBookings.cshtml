@@ -12,9 +12,17 @@
             <h2 class="fw-bold">Lịch Sử & Quản Lý Đơn Hàng</h2>
             <p class="text-muted">Trang @Model.PageIndex / @Model.TotalPages | Tổng số đơn: @Model.Count</p>
         </div>
-        <a asp-action="Index" class="btn btn-cinema-red rounded-pill px-4">
-            <i class="bi bi-plus-circle me-1"></i> Bán Vé Mới
-        </a>
+        <div class="d-flex gap-2">
+            @if (ViewBag.AssignedCinemaId != null)
+            {
+                <a href="/Staff/Booking/SalesDashboard" class="btn btn-outline-warning rounded-pill px-4">
+                    <i class="bi bi-bar-chart-line me-2"></i> Doanh Thu & Báo Cáo
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-cinema-red rounded-pill px-4">
+                <i class="bi bi-plus-circle me-1"></i> Bán Vé Mới
+            </a>
+        </div>
     </div>
 
     <!-- Premium Filters Card for Staff -->
@@ -24,13 +32,26 @@
                 <!-- Cinema Filter -->
                 <div class="col-md-3">
                     <label class="form-label text-muted small">Rạp Chiếu</label>
-                    <select name="cinemaId" class="form-select bg-dark text-white border-secondary" onchange="this.form.submit()">
-                        <option value="">-- Tất cả rạp --</option>
-                        @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
-                        {
-                            <option value="@c.Id" selected="@(ViewBag.CinemaId == c.Id ? "selected" : null)">@c.Name</option>
-                        }
-                    </select>
+                    @if (ViewBag.AssignedCinemaId != null)
+                    {
+                        var assignedId = (int)ViewBag.AssignedCinemaId;
+                        var cinemas = ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>;
+                        var assignedCinema = cinemas?.FirstOrDefault(c => c.Id == assignedId);
+                        <select name="cinemaId_disabled" class="form-select bg-dark text-white border-secondary" disabled>
+                            <option value="@assignedId">@(assignedCinema?.Name ?? "Rạp của bạn")</option>
+                        </select>
+                        <input type="hidden" name="cinemaId" value="@assignedId" />
+                    }
+                    else
+                    {
+                        <select name="cinemaId" class="form-select bg-dark text-white border-secondary" onchange="this.form.submit()">
+                            <option value="">-- Tất cả rạp --</option>
+                            @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
+                            {
+                                <option value="@c.Id" selected="@(ViewBag.CinemaId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    }
                 </div>
 
                 <!-- Room Filter -->

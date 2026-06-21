@@ -1,0 +1,655 @@
+@using BE.Areas.Admin.Controllers
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Quản lý Doanh thu Rạp";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="h3 mb-1 fw-bold text-white">
+                <i class="bi bi-graph-up text-primary me-2"></i>
+                Quản Lý Doanh Thu Rạp Chiếu Phim
+            </h2>
+            <p class="text-muted mb-0 small">Báo cáo doanh số bán hàng, xếp hạng doanh thu nhân viên và thống kê chi tiết theo rạp.</p>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card bg-dark border-secondary mb-4 shadow">
+        <div class="card-body">
+            <form method="get" action="/Admin/Revenue" id="revenueFilterForm">
+                <div class="row g-3 align-items-end">
+                    <!-- Cinema Selection -->
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Chọn Rạp Chiếu Phim</label>
+                        <select name="cinemaId" class="form-select bg-dark text-white border-secondary" onchange="this.form.submit()">
+                            <option value="0" selected="@(ViewBag.SelectedCinemaId == 0 ? "selected" : null)">Tất cả các rạp (Nhiều quầy)</option>
+                            @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
+                            {
+                                <option value="@c.Id" selected="@(ViewBag.SelectedCinemaId == c.Id ? "selected" : null)">@c.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Date range -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Từ ngày</label>
+                        <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control bg-dark text-white border-secondary">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Đến ngày</label>
+                        <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control bg-dark text-white border-secondary">
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel-fill me-1"></i> Lọc
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="resetForm()">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Card 1: Total Cinema Revenue -->
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-primary">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted fw-bold uppercase">Tổng Doanh Thu Rạp</small>
+                            <h3 class="fw-bold text-white mt-1 mb-0">@ViewBag.TotalCinemaRevenue.ToString("N0") ₫</h3>
+                        </div>
+                        <div class="p-2 bg-primary bg-opacity-10 text-primary rounded">
+                            <i class="bi bi-cash-stack fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Doanh thu tại rạp <span class="text-white fw-bold">@ViewBag.CinemaName</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Staff Counter Sales -->
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-success">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted fw-bold uppercase">Doanh Thu Tại Quầy (Tiền Mặt)</small>
+                            <h3 class="fw-bold text-success mt-1 mb-0">
+                                @(((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Sum(s => s.TotalRevenue).ToString("N0")) ₫
+                            </h3>
+                        </div>
+                        <div class="p-2 bg-success bg-opacity-10 text-success rounded">
+                            <i class="bi bi-person-workspace fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Do nhân viên bán hàng xuất vé
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Online Sales -->
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-info">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted fw-bold uppercase">Doanh Thu Trực Tuyến</small>
+                            <h3 class="fw-bold text-info mt-1 mb-0">@ViewBag.OnlineRevenue.ToString("N0") ₫</h3>
+                        </div>
+                        <div class="p-2 bg-info bg-opacity-10 text-info rounded">
+                            <i class="bi bi-globe fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Khách đặt qua Website & App (@ViewBag.OnlineBookingsCount giao dịch)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Tickets Sold -->
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-warning">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted fw-bold uppercase">Số Vé Bán Ra</small>
+                            <h3 class="fw-bold text-warning mt-1 mb-0">@ViewBag.TotalTicketsSold</h3>
+                        </div>
+                        <div class="p-2 bg-warning bg-opacity-10 text-warning rounded">
+                            <i class="bi bi-ticket-perforated fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Bao gồm: <strong class="text-white">@ViewBag.OnlineTickets</strong> vé online + <strong class="text-white">@(((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Sum(s => s.TotalTickets))</strong> vé tại quầy
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="card bg-dark border-secondary shadow mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white fw-bold mb-3">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                Xu Hướng Doanh Thu Theo Ngày
+            </h5>
+            <div id="revenueChartContainer" style="height: 320px; width: 100%;"></div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Staff Performance Table -->
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary shadow h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-white fw-bold mb-3">
+                        <i class="bi bi-person-badge-fill me-2 text-primary"></i>
+                        Danh Sách Bán Hàng Của Nhân Viên
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nhân viên</th>
+                                    <th>Rạp / Quầy</th>
+                                    <th class="text-center">Số Đơn</th>
+                                    <th class="text-center">Số Vé</th>
+                                    <th class="text-end">Tiền Vé</th>
+                                    <th class="text-end">Bắp Nước</th>
+                                    <th class="text-end">Doanh Số</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.StaffSalesList == null || ((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            Không tìm thấy nhân viên bán hàng nào có doanh số tại rạp này!
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var s in (List<StaffSalesViewModel>)ViewBag.StaffSalesList)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold text-white">@s.FullName</div>
+                                                <small class="text-muted">@s.Email</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary bg-opacity-20 text-primary">@s.CinemaName</span>
+                                            </td>
+                                            <td class="text-center">@s.TotalBookings</td>
+                                            <td class="text-center fw-bold">@s.TotalTickets</td>
+                                            <td class="text-end text-muted">@s.TicketRevenue.ToString("N0") ₫</td>
+                                            <td class="text-end text-warning">@s.FoodRevenue.ToString("N0") ₫</td>
+                                            <td class="text-end fw-bold text-success">@s.TotalRevenue.ToString("N0") ₫</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Concessions vs Ticket Revenue Split -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary shadow h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="card-title text-white fw-bold mb-4">
+                            <i class="bi bi-pie-chart-fill me-2 text-primary"></i>
+                            Cấu Trúc Doanh Thu
+                        </h5>
+
+                        <div class="list-group list-group-flush bg-transparent">
+                            <div class="list-group-item bg-transparent text-white border-secondary px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-muted d-block small">Doanh thu Vé</span>
+                                    <strong class="fs-5 text-white">@ViewBag.TotalTicketRevenue.ToString("N0") ₫</strong>
+                                </div>
+                                <span class="badge bg-primary bg-opacity-20 text-primary px-3 py-2 rounded-pill">
+                                    @(ViewBag.TotalCinemaRevenue > 0 ? ((double)ViewBag.TotalTicketRevenue / (double)ViewBag.TotalCinemaRevenue * 100).ToString("F1") : "0.0")%
+                                </span>
+                            </div>
+                            <div class="list-group-item bg-transparent text-white border-secondary px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-muted d-block small">Doanh thu Bắp nước (Concessions)</span>
+                                    <strong class="fs-5 text-warning">@ViewBag.TotalFoodRevenue.ToString("N0") ₫</strong>
+                                </div>
+                                <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2 rounded-pill">
+                                    @(ViewBag.TotalCinemaRevenue > 0 ? ((double)ViewBag.TotalFoodRevenue / (double)ViewBag.TotalCinemaRevenue * 100).ToString("F1") : "0.0")%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-black bg-opacity-40 rounded border border-secondary">
+                        <small class="text-muted d-block mb-1"><i class="bi bi-info-circle me-1"></i> Lưu ý</small>
+                        <span class="text-muted small d-inline-block">Doanh thu bắp nước được cộng gộp trong tổng tiền hóa đơn. Báo cáo phân tách chính xác dựa trên lịch sử đặt món ăn (`BookingFoods`) đi kèm.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Management Section -->
+    <div class="card bg-dark border-secondary shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                <div>
+                    <h5 class="card-title text-white fw-bold mb-0">
+                        <i class="bi bi-person-gear me-2 text-primary"></i>
+                        Quản Lý Nhân Viên & Quầy Vé Tại Rạp: <span class="text-warning">@ViewBag.CinemaName</span>
+                    </h5>
+                    <p class="text-muted mb-0 small">Danh sách nhân viên bán vé được phân công trực tiếp tại rạp này.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-success px-3" data-bs-toggle="modal" data-bs-target="#createStaffModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Cấp TK Staff Mới
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary px-3" data-bs-toggle="modal" data-bs-target="#reassignStaffModal">
+                        <i class="bi bi-arrow-left-right me-1"></i> Phân Bổ Nhân Viên
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Rạp được phân</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Ngày tạo tài khoản</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.CinemaStaff == null || ((List<BE.Core.Entities.Business.User>)ViewBag.CinemaStaff).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-1"></i> Rạp này hiện chưa được phân công nhân viên bán vé nào!
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var staff in (List<BE.Core.Entities.Business.User>)ViewBag.CinemaStaff)
+                            {
+                                var cName = (ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)?.FirstOrDefault(c => c.Id == staff.CinemaId)?.Name ?? "Chưa phân rạp";
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-white">@staff.FullName</div>
+                                        <span class="badge bg-success bg-opacity-20 text-success">Staff</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info bg-opacity-10 text-info">@cName</span>
+                                    </td>
+                                    <td>@staff.Email</td>
+                                    <td>@(string.IsNullOrEmpty(staff.PhoneNumber) ? "Chưa cập nhật" : staff.PhoneNumber)</td>
+                                    <td>@staff.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        <form method="post" action="/Admin/Revenue/ReassignStaff" onsubmit="return confirm('Bạn có chắc muốn gỡ nhân viên @staff.FullName khỏi rạp này?')" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="staffId" value="@staff.Id" />
+                                            <input type="hidden" name="cinemaId" value="" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-x-circle me-1"></i> Gỡ khỏi rạp
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Transaction Log -->
+    <div class="card bg-dark border-secondary shadow mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white fw-bold mb-3">
+                <i class="bi bi-clock-history me-2 text-primary"></i>
+                Nhật Ký Hóa Đơn Thanh Toán Gần Đây (Tối đa 50)
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Ngày đặt</th>
+                            <th>Khách hàng</th>
+                            <th>Phim & Phòng</th>
+                            <th>Rạp</th>
+                            <th class="text-center">Số Vé</th>
+                            <th>Phương thức</th>
+                            <th>Người Bán</th>
+                            <th class="text-end">Tổng tiền</th>
+                            <th class="text-center">Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.DetailedTransactions == null || ((List<TransactionDetailViewModel>)ViewBag.DetailedTransactions).Count == 0)
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    Không tìm thấy giao dịch nào phù hợp!
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var t in (List<TransactionDetailViewModel>)ViewBag.DetailedTransactions)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-warning">#@t.BookingId</td>
+                                    <td>@t.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <div class="fw-bold">@t.CustomerName</div>
+                                        <small class="text-muted">@t.CustomerEmail</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-truncate" style="max-width: 180px;">@t.MovieTitle</div>
+                                        <small class="text-muted">Phòng: @t.RoomName</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary bg-opacity-20 text-primary">@t.CinemaName</span>
+                                    </td>
+                                    <td class="text-center">@t.TicketsCount</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@t.PaymentMethod</span>
+                                    </td>
+                                    <td>
+                                        @if (t.SellerName == "Khách đặt Online")
+                                        {
+                                            <span class="text-info"><i class="bi bi-globe me-1"></i> @t.SellerName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success"><i class="bi bi-person-fill me-1"></i> @t.SellerName</span>
+                                        }
+                                    </td>
+                                    <td class="text-end fw-bold text-success">@t.TotalAmount.ToString("N0") ₫</td>
+                                    <td class="text-center">
+                                        <a href="/Admin/Bookings/Details/@t.BookingId" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                            Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Staff Account -->
+    <div class="modal fade" id="createStaffModal" tabindex="-1" aria-labelledby="createStaffModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <form method="post" action="/Admin/Revenue/CreateStaff">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title fw-bold text-success" id="createStaffModalLabel">
+                            <i class="bi bi-person-plus-fill me-2"></i>Cấp Tài Khoản Nhân Viên Mới
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        @if (ViewBag.SelectedCinemaId == 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Chọn Rạp Chiếu Phim</label>
+                                <select name="cinemaId" class="form-select bg-black text-white border-secondary" required>
+                                    <option value="">-- Chọn rạp --</option>
+                                    @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" name="cinemaId" value="@ViewBag.SelectedCinemaId" />
+                            <p class="text-muted small">Tài khoản này sẽ tự động được gán vai trò <span class="badge bg-success">Staff</span> và được phân công làm việc tại rạp <strong class="text-white">@ViewBag.CinemaName</strong>.</p>
+                        }
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Họ và Tên</label>
+                            <input type="text" name="fullName" class="form-control bg-black text-white border-secondary" required placeholder="Nguyễn Văn A" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Email (Tên đăng nhập)</label>
+                            <input type="email" name="email" class="form-control bg-black text-white border-secondary" required placeholder="nhanvien@domain.com" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Số điện thoại</label>
+                            <input type="text" name="phoneNumber" class="form-control bg-black text-white border-secondary" placeholder="0901234567" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Mật khẩu ban đầu</label>
+                            <input type="password" name="password" class="form-control bg-black text-white border-secondary" required placeholder="Mật khẩu bảo mật..." />
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> Tạo tài khoản
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Reassign Staff Member -->
+    <div class="modal fade" id="reassignStaffModal" tabindex="-1" aria-labelledby="reassignStaffModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <form method="post" action="/Admin/Revenue/ReassignStaff">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title fw-bold text-primary" id="reassignStaffModalLabel">
+                            <i class="bi bi-arrow-left-right me-2"></i>Phân Bổ Nhân Viên Vào Rạp
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        @if (ViewBag.SelectedCinemaId == 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Chọn Rạp Phân Bổ</label>
+                                <select name="cinemaId" class="form-select bg-black text-white border-secondary" required>
+                                    <option value="">-- Chọn rạp --</option>
+                                    @foreach (var c in ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" name="cinemaId" value="@ViewBag.SelectedCinemaId" />
+                            <p class="text-muted small">Chọn một nhân viên Staff hiện có trong hệ thống để phân công làm việc tại rạp <strong class="text-white">@ViewBag.CinemaName</strong>.</p>
+                        }
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Chọn Nhân Viên</label>
+                            <select name="staffId" class="form-select bg-black text-white border-secondary" required>
+                                <option value="">-- Chọn nhân viên --</option>
+                                @foreach (var s in (List<BE.Core.Entities.Business.User>)ViewBag.AllStaff)
+                                {
+                                    string assignInfo = s.CinemaId == null ? "Chưa có rạp" : $"Đang ở rạp: {s.Cinema?.Name ?? s.CinemaId.ToString()}";
+                                    <option value="@s.Id" disabled="@(s.CinemaId == ViewBag.SelectedCinemaId ? "disabled" : null)">
+                                        @s.FullName (@s.Email) - [@assignInfo]
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> Phân bổ rạp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function resetForm() {
+            const today = new Date();
+            const lastMonth = new Date();
+            lastMonth.setDate(today.getDate() - 30);
+            
+            document.querySelector('input[name="startDate"]').value = lastMonth.toISOString().split('T')[0];
+            document.querySelector('input[name="endDate"]').value = today.toISOString().split('T')[0];
+            document.getElementById('revenueFilterForm').submit();
+        }
+
+        // Parse daily sales data from Razor
+        const rawSalesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DailySalesData));
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            if (rawSalesData && rawSalesData.length > 0) {
+                const dates = rawSalesData.map(item => item.DateStr);
+                const revenues = rawSalesData.map(item => item.Revenue);
+
+                Highcharts.chart('revenueChartContainer', {
+                    chart: {
+                        type: 'areaspline',
+                        backgroundColor: '#1f1f2e',
+                        style: {
+                            fontFamily: 'Inter, sans-serif'
+                        }
+                    },
+                    title: {
+                        text: null
+                    },
+                    xAxis: {
+                        categories: dates,
+                        labels: {
+                            style: {
+                                color: '#a0aec0'
+                            }
+                        },
+                        lineColor: '#2d3748',
+                        tickColor: '#2d3748'
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Doanh thu (VND)',
+                            style: {
+                                color: '#a0aec0'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                color: '#a0aec0'
+                            },
+                            formatter: function () {
+                                return this.value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        },
+                        gridLineColor: '#2d3748'
+                    },
+                    tooltip: {
+                        shared: true,
+                        backgroundColor: '#2d3748',
+                        style: {
+                            color: '#ffffff'
+                        },
+                        formatter: function () {
+                            let s = '<b>Ngày ' + this.x + '</b><br/>';
+                            this.points.forEach(point => {
+                                s += point.series.name + ': <b>' + point.y.toLocaleString('vi-VN') + ' ₫</b>';
+                            });
+                            return s;
+                        }
+                    },
+                    plotOptions: {
+                        areaspline: {
+                            fillColor: {
+                                linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                                stops: [
+                                    [0, 'rgba(13, 110, 253, 0.45)'],
+                                    [1, 'rgba(13, 110, 253, 0.0)']
+                                ]
+                            },
+                            marker: {
+                                radius: 4
+                            },
+                            lineWidth: 3,
+                            states: {
+                                hover: {
+                                    lineWidth: 4
+                                }
+                            },
+                            threshold: null
+                        }
+                    },
+                    series: [{
+                        name: 'Doanh thu',
+                        data: revenues,
+                        color: '#0d6efd'
+                    }],
+                    credits: {
+                        enabled: false
+                    },
+                    legend: {
+                        enabled: false
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        .card-stat {
+            transition: transform 0.2s ease;
+        }
+        .card-stat:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+}

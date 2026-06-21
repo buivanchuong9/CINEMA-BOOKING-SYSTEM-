@@ -37,12 +37,30 @@ public class UsersController : Controller
         {
             var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
             var adminIds = adminUsers.Select(u => u.Id).ToHashSet();
-            usersQuery = (await _context.Users.ToListAsync()).Where(u => !adminIds.Contains(u.Id));
+            usersQuery = await _context.Users.Include(u => u.Cinema).ToListAsync();
+            usersQuery = usersQuery.Where(u => !adminIds.Contains(u.Id));
             ViewData["Title"] = "Tất Cả Tài Khoản";
         }
         else
         {
-            usersQuery = await _userManager.GetUsersInRoleAsync(role);
+            var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.Name == role);
+            if (roleEntity != null)
+            {
+                var userIds = await _context.UserRoles
+                    .Where(ur => ur.RoleId == roleEntity.Id)
+                    .Select(ur => ur.UserId)
+                    .ToListAsync();
+                
+                usersQuery = await _context.Users
+                    .Include(u => u.Cinema)
+                    .Where(u => userIds.Contains(u.Id))
+                    .ToListAsync();
+            }
+            else
+            {
+                usersQuery = new List<User>();
+            }
+
             if (role == "Customer") ViewData["Title"] = "Quản Lý Người Dùng";
             else if (role == "Staff") ViewData["Title"] = "Quản Lý Nhân Viên Bán Hàng";
             else ViewData["Title"] = $"Quản Lý {role}";
@@ -79,15 +97,16 @@ public class UsersController : Controller
     }
 
     // GET: Admin/Users/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
         return View();
     }
 
     // POST: Admin/Users/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(string FullName, string Email, string Password, string Role, string PhoneNumber)
+    public async Task<IActionResult> Create(string FullName, string Email, string Password, string Role, string PhoneNumber, int? CinemaId)
     {
         if (ModelState.IsValid)
         {
@@ -102,6 +121,11 @@ public class UsersController : Controller
                 CreatedAt = DateTime.Now
             };
 
+            if (Role == "Staff")
+            {
+                user.CinemaId = CinemaId;
+            }
+
             var result = await _userManager.CreateAsync(user, Password);
             if (result.Succeeded)
             {
@@ -110,7 +134,7 @@ public class UsersController : Controller
                     await _userManager.AddToRoleAsync(user, Role);
                 }
                 TempData["Success"] = "Thêm tài khoản thành công!";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { role = Role });
             }
 
             foreach (var error in result.Errors)
@@ -118,6 +142,7 @@ public class UsersController : Controller
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
         return View();
     }
 
@@ -134,13 +159,16 @@ public class UsersController : Controller
             return Forbid();
         }
 
+        ViewBag.IsStaff = await _userManager.IsInRoleAsync(user, "Staff");
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
+
         return View(user);
     }
 
     // POST: Admin/Users/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(string id, string FullName, string PhoneNumber, string MembershipLevel, int Points, string? NewPassword)
+    public async Task<IActionResult> Edit(string id, string FullName, string PhoneNumber, string MembershipLevel, int Points, string? NewPassword, int? CinemaId)
     {
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
@@ -155,6 +183,15 @@ public class UsersController : Controller
         user.MembershipLevel = MembershipLevel;
         user.Points = Points;
 
+        if (await _userManager.IsInRoleAsync(user, "Staff"))
+        {
+            user.CinemaId = CinemaId;
+        }
+        else
+        {
+            user.CinemaId = null;
+        }
+
         var result = await _userManager.UpdateAsync(user);
 
         if (result.Succeeded && !string.IsNullOrEmpty(NewPassword))
@@ -166,13 +203,16 @@ public class UsersController : Controller
         if (result.Succeeded)
         {
             TempData["Success"] = "Cập nhật tài khoản thành công!";
-            return RedirectToAction(nameof(Index));
+            string? role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            return RedirectToAction(nameof(Index), new { role = role });
         }
 
         foreach (var error in result.Errors)
         {
             ModelState.AddModelError(string.Empty, error.Description);
         }
+        ViewBag.IsStaff = await _userManager.IsInRoleAsync(user, "Staff");
+        ViewBag.Cinemas = await _context.Cinemas.OrderBy(c => c.Name).ToListAsync();
         return View(user);
     }
 
@@ -189,6 +229,8 @@ public class UsersController : Controller
             return Forbid();
         }
 
+        string? role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
         var result = await _userManager.DeleteAsync(user);
         if (result.Succeeded)
         {
@@ -198,7 +240,7 @@ public class UsersController : Controller
         {
             TempData["Error"] = "Lỗi khi xóa tài khoản!";
         }
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { role = role });
     }
 
     // GET: Admin/Users/Profile

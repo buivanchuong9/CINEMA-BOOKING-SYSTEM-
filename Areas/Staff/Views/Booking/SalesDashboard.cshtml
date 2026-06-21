@@ -1,0 +1,329 @@
+@using BE.Core.Enums
+@using BE.Areas.Staff.Controllers
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Doanh Thu & Thống Kê Rạp";
+}
+
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1">
+                <i class="bi bi-bar-chart-line me-2 text-cinema-red"></i>
+                Báo Cáo Bán Hàng & Doanh Thu
+            </h2>
+            <p class="text-muted mb-0">Quản lý rạp: <span class="text-popcorn-gold fw-bold">@ViewBag.CinemaName</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Staff/Booking" class="btn btn-outline-light rounded-pill px-4">
+                <i class="bi bi-ticket-perforated me-2"></i> Bán Vé
+            </a>
+            <a href="/Staff/Booking/ManageBookings" class="btn btn-outline-light rounded-pill px-4">
+                <i class="bi bi-list-ul me-2"></i> Quản Lý Vé
+            </a>
+        </div>
+    </div>
+
+    <!-- Date Range Filter Form -->
+    <div class="glass-card p-4 mb-4 shadow">
+        <form method="get" action="/Staff/Booking/SalesDashboard" id="salesFilterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label text-muted small">Từ ngày</label>
+                    <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control bg-dark text-white border-secondary" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small">Đến ngày</label>
+                    <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control bg-dark text-white border-secondary" required />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-cinema-red w-100">
+                        <i class="bi bi-filter me-1"></i> Lọc Kết Quả
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-light w-100" onclick="resetFilter()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Mặc định
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Statistics Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Card 1: Total Revenue -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 shadow h-100 border-start border-4 border-cinema-red position-relative overflow-hidden stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small uppercase mb-1 fw-bold">Tổng Doanh Thu</p>
+                        <h3 class="fw-bold text-white mb-0">@ViewBag.TotalRevenue.ToString("N0") ₫</h3>
+                    </div>
+                    <div class="stat-icon bg-cinema-red text-white">
+                        <i class="bi bi-currency-dollar fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-muted small">Bao gồm vé & concessions</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Ticket Revenue -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 shadow h-100 border-start border-4 border-success position-relative overflow-hidden stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small uppercase mb-1 fw-bold">Doanh Thu Vé</p>
+                        <h3 class="fw-bold text-success mb-0">@ViewBag.TotalTicketRevenue.ToString("N0") ₫</h3>
+                    </div>
+                    <div class="stat-icon bg-success text-white">
+                        <i class="bi bi-ticket-detailed fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-muted small">Tổng số vé bán ra: <strong class="text-white">@ViewBag.TotalTickets</strong> vé</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Food Revenue -->
+        <div class="col-md-4">
+            <div class="glass-card p-4 shadow h-100 border-start border-4 border-warning position-relative overflow-hidden stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small uppercase mb-1 fw-bold">Doanh Thu Bắp Nước</p>
+                        <h3 class="fw-bold text-warning mb-0">@ViewBag.TotalFoodRevenue.ToString("N0") ₫</h3>
+                    </div>
+                    <div class="stat-icon bg-warning text-dark">
+                        <i class="bi bi-cup-straw fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-muted small">Doanh số bỏng ngô, nước giải khát</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Left Column: Movie Sales Performance & Ratios -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4 shadow h-100">
+                <h4 class="fw-bold text-white mb-4">
+                    <i class="bi bi-film me-2 text-cinema-red"></i>
+                    Hiệu Suất & Tỉ Lệ Bán Phim
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Phim</th>
+                                <th class="text-center">Vé Bán Ra</th>
+                                <th>Tỉ Lệ Bán Ra</th>
+                                <th class="text-end">Doanh Thu Phim</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.MovieStats == null || ((List<MovieSalesStatViewModel>)ViewBag.MovieStats).Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Không có dữ liệu bán vé trong khoảng thời gian này!
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var stat in (List<MovieSalesStatViewModel>)ViewBag.MovieStats)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@stat.PosterUrl" alt="" style="width: 45px; height: 65px; object-fit: cover;" class="rounded me-3">
+                                                <span class="fw-bold text-white text-truncate" style="max-width: 220px;" title="@stat.Title">@stat.Title</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold">@stat.TicketsSold</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 8px; background-color: #2b2b3d;" data-bs-theme="dark">
+                                                    <div class="progress-bar bg-cinema-red" role="progressbar" style="width: @stat.SalesRatio%" aria-valuenow="@stat.SalesRatio" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                                <span class="small text-muted" style="min-width: 45px;">@stat.SalesRatio.ToString("F1")%</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold text-popcorn-gold">@stat.Revenue.ToString("N0") ₫</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Quick Stats -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 shadow h-100">
+                <h4 class="fw-bold text-white mb-4">
+                    <i class="bi bi-graph-up-arrow me-2 text-cinema-red"></i>
+                    Tổng Quan Giao Dịch
+                </h4>
+                
+                <div class="list-group list-group-flush bg-transparent">
+                    <div class="list-group-item bg-transparent text-white border-secondary px-0 py-3 d-flex justify-content-between">
+                        <span class="text-muted">Tổng số đơn thành công</span>
+                        <span class="fw-bold fs-5">@ViewBag.TotalBookings</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary px-0 py-3 d-flex justify-content-between">
+                        <span class="text-muted">Vé trung bình mỗi đơn</span>
+                        <span class="fw-bold">
+                            @(ViewBag.TotalBookings > 0 ? ((double)ViewBag.TotalTickets / ViewBag.TotalBookings).ToString("F1") : "0.0") vé
+                        </span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-white border-secondary px-0 py-3 d-flex justify-content-between">
+                        <span class="text-muted">Giá trị trung bình đơn</span>
+                        <span class="fw-bold text-popcorn-gold">
+                            @(ViewBag.TotalBookings > 0 ? ((decimal)ViewBag.TotalRevenue / ViewBag.TotalBookings).ToString("N0") : "0") ₫
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card bg-black border-secondary mt-4">
+                    <div class="card-body">
+                        <h6 class="text-popcorn-gold fw-bold mb-2">Ghi Chú Vận Hành</h6>
+                        <p class="small text-muted mb-0">
+                            Các chỉ số hiển thị được tính toán dựa trên các hóa đơn có trạng thái <span class="text-success fw-bold">Đã Thanh Toán</span>. Mọi thay đổi về giá vé hoặc hoàn tiền sẽ tự động cập nhật theo thời gian thực.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales Table -->
+    <div class="glass-card p-4 shadow">
+        <h4 class="fw-bold text-white mb-4">
+            <i class="bi bi-clock-history me-2 text-cinema-red"></i>
+            Hóa Đơn Gần Đây
+        </h4>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Mã Đơn</th>
+                        <th>Thời Gian</th>
+                        <th>Khách Hàng</th>
+                        <th>Suất Chiếu</th>
+                        <th class="text-center">Số Vé</th>
+                        <th class="text-end">Thành Tiền</th>
+                        <th class="text-center">Chi Tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentSales == null || ((List<BE.Core.Entities.Bookings.Booking>)ViewBag.RecentSales).Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                Không tìm thấy hóa đơn nào thanh toán thành công gần đây!
+                             </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var b in (List<BE.Core.Entities.Bookings.Booking>)ViewBag.RecentSales)
+                        {
+                            <tr>
+                                <td class="fw-bold text-popcorn-gold">#@b.Id</td>
+                                <td>@b.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="fw-bold text-white">@b.User?.FullName</div>
+                                    <small class="text-muted">@b.User?.Email</small>
+                                </td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 200px;" title="@b.Showtime?.Movie?.Title">
+                                        @b.Showtime?.Movie?.Title
+                                    </span>
+                                    <div class="small text-muted">Phòng: @b.Showtime?.Room?.Name</div>
+                                </td>
+                                <td class="text-center fw-bold">@b.BookingDetails.Count</td>
+                                <td class="text-end fw-bold text-cinema-red">@b.TotalAmount.ToString("N0") ₫</td>
+                                <td class="text-center">
+                                    <a href="/Staff/Booking/PrintTicket/@b.Id" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                        Xem
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(30, 30, 45, 0.45);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+    }
+    
+    .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .text-cinema-red {
+        color: #e50914;
+    }
+    
+    .btn-cinema-red {
+        background-color: #e50914;
+        color: white;
+        border: none;
+        transition: background-color 0.2s ease;
+    }
+    
+    .btn-cinema-red:hover {
+        background-color: #b80710;
+        color: white;
+    }
+    
+    .text-popcorn-gold {
+        color: #ffc107;
+    }
+</style>
+
+<script>
+    function resetFilter() {
+        var today = new Date();
+        var priorDate = new Date();
+        priorDate.setDate(today.getDate() - 30);
+        
+        var formattedToday = today.toISOString().split('T')[0];
+        var formattedPrior = priorDate.toISOString().split('T')[0];
+        
+        document.querySelector('input[name="startDate"]').value = formattedPrior;
+        document.querySelector('input[name="endDate"]').value = formattedToday;
+        document.getElementById('salesFilterForm').submit();
+    }
+</script>
