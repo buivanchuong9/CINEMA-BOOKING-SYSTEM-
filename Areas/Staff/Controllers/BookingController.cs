@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using BE.Application.Helpers;
 using BE.Core.Entities.Bookings;
 using BE.Core.Entities.Movies;
+using BE.Core.Interfaces.Services;
 
 namespace BE.Areas.Staff.Controllers;
 
@@ -24,19 +25,22 @@ public class BookingController : Controller
     private readonly AppDbContext _context;
     private readonly UserManager<User> _userManager;
     private readonly ILogger<BookingController> _logger;
+    private readonly IRedisService _redisService;
 
     public BookingController(
         IUnitOfWork unitOfWork, 
         IBookingService bookingService, 
         AppDbContext context,
         UserManager<User> userManager,
-        ILogger<BookingController> logger)
+        ILogger<BookingController> logger,
+        IRedisService redisService)
     {
         _unitOfWork = unitOfWork;
         _bookingService = bookingService;
         _context = context;
         _userManager = userManager;
         _logger = logger;
+        _redisService = redisService;
     }
 
     // GET: /Staff/Booking
@@ -226,11 +230,12 @@ public class BookingController : Controller
     {
         int pageSize = 20;
 
-        // Check if the current user has a cinema assigned
+        // Determine current user and role
         var userId = _userManager.GetUserId(User);
         var currentUser = await _userManager.FindByIdAsync(userId ?? "");
         var assignedCinemaId = currentUser?.CinemaId;
-        
+        bool isAdminRole = User.IsInRole("Admin");
+
         if (assignedCinemaId.HasValue)
         {
             cinemaId = assignedCinemaId.Value;
@@ -246,10 +251,28 @@ public class BookingController : Controller
                     .ThenInclude(r => r.Cinema)
             .AsQueryable();
 
-        // Apply filters
-        if (cinemaId.HasValue && cinemaId.Value > 0)
+        if (isAdminRole)
         {
-            query = query.Where(b => b.Showtime != null && b.Showtime.Room != null && b.Showtime.Room.CinemaId == cinemaId.Value);
+            // Admin sees all bookings of the cinema (by showtime room)
+            ViewBag.IsStaffSelf = false;
+            if (cinemaId.HasValue && cinemaId.Value > 0)
+            {
+                query = query.Where(b => b.Showtime != null && b.Showtime.Room != null && b.Showtime.Room.CinemaId == cinemaId.Value);
+            }
+        }
+        else
+        {
+            // Staff sees ALL counter sales (sold by any staff) of their cinema, excluding online/system user bookings
+            ViewBag.IsStaffSelf = true;
+            query = query.Where(b =>
+                b.PaymentMethod == PaymentMethod.Cash &&
+                b.TransactionId != null &&
+                b.TransactionId.StartsWith("CASH-"));
+
+            if (assignedCinemaId.HasValue)
+            {
+                query = query.Where(b => b.Showtime != null && b.Showtime.Room != null && b.Showtime.Room.CinemaId == assignedCinemaId.Value);
+            }
         }
 
         if (roomId.HasValue && roomId.Value > 0)
@@ -283,7 +306,7 @@ public class BookingController : Controller
 
         var paginatedBookings = await PaginatedList<Booking>.CreateAsync(query.AsNoTracking(), pageNumber, pageSize);
 
-        // Load movie titles explicitly (Notes field reuse is kept for backward compatibility just in case)
+        // Load movie titles explicitly
         foreach (var b in paginatedBookings)
         {
             if (b.Showtime?.Movie != null)
@@ -304,6 +327,18 @@ public class BookingController : Controller
         ViewBag.MovieId = movieId;
         ViewBag.Status = status;
         ViewBag.Search = search;
+
+        // Pass current userId to view for ownership check
+        ViewBag.CurrentUserId = userId;
+
+        // Build seller name map (userId -> displayName) for showing in "Người Bán" column
+        var allUsers = await _userManager.Users
+            .Select(u => new { u.Id, u.Email, u.UserName })
+            .ToListAsync();
+        ViewBag.SellerMap = allUsers.ToDictionary(
+            u => u.Id,
+            u => u.Email ?? u.UserName ?? $"NV #{u.Id[..Math.Min(6, u.Id.Length)]}"
+        );
 
         return View(paginatedBookings);
     }
@@ -339,28 +374,66 @@ public class BookingController : Controller
     public async Task<IActionResult> Cancel(int id)
     {
         _logger.LogInformation($"Staff cancelling booking: {id}");
-        var booking = await _context.Bookings.FindAsync(id);
+        var booking = await _context.Bookings
+            .Include(b => b.BookingDetails)
+            .FirstOrDefaultAsync(b => b.Id == id);
         if (booking == null) return NotFound();
 
-        if (booking.Status == BookingStatus.Paid)
+        // Ownership check: Staff can only cancel bookings THEY sold
+        bool isAdminRole = User.IsInRole("Admin");
+        if (!isAdminRole)
         {
-            booking.RefundStatus = "Pending";
+            var currentUserId = _userManager.GetUserId(User);
+            var expectedPrefix = $"CASH-{currentUserId}-";
+            bool isMySale = booking.TransactionId != null && booking.TransactionId.StartsWith(expectedPrefix);
+            if (!isMySale)
+            {
+                TempData["Error"] = "Bạn không có quyền hủy vé này! Chỉ có thể hủy vé do chính bạn bán.";
+                return RedirectToAction(nameof(ManageBookings), new
+                {
+                    cinemaId = Request.Form["cinemaId"],
+                    roomId = Request.Form["roomId"],
+                    movieId = Request.Form["movieId"],
+                    status = Request.Form["status"],
+                    search = Request.Form["search"],
+                    pageNumber = Request.Form["pageNumber"]
+                });
+            }
+        }
+
+        try
+        {
+            // Staff cancel: Hủy trực tiếp, không cần thông qua luồng hoàn tiền (nhân viên trả tiền mặt trực tiếp tại quầy)
+            booking.Status = BookingStatus.Cancelled;
+            booking.RefundStatus = "None"; // Không cần hoàn tiền qua hệ thống
             booking.UpdatedAt = DateTime.Now;
+
+            // Xả ghế trong DB và Redis
+            foreach (var detail in booking.BookingDetails)
+            {
+                var seat = await _unitOfWork.Seats.GetByIdAsync(detail.SeatId);
+                if (seat != null)
+                {
+                    seat.Status = SeatStatus.Available;
+                    _unitOfWork.Seats.Update(seat);
+
+                    if (booking.ShowtimeId.HasValue)
+                    {
+                        await _redisService.ReleaseSeatAsync(booking.ShowtimeId.Value, seat.Id);
+                        _logger.LogInformation($"[StaffCancel] Released seat {seat.Row}-{seat.Number} from Redis");
+                    }
+                }
+            }
+
             _context.Bookings.Update(booking);
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Đã chuyển đơn vé sang trạng thái chờ hoàn tiền!";
+
+            TempData["Success"] = "Đã hủy đơn đặt vé tại quầy và giải phóng ghế thành công!";
         }
-        else
+        catch (Exception ex)
         {
-            var success = await _bookingService.CancelBookingAsync(id);
-            if (success)
-            {
-                TempData["Success"] = "Đã hủy đơn đặt vé tại quầy và giải phóng ghế thành công!";
-            }
-            else
-            {
-                TempData["Error"] = "Hủy đơn đặt vé thất bại!";
-            }
+            _logger.LogError(ex, $"[StaffCancel] Error cancelling booking {id}");
+            TempData["Error"] = "Hủy đơn đặt vé thất bại!";
         }
 
         return RedirectToAction(nameof(ManageBookings), new {

@@ -65,7 +65,7 @@ public class RevenueController : Controller
             .Include(b => b.Showtime)
                 .ThenInclude(s => s.Room)
                     .ThenInclude(r => r.Cinema)
-            .Where(b => b.Status == BookingStatus.Paid
+            .Where(b => (b.Status == BookingStatus.Paid || b.Status == BookingStatus.Cancelled)
                         && b.Showtime != null
                         && b.Showtime.Room != null
                         && b.BookingDate >= start
@@ -92,9 +92,10 @@ public class RevenueController : Controller
                 g => g.Sum(bf => bf.Quantity * bf.UnitPrice)
             );
 
-        // 6. Get all staff users
+        // 6. Get all staff users and build map from all users to be GUID safe and cover everyone
         var staffUsers = await _userManager.GetUsersInRoleAsync("Staff");
-        var staffMap = staffUsers.ToDictionary(u => u.Id, u => u);
+        var allUsersList = await _userManager.Users.ToListAsync();
+        var staffMap = allUsersList.ToDictionary(u => u.Id, u => u);
 
         // 7. Process sales per seller
         var staffSales = new Dictionary<string, StaffSalesViewModel>();
@@ -110,14 +111,16 @@ public class RevenueController : Controller
             staffSales[staff.Id] = new StaffSalesViewModel
             {
                 StaffId = staff.Id,
-                FullName = staff.FullName ?? staff.UserName ?? "Chưa đặt tên",
+                FullName = staff.Email ?? staff.UserName ?? "Chưa đặt tên", // Use Email as FullName for easier identification
                 Email = staff.Email ?? "N/A",
                 CinemaName = cName,
                 TotalBookings = 0,
                 TotalTickets = 0,
                 TicketRevenue = 0,
                 FoodRevenue = 0,
-                TotalRevenue = 0
+                TotalRevenue = 0,
+                TotalCancelledBookings = 0,
+                TotalCancelledTickets = 0
             };
         }
 
@@ -129,9 +132,83 @@ public class RevenueController : Controller
         decimal totalCinemaRevenue = 0;
         int totalTicketsSold = 0;
         decimal totalFoodRevenue = 0;
+        
+        int totalCancelledBookings = 0;
+        int totalCancelledTickets = 0;
 
         foreach (var b in bookings)
         {
+            bool isCancelled = b.Status == BookingStatus.Cancelled;
+            bool isCounterSale = b.PaymentMethod == PaymentMethod.Cash && b.TransactionId != null && b.TransactionId.StartsWith("CASH-");
+
+            if (isCancelled)
+            {
+                totalCancelledBookings++;
+                totalCancelledTickets += b.BookingDetails.Count;
+
+                if (isCounterSale)
+                {
+                    string? sellerId = null;
+                    var temp = b.TransactionId!.Substring(5);
+                    int lastHyphen = temp.LastIndexOf('-');
+                    if (lastHyphen > 0)
+                    {
+                        sellerId = temp.Substring(0, lastHyphen);
+                    }
+
+                    if (!string.IsNullOrEmpty(sellerId))
+                    {
+                        if (!staffSales.ContainsKey(sellerId))
+                        {
+                            staffMap.TryGetValue(sellerId, out var externalStaff);
+                            staffSales[sellerId] = new StaffSalesViewModel
+                            {
+                                StaffId = sellerId,
+                                FullName = externalStaff?.Email ?? externalStaff?.UserName ?? $"Nhân viên (ID: {sellerId[..Math.Min(6, sellerId.Length)]})",
+                                Email = externalStaff?.Email ?? "N/A",
+                                CinemaName = cinemas.FirstOrDefault(c => c.Id == externalStaff?.CinemaId)?.Name ?? "Chưa phân rạp",
+                                TotalBookings = 0,
+                                TotalTickets = 0,
+                                TicketRevenue = 0,
+                                FoodRevenue = 0,
+                                TotalRevenue = 0,
+                                TotalCancelledBookings = 0,
+                                TotalCancelledTickets = 0
+                            };
+                        }
+
+                        var stats = staffSales[sellerId];
+                        stats.TotalCancelledBookings++;
+                        stats.TotalCancelledTickets += b.BookingDetails.Count;
+                    }
+                    else
+                    {
+                        const string fallbackKey = "Unknown_Staff";
+                        if (!staffSales.ContainsKey(fallbackKey))
+                        {
+                            staffSales[fallbackKey] = new StaffSalesViewModel
+                            {
+                                StaffId = fallbackKey,
+                                FullName = "Nhân viên khác / Quầy",
+                                Email = "N/A",
+                                CinemaName = "N/A",
+                                TotalBookings = 0,
+                                TotalTickets = 0,
+                                TicketRevenue = 0,
+                                FoodRevenue = 0,
+                                TotalRevenue = 0,
+                                TotalCancelledBookings = 0,
+                                TotalCancelledTickets = 0
+                            };
+                        }
+                        var stats = staffSales[fallbackKey];
+                        stats.TotalCancelledBookings++;
+                        stats.TotalCancelledTickets += b.BookingDetails.Count;
+                    }
+                }
+                continue; // Do not sum revenue for cancelled bookings
+            }
+
             var foodCost = foodRevenueByBooking.ContainsKey(b.Id) ? foodRevenueByBooking[b.Id] : 0;
             var ticketCost = b.TotalAmount - foodCost;
 
@@ -139,13 +216,16 @@ public class RevenueController : Controller
             totalTicketsSold += b.BookingDetails.Count;
             totalFoodRevenue += foodCost;
 
-            // Check if counter sale
-            bool isCounterSale = b.PaymentMethod == PaymentMethod.Cash && b.TransactionId != null && b.TransactionId.StartsWith("CASH-");
             if (isCounterSale)
             {
                 // Format: CASH-{staffId}-{timestamp}
-                var parts = b.TransactionId!.Split('-');
-                string? sellerId = parts.Length >= 2 ? parts[1] : null;
+                string? sellerId = null;
+                var temp = b.TransactionId!.Substring(5);
+                int lastHyphen = temp.LastIndexOf('-');
+                if (lastHyphen > 0)
+                {
+                    sellerId = temp.Substring(0, lastHyphen);
+                }
 
                 if (!string.IsNullOrEmpty(sellerId))
                 {
@@ -156,14 +236,16 @@ public class RevenueController : Controller
                         staffSales[sellerId] = new StaffSalesViewModel
                         {
                             StaffId = sellerId,
-                            FullName = externalStaff?.FullName ?? externalStaff?.UserName ?? $"Nhân viên (ID: {sellerId.Take(6)}...)",
+                            FullName = externalStaff?.Email ?? externalStaff?.UserName ?? $"Nhân viên (ID: {sellerId[..Math.Min(6, sellerId.Length)]})",
                             Email = externalStaff?.Email ?? "N/A",
                             CinemaName = cinemas.FirstOrDefault(c => c.Id == externalStaff?.CinemaId)?.Name ?? "Chưa phân rạp",
                             TotalBookings = 0,
                             TotalTickets = 0,
                             TicketRevenue = 0,
                             FoodRevenue = 0,
-                            TotalRevenue = 0
+                            TotalRevenue = 0,
+                            TotalCancelledBookings = 0,
+                            TotalCancelledTickets = 0
                         };
                     }
 
@@ -190,7 +272,9 @@ public class RevenueController : Controller
                             TotalTickets = 0,
                             TicketRevenue = 0,
                             FoodRevenue = 0,
-                            TotalRevenue = 0
+                            TotalRevenue = 0,
+                            TotalCancelledBookings = 0,
+                            TotalCancelledTickets = 0
                         };
                     }
                     var stats = staffSales[fallbackKey];
@@ -222,11 +306,14 @@ public class RevenueController : Controller
         ViewBag.OnlineTickets = onlineTickets;
         ViewBag.OnlineRevenue = onlineRevenue;
 
+        ViewBag.TotalCancelledBookings = totalCancelledBookings;
+        ViewBag.TotalCancelledTickets = totalCancelledTickets;
+
         // 8. Prepare daily sales chart data for last 30 days
         var dailySales = new List<object>();
         for (var date = start.Date; date <= end.Date; date = date.AddDays(1))
         {
-            var dayBookings = bookings.Where(b => b.BookingDate.Date == date).ToList();
+            var dayBookings = bookings.Where(b => b.BookingDate.Date == date && b.Status == BookingStatus.Paid).ToList();
             var dayRevenue = dayBookings.Sum(b => b.TotalAmount);
             dailySales.Add(new
             {
@@ -244,11 +331,16 @@ public class RevenueController : Controller
                 string sellerName = "Khách đặt Online";
                 if (b.PaymentMethod == PaymentMethod.Cash && b.TransactionId != null && b.TransactionId.StartsWith("CASH-"))
                 {
-                    var parts = b.TransactionId.Split('-');
-                    var sellerId = parts.Length >= 2 ? parts[1] : null;
+                    string? sellerId = null;
+                    var temp = b.TransactionId.Substring(5);
+                    int lastHyphen = temp.LastIndexOf('-');
+                    if (lastHyphen > 0)
+                    {
+                        sellerId = temp.Substring(0, lastHyphen);
+                    }
                     if (sellerId != null && staffMap.TryGetValue(sellerId, out var sUser))
                     {
-                        sellerName = sUser.FullName ?? sUser.UserName ?? "Nhân viên";
+                        sellerName = sUser.Email ?? sUser.UserName ?? "Nhân viên";
                     }
                     else
                     {
@@ -267,7 +359,8 @@ public class RevenueController : Controller
                     TicketsCount = b.BookingDetails.Count,
                     PaymentMethod = b.PaymentMethod?.ToString() ?? "N/A",
                     SellerName = sellerName,
-                    TotalAmount = b.TotalAmount
+                    TotalAmount = b.TotalAmount,
+                    Status = b.Status.ToString()
                 };
             })
             .ToList();
@@ -363,6 +456,8 @@ public class StaffSalesViewModel
     public decimal TicketRevenue { get; set; }
     public decimal FoodRevenue { get; set; }
     public decimal TotalRevenue { get; set; }
+    public int TotalCancelledBookings { get; set; }
+    public int TotalCancelledTickets { get; set; }
 }
 
 public class TransactionDetailViewModel
@@ -378,4 +473,5 @@ public class TransactionDetailViewModel
     public string PaymentMethod { get; set; } = string.Empty;
     public string SellerName { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
+    public string Status { get; set; } = string.Empty;
 }

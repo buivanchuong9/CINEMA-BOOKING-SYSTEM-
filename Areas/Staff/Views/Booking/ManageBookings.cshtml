@@ -3,14 +3,33 @@
 @model PaginatedList<BE.Core.Entities.Bookings.Booking>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Quản Lý Đơn Hàng - Nhân Viên";
+    bool isStaffSelf = ViewBag.IsStaffSelf == true;
+    ViewData["Title"] = isStaffSelf ? "Vé Tôi Đã Bán" : "Quản Lý Đơn Hàng - Toàn Rạp";
 }
 
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold">Lịch Sử & Quản Lý Đơn Hàng</h2>
-            <p class="text-muted">Trang @Model.PageIndex / @Model.TotalPages | Tổng số đơn: @Model.Count</p>
+            @if (isStaffSelf)
+            {
+                <h2 class="fw-bold"><i class="bi bi-ticket-perforated me-2 text-warning"></i>Vé Tôi Đã Bán</h2>
+                <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages | Tổng số vé: @Model.Count</p>
+                <div class="mt-1">
+                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-3 py-1">
+                        <i class="bi bi-person-fill me-1"></i> Chỉ hiển thị vé do bạn bán tại quầy
+                    </span>
+                </div>
+            }
+            else
+            {
+                <h2 class="fw-bold"><i class="bi bi-journal-text me-2 text-info"></i>Lịch Sử & Quản Lý Đơn Hàng</h2>
+                <p class="text-muted mb-0">Trang @Model.PageIndex / @Model.TotalPages | Tổng số đơn: @Model.Count</p>
+                <div class="mt-1">
+                    <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-25 px-3 py-1">
+                        <i class="bi bi-shield-fill me-1"></i> Xem toàn bộ đơn hàng của rạp (quyền Admin)
+                    </span>
+                </div>
+            }
         </div>
         <div class="d-flex gap-2">
             @if (ViewBag.AssignedCinemaId != null)
@@ -29,7 +48,9 @@
     <div class="glass-card p-4 mb-4 shadow">
         <form method="get" action="/Staff/Booking/ManageBookings" id="staffFilterForm">
             <div class="row g-3">
-                <!-- Cinema Filter -->
+                @if (!isStaffSelf)
+                {
+                <!-- Cinema Filter (Admin only) -->
                 <div class="col-md-3">
                     <label class="form-label text-muted small">Rạp Chiếu</label>
                     @if (ViewBag.AssignedCinemaId != null)
@@ -53,6 +74,7 @@
                         </select>
                     }
                 </div>
+                }
 
                 <!-- Room Filter -->
                 <div class="col-md-2">
@@ -125,8 +147,8 @@
                         <th>Phim</th>
                         <th>Tổng Tiền</th>
                         <th>Trạng Thái</th>
-                        <th>Thanh Toán</th>
-                        <th class="text-center" style="width: 250px;">Thao Tác</th>
+                        <th>Người Bán</th>
+                        <th class="text-center" style="width: 220px;">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -143,6 +165,35 @@
                     {
                         @foreach (var b in Model)
                         {
+                            string sellerDisplay = "";
+                            string sellerClass = "text-muted";
+                            bool isMySale = false;
+                            var currentUserId = ViewBag.CurrentUserId as string;
+
+                            if (b.PaymentMethod == PaymentMethod.Cash
+                                && b.TransactionId != null
+                                && b.TransactionId.StartsWith("CASH-"))
+                            {
+                                string sellerId = null;
+                                var temp = b.TransactionId.Substring(5);
+                                int lastHyphen = temp.LastIndexOf('-');
+                                if (lastHyphen > 0)
+                                {
+                                    sellerId = temp.Substring(0, lastHyphen);
+                                }
+                                isMySale = (sellerId == currentUserId);
+                                var sellerInfo = ViewBag.SellerMap as Dictionary<string, string>;
+                                sellerDisplay = sellerInfo != null && sellerId != null && sellerInfo.ContainsKey(sellerId)
+                                    ? sellerInfo[sellerId]
+                                    : (sellerId != null ? $"NV #{sellerId[..Math.Min(6, sellerId.Length)]}" : "Nhân viên");
+                                sellerClass = isMySale ? "text-warning" : "text-info";
+                            }
+                            else
+                            {
+                                sellerDisplay = "Khách Online";
+                                sellerClass = "text-muted";
+                                isMySale = false;
+                            }
                             <tr>
                                 <td class="fw-bold text-popcorn-gold">#@b.Id</td>
                                 <td>
@@ -201,17 +252,31 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (b.PaymentMethod.HasValue)
+                                    @if (b.PaymentMethod == PaymentMethod.Cash && b.TransactionId != null && b.TransactionId.StartsWith("CASH-"))
                                     {
-                                        <span class="badge bg-outline-light border border-secondary text-white">@b.PaymentMethod</span>
+                                        <div>
+                                            @if (isMySale)
+                                            {
+                                                <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25">
+                                                    <i class="bi bi-person-fill me-1"></i>@sellerDisplay
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info bg-opacity-10 text-info">
+                                                    <i class="bi bi-person me-1"></i>@sellerDisplay
+                                                </span>
+                                            }
+                                        </div>
+                                        <small class="text-muted">Tại quầy</small>
                                     }
                                     else
                                     {
-                                        <span class="text-muted italic">-</span>
+                                        <span class="text-muted small"><i class="bi bi-globe me-1"></i>Khách Online</span>
                                     }
                                 </td>
                                 <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
+                                    <div class="d-flex justify-content-center gap-1 flex-wrap">
                                         <a asp-action="PrintTicket" asp-route-id="@b.Id" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-printer"></i> In Vé
                                         </a>
@@ -230,7 +295,14 @@
                                                 </button>
                                             </form>
                                         }
-                                        @if (b.Status == BookingStatus.Pending || (b.Status == BookingStatus.Paid && b.RefundStatus == "None"))
+                                        @{
+                                            // Nhân viên bán hàng được hủy vé Pending hoặc vé Paid do chính họ bán
+                                            // (bất kể RefundStatus vì họ hoàn tiền mặt trực tiếp tại quầy)
+                                            bool canCancel = b.Status == BookingStatus.Pending
+                                                || (b.Status == BookingStatus.Paid && isMySale);
+                                            bool hasPermission = isStaffSelf ? isMySale : true; // Admin hủy được hết, Staff chỉ hủy vé của mình
+                                        }
+                                        @if (canCancel && hasPermission)
                                         {
                                             <form asp-action="Cancel" asp-route-id="@b.Id" method="post" class="d-inline cancel-booking-form">
                                                 @Html.AntiForgeryToken()
@@ -244,6 +316,12 @@
                                                     Hủy Vé
                                                 </button>
                                             </form>
+                                        }
+                                        else if (canCancel && !hasPermission)
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1" title="Chỉ người bán mới có thể hủy vé này">
+                                                <i class="bi bi-lock-fill me-1"></i>Không thể hủy
+                                            </span>
                                         }
                                     </div>
                                 </td>

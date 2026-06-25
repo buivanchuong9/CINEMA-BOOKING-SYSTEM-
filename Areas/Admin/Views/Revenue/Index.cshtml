@@ -58,9 +58,9 @@
     </div>
 
     <!-- Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
         <!-- Card 1: Total Cinema Revenue -->
-        <div class="col-md-3">
+        <div class="col">
             <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-primary">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -80,12 +80,12 @@
         </div>
 
         <!-- Card 2: Staff Counter Sales -->
-        <div class="col-md-3">
+        <div class="col">
             <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-success">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <small class="text-muted fw-bold uppercase">Doanh Thu Tại Quầy (Tiền Mặt)</small>
+                            <small class="text-muted fw-bold uppercase">Doanh Thu Tại Quầy</small>
                             <h3 class="fw-bold text-success mt-1 mb-0">
                                 @(((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Sum(s => s.TotalRevenue).ToString("N0")) ₫
                             </h3>
@@ -102,7 +102,7 @@
         </div>
 
         <!-- Card 3: Online Sales -->
-        <div class="col-md-3">
+        <div class="col">
             <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-info">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -115,14 +115,14 @@
                         </div>
                     </div>
                     <div class="mt-2 small text-muted">
-                        Khách đặt qua Website & App (@ViewBag.OnlineBookingsCount giao dịch)
+                        Khách đặt online (@ViewBag.OnlineBookingsCount giao dịch)
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Card 4: Tickets Sold -->
-        <div class="col-md-3">
+        <div class="col">
             <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-warning">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -135,7 +135,27 @@
                         </div>
                     </div>
                     <div class="mt-2 small text-muted">
-                        Bao gồm: <strong class="text-white">@ViewBag.OnlineTickets</strong> vé online + <strong class="text-white">@(((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Sum(s => s.TotalTickets))</strong> vé tại quầy
+                        <strong class="text-white">@ViewBag.OnlineTickets</strong> vé online + <strong class="text-white">@(((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Sum(s => s.TotalTickets))</strong> vé quầy
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 5: Cancelled Bookings -->
+        <div class="col">
+            <div class="card bg-dark border-secondary shadow h-100 card-stat border-start border-4 border-danger">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted fw-bold uppercase">Số Vé Đã Hủy</small>
+                            <h3 class="fw-bold text-danger mt-1 mb-0">@ViewBag.TotalCancelledTickets</h3>
+                        </div>
+                        <div class="p-2 bg-danger bg-opacity-10 text-danger rounded">
+                            <i class="bi bi-x-circle fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Tổng cộng: <strong class="text-white">@ViewBag.TotalCancelledBookings</strong> đơn vé bị hủy
                     </div>
                 </div>
             </div>
@@ -170,6 +190,8 @@
                                     <th>Rạp / Quầy</th>
                                     <th class="text-center">Số Đơn</th>
                                     <th class="text-center">Số Vé</th>
+                                    <th class="text-center text-danger">Đơn Hủy</th>
+                                    <th class="text-center text-danger">Vé Hủy</th>
                                     <th class="text-end">Tiền Vé</th>
                                     <th class="text-end">Bắp Nước</th>
                                     <th class="text-end">Doanh Số</th>
@@ -179,7 +201,7 @@
                                 @if (ViewBag.StaffSalesList == null || ((List<StaffSalesViewModel>)ViewBag.StaffSalesList).Count == 0)
                                 {
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
+                                        <td colspan="9" class="text-center py-4 text-muted">
                                             Không tìm thấy nhân viên bán hàng nào có doanh số tại rạp này!
                                         </td>
                                     </tr>
@@ -198,6 +220,8 @@
                                             </td>
                                             <td class="text-center">@s.TotalBookings</td>
                                             <td class="text-center fw-bold">@s.TotalTickets</td>
+                                            <td class="text-center text-danger">@s.TotalCancelledBookings</td>
+                                            <td class="text-center text-danger fw-bold">@s.TotalCancelledTickets</td>
                                             <td class="text-end text-muted">@s.TicketRevenue.ToString("N0") ₫</td>
                                             <td class="text-end text-warning">@s.FoodRevenue.ToString("N0") ₫</td>
                                             <td class="text-end fw-bold text-success">@s.TotalRevenue.ToString("N0") ₫</td>
@@ -282,6 +306,7 @@
                             <th>Email</th>
                             <th>Số điện thoại</th>
                             <th>Ngày tạo tài khoản</th>
+                            <th class="text-center">Vé Đã Bán</th>
                             <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
@@ -289,7 +314,7 @@
                         @if (ViewBag.CinemaStaff == null || ((List<BE.Core.Entities.Business.User>)ViewBag.CinemaStaff).Count == 0)
                         {
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
+                                <td colspan="6" class="text-center py-4 text-muted">
                                     <i class="bi bi-info-circle me-1"></i> Rạp này hiện chưa được phân công nhân viên bán vé nào!
                                 </td>
                             </tr>
@@ -299,6 +324,8 @@
                             @foreach (var staff in (List<BE.Core.Entities.Business.User>)ViewBag.CinemaStaff)
                             {
                                 var cName = (ViewBag.Cinemas as List<BE.Core.Entities.CinemaInfrastructure.Cinema>)?.FirstOrDefault(c => c.Id == staff.CinemaId)?.Name ?? "Chưa phân rạp";
+                                var staffSalesList = (List<StaffSalesViewModel>)ViewBag.StaffSalesList;
+                                var staffStat = staffSalesList?.FirstOrDefault(s => s.StaffId == staff.Id);
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-white">@staff.FullName</div>
@@ -310,6 +337,31 @@
                                     <td>@staff.Email</td>
                                     <td>@(string.IsNullOrEmpty(staff.PhoneNumber) ? "Chưa cập nhật" : staff.PhoneNumber)</td>
                                     <td>@staff.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                         @if (staffStat != null && (staffStat.TotalBookings > 0 || staffStat.TotalCancelledBookings > 0))
+                                         {
+                                             <div class="d-flex flex-column align-items-center gap-1">
+                                                 @if (staffStat.TotalBookings > 0)
+                                                 {
+                                                     <a href="/Staff/Booking/ManageBookings?search=CASH-@staff.Id" 
+                                                        class="btn btn-xs btn-outline-warning rounded-pill px-2 py-0" style="font-size: 0.75rem;" title="Xem vé nhân viên này đã bán">
+                                                         <i class="bi bi-ticket-perforated me-1"></i>
+                                                         @staffStat.TotalBookings đơn · @staffStat.TotalTickets vé
+                                                     </a>
+                                                 }
+                                                 @if (staffStat.TotalCancelledBookings > 0)
+                                                 {
+                                                     <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25" style="font-size: 0.75rem;">
+                                                         <i class="bi bi-x-circle-fill me-1"></i>Hủy: @staffStat.TotalCancelledBookings đơn · @staffStat.TotalCancelledTickets vé
+                                                     </span>
+                                                 }
+                                             </div>
+                                         }
+                                         else
+                                         {
+                                             <span class="text-muted small"><i class="bi bi-dash"></i> Chưa bán</span>
+                                         }
+                                    </td>
                                     <td class="text-center">
                                         <form method="post" action="/Admin/Revenue/ReassignStaff" onsubmit="return confirm('Bạn có chắc muốn gỡ nhân viên @staff.FullName khỏi rạp này?')" style="display:inline;">
                                             @Html.AntiForgeryToken()
@@ -347,6 +399,7 @@
                             <th>Rạp</th>
                             <th class="text-center">Số Vé</th>
                             <th>Phương thức</th>
+                            <th>Trạng thái</th>
                             <th>Người Bán</th>
                             <th class="text-end">Tổng tiền</th>
                             <th class="text-center">Chi tiết</th>
@@ -356,7 +409,7 @@
                         @if (ViewBag.DetailedTransactions == null || ((List<TransactionDetailViewModel>)ViewBag.DetailedTransactions).Count == 0)
                         {
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="11" class="text-center py-4 text-muted">
                                     Không tìm thấy giao dịch nào phù hợp!
                                 </td>
                             </tr>
@@ -384,6 +437,16 @@
                                         <span class="badge bg-secondary">@t.PaymentMethod</span>
                                     </td>
                                     <td>
+                                        @if (t.Status == "Cancelled")
+                                        {
+                                            <span class="badge bg-danger">Đã Hủy</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Thành công</span>
+                                        }
+                                    </td>
+                                    <td>
                                         @if (t.SellerName == "Khách đặt Online")
                                         {
                                             <span class="text-info"><i class="bi bi-globe me-1"></i> @t.SellerName</span>
@@ -393,7 +456,9 @@
                                             <span class="text-success"><i class="bi bi-person-fill me-1"></i> @t.SellerName</span>
                                         }
                                     </td>
-                                    <td class="text-end fw-bold text-success">@t.TotalAmount.ToString("N0") ₫</td>
+                                    <td class="text-end fw-bold @(t.Status == "Cancelled" ? "text-danger text-decoration-line-through" : "text-success")">
+                                        @t.TotalAmount.ToString("N0") ₫
+                                    </td>
                                     <td class="text-center">
                                         <a href="/Admin/Bookings/Details/@t.BookingId" class="btn btn-sm btn-outline-light rounded-pill px-3">
                                             Xem
