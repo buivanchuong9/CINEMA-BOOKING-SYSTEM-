@@ -49,8 +49,15 @@
                             <th>Họ và Tên</th>
                             <th>Email / Username</th>
                             <th>Số Điện Thoại</th>
-                            <th>Hạng Thành Viên</th>
-                            <th>Điểm</th>
+                            @if (ViewBag.CurrentRole == "Staff")
+                            {
+                                <th>Rạp Phân Công</th>
+                            }
+                            else
+                            {
+                                <th>Hạng Thành Viên</th>
+                                <th>Điểm</th>
+                            }
                             <th>Ngày Tạo</th>
                             <th class="text-center" style="width: 150px;">Thao tác</th>
                         </tr>
@@ -62,8 +69,19 @@
                                 <td class="fw-bold">@item.FullName</td>
                                 <td>@item.Email</td>
                                 <td>@item.PhoneNumber</td>
-                                <td><span class="badge bg-info text-dark">@item.MembershipLevel</span></td>
-                                <td>@item.Points</td>
+                                @if (ViewBag.CurrentRole == "Staff")
+                                {
+                                    <td>
+                                        <span class="badge bg-success">
+                                            @(item.Cinema != null ? item.Cinema.Name : "Chưa phân rạp")
+                                        </span>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td><span class="badge bg-info text-dark">@item.MembershipLevel</span></td>
+                                    <td>@item.Points</td>
+                                }
                                 <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td class="text-center">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1" title="Sửa">

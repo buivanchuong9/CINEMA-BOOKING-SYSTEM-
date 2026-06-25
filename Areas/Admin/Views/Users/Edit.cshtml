@@ -47,6 +47,23 @@
                         <label class="form-label fw-bold">Mật khẩu mới (Để trống nếu không đổi)</label>
                         <input type="password" name="NewPassword" class="form-control" placeholder="Nhập mật khẩu mới..." />
                     </div>
+
+                    @if (ViewBag.IsStaff == true)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Rạp chiếu phim phân công</label>
+                            <select name="CinemaId" class="form-select bg-black text-white border-secondary">
+                                <option value="">-- Chọn rạp chiếu phim --</option>
+                                @if (ViewBag.Cinemas != null)
+                                {
+                                    @foreach (var cinema in ViewBag.Cinemas)
+                                    {
+                                        <option value="@cinema.Id" selected="@(Model.CinemaId == cinema.Id)">@cinema.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    }
                 </div>
 
                 <hr />
